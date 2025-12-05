@@ -1,0 +1,47 @@
+@startuml WorkNexus_ActivityDiagram_Compact
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Calibri
+skinparam activity {
+  BackgroundColor White
+  BorderColor Black
+}
+
+start
+
+:User Opens System;
+:Enter Credentials;
+
+if (Valid Login?) then (Yes)
+  :Load Role-Based Dashboard;
+
+  if (User Role?) then (Admin)
+    :Create HR/PM Accounts;
+    :Manage System Settings;
+  elseif (HR) then (Yes)
+    :Manage Employees;
+    :Manage Departments;
+    :Generate Payroll;
+  elseif (PM) then (Yes)
+    :Create Project;
+    :Assign Team;
+    :Create Tasks;
+    :Update Project Status;
+    :Manage Client Information;
+  else (Employee)
+    :View Tasks;
+    :Log Hours;
+    :Update Task Status;
+  endif
+
+  ' --- Optional: Show post-login common actions (if any) ---
+  :User Logs Out;
+  stop
+
+else (No)
+  :Show Error;
+  stop
+endif
+
+@enduml

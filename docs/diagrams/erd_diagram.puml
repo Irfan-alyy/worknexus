@@ -1,0 +1,81 @@
+@startuml WorkNexus - ERD (Logical)
+
+' Styling
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Calibri
+
+entity "User" as User {
+  + user_id (PK)
+  --
+  email
+  password
+  name
+  role
+}
+
+entity "Employee" as Employee {
+  + emp_id (PK)
+  --
+  user_id (FK)
+  dept_id (FK)
+}
+
+entity "Department" as Department {
+  + dept_id (PK)
+  --
+  name
+}
+
+entity "Project" as Project {
+  + project_id (PK)
+  --
+  client_id (FK)
+  pm_id (FK)
+  title
+  payment_model
+  status
+}
+
+entity "Task" as Task {
+  + task_id (PK)
+  --
+  project_id (FK)
+  assigned_to (FK)
+  title
+  status
+  logged_hours
+}
+
+entity "Client" as Client {
+  + client_id (PK)
+  --
+  name
+  email
+  company
+  project_url
+}
+
+entity "Payroll" as Payroll {
+  + payroll_id (PK)
+  --
+  emp_id (FK)
+  project_id (FK)
+  amount
+  payment_model
+}
+
+' Relationships
+User ||--o{ Employee : "1 to 0..*"
+Department ||--o{ Employee : "1 to 0..*"
+Client ||--o{ Project : "1 to 0..*"
+Project ||--o{ Task : "1 to 0..*"
+Employee }o--|| Task : "0..1 to 1"
+Project ||--o{ Payroll : "1 to 0..*"
+Employee ||--o{ Payroll : "1 to 0..*"
+
+@enduml
+
+
+
+

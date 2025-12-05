@@ -1,0 +1,118 @@
+@startuml WorkNexus_ClassDiagram
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Calibri
+skinparam wrapWidth 180
+skinparam class {
+  BackgroundColor White
+  BorderColor Black
+  BorderThickness 1.2
+  ArrowColor Black
+}
+
+'================ CLASSES ================
+
+class User {
+  - userId: int
+  - email: string
+  - password: string (hashed)
+  - name: string
+  - role: enum(Admin, HR, PM, Employee)
+}
+
+class Admin {
+  + createHR(): void
+  + createPM(): void
+}
+
+class HRManager {
+  + createEmployee(): void
+  + resetPassword(): void
+  + manageDepartments(): void
+  + generatePayroll(): void
+}
+
+class ProjectManager {
+  + createProject(): void
+  + assignTeam(): void
+  + createTask(): void
+  + updateProjectStatus(): void
+  + manageClientInfo(): void
+}
+
+class Employee {
+  + viewTasks(): List<Task>
+  + logHours(): void
+  + updateTaskStatus(): void
+}
+
+class Department {
+  - deptId: int
+  - name: string
+  - description: string
+}
+
+class Project {
+  - projectId: int
+  - title: string
+  - description: string
+  - startDate: Date
+  - endDate: Date
+  - paymentModel: enum(Fixed, Hourly, RevenueShare)
+  - status: enum(NotStarted, Ongoing, Completed)
+}
+
+class Task {
+  - taskId: int
+  - title: string
+  - description: string
+  - deadline: Date
+  - status: enum(Pending, InProgress, Completed)
+  - loggedHours: float
+}
+
+class Client {
+  - clientId: int
+  - name: string
+  - company: string
+  - email: string
+  - projectUrl: string
+}
+
+class Payroll {
+  - payrollId: int
+  - employeeId: int
+  - month: string
+  - paymentModel: enum(Fixed, Hourly, RevenueShare)
+  - amount: float
+}
+
+'================ RELATIONSHIPS ================
+
+User <|-- Admin
+User <|-- HRManager
+User <|-- ProjectManager
+User <|-- Employee
+
+HRManager --> Employee : manages >
+HRManager --> Department : oversees >
+HRManager --> Payroll : generates >
+
+ProjectManager --> Project : creates >
+ProjectManager --> Client : manages >
+
+Employee --> Task : works on >
+Employee --> Project : member of >
+Employee --> Payroll : receives >
+
+Project --> Task : contains >
+Project --> Client : client >
+Project --> Payroll : payroll >
+
+Department --> Employee : includes >
+
+Payroll --> Employee
+Payroll --> Project
+
+@enduml

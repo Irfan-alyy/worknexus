@@ -1,0 +1,169 @@
+
+@startuml WorkNexus Use Case Diagram 1 - Core Operations
+
+' Title and styling - Black and White
+title WorkNexus - Use Case Diagram 1: Core Operations
+skinparam monochrome true
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    BorderThickness 2
+    ArrowColor Black
+    ArrowThickness 1.5
+    FontSize 11
+}
+skinparam defaultTextAlignment center
+skinparam nodesep 30
+skinparam ranksep 40
+
+' Single column of use cases
+rectangle "WorkNexus Management System" {
+    usecase (User Login) as UC_Login
+    usecase (Manage User\nAccounts) as UC_Accounts
+    usecase (Manage\nEmployees) as UC_Employees
+    usecase (Assign to\nDepartments) as UC_Dept
+    usecase (Manage\nProjects) as UC_Projects
+    usecase (Assign Team\nto Projects) as UC_Team
+    usecase (Manage\nTasks) as UC_Tasks
+}
+
+' Actors on left
+actor "Admin" as Admin
+actor "HR Manager" as HR
+actor "Project\nManager" as PM
+actor "Employee" as EMP
+
+' Connections
+Admin --> UC_Login
+Admin --> UC_Accounts
+
+HR --> UC_Login
+HR --> UC_Accounts
+HR --> UC_Employees
+HR --> UC_Dept
+PM --> UC_Login
+PM --> UC_Projects
+PM --> UC_Team
+PM --> UC_Tasks
+
+EMP --> UC_Login
+EMP --> UC_Tasks
+
+' Relationships
+UC_Accounts ..> UC_Login : <<include>>
+UC_Team ..> UC_Employees : <<extend>>
+@enduml
+
+
+' ============================================
+
+@startuml WorkNexus Use Case Diagram 2 - Execution & Tracking
+
+' Title and styling - Black and White
+title WorkNexus - Use Case Diagram 2: Execution & Tracking
+skinparam monochrome true
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    BorderThickness 2
+    ArrowColor Black
+    ArrowThickness 1.5
+    FontSize 11
+}
+skinparam defaultTextAlignment center
+skinparam nodesep 30
+skinparam ranksep 40
+
+' Single column of use cases
+rectangle "WorkNexus Management System" {
+    usecase (Log Working\nHours) as UC_Hours
+    usecase (Update Task\nStatus) as UC_Status
+    usecase (Track Project\nProgress) as UC_Progress
+    usecase (Manage Client\nInformation) as UC_Clients
+    usecase (View Role-Based\nDashboard) as UC_Dashboard
+}
+
+' Actors on left
+actor "Admin" as Admin
+actor "HR Manager" as HR
+actor "Project\nManager" as PM
+actor "Employee" as EMP
+
+' Connections
+Admin --> UC_Dashboard
+
+HR --> UC_Dashboard
+
+PM --> UC_Progress
+PM --> UC_Clients
+PM --> UC_Dashboard
+
+EMP --> UC_Hours
+EMP --> UC_Status
+EMP --> UC_Dashboard
+
+@enduml
+
+' ============================================
+
+@startuml WorkNexus Use Case Diagram 3 - Payroll & Reports
+
+' Title and styling - Black and White
+title WorkNexus - Use Case Diagram 3: Payroll & Reports
+skinparam monochrome true
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    BorderThickness 2
+    ArrowColor Black
+    ArrowThickness 1.5
+    FontSize 11
+}
+skinparam defaultTextAlignment center
+skinparam nodesep 30
+skinparam ranksep 40
+
+top to bottom direction
+
+' Actors on left
+actor "Admin" as Admin
+actor "HR Manager" as HR
+actor "Project\nManager" as PM
+
+' Single narrow column of use cases
+rectangle "WorkNexus Management System" {
+    usecase (Generate\nPayroll) as UC_Payroll
+    
+    usecase (Calculate\nFixed Salary) as UC_Fixed
+    
+    usecase (Calculate\nHourly Payment) as UC_Hourly
+    
+    usecase (Calculate\nRevenue Share) as UC_Revenue
+    
+    usecase (Process\nPayments) as UC_Process
+    
+    usecase (Generate\nReports) as UC_Reports
+}
+
+' Connections
+Admin -right-> UC_Reports
+
+HR -right-> UC_Payroll
+HR -right-> UC_Process
+HR -right-> UC_Reports
+
+PM -right-> UC_Reports
+
+' Relationships
+UC_Payroll .down.> UC_Fixed : <<include>>
+UC_Payroll .down.> UC_Hourly : <<include>>
+UC_Payroll .down.> UC_Revenue : <<include>>
+UC_Process .up.> UC_Payroll : <<include>>
+
+@enduml
