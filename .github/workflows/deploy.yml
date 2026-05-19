@@ -1,0 +1,73 @@
+name: Deploy Worknexus Stack
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- 1. BUILD & PUSH BACKEND DOCKER IMAGE ---
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend # Pointing to your backend folder
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/worknexus-backend:latest
+
+      # --- 2. BUILD REACT FRONTEND ---
+      - name: Set up Node.js for React Build
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json # Pointing to your frontend folder
+
+      - name: Build React Application
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      # --- 3. DEPLOY TO ORACLE UBUNTU SERVER ---
+      - name: Update Backend Container via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          script: |
+            # Pull the fresh image from Docker Hub
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/worknexus-backend:latest
+            
+            # Stop and remove the old running container if it exists
+            docker stop worknexus-backend-app || true
+            docker rm worknexus-backend-app || true
+            
+            # Spin up the new container mapping host port 3000 to container port 3000
+            docker run -d \
+              --name worknexus-backend-app \
+              -p 3000:3000 \
+              --restart unless-stopped \
+              ${{ secrets.DOCKERHUB_USERNAME }}/worknexus-backend:latest
+
+      - name: Sync Frontend Build Files via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          source: "frontend/dist/*" # Use "frontend/build/*" if your project compiles to build/ instead of dist/
+          target: "/var/www/fyp-frontend"
+          strip_components: 2
