@@ -68,6 +68,6 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_SECRET_KEY }}
-          source: "frontend/dist/*" # Use "frontend/build/*" if your project compiles to build/ instead of dist/
+          source: "frontend/dist/**" # Use "frontend/build/*" if your project compiles to build/ instead of dist/
           target: "/var/www/fyp-frontend"
           strip_components: 2
