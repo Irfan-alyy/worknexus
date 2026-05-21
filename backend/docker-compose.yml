@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: worknexus_prod_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Node.js Application Service
+  backend:
+    build: .
+    container_name: worknexus_backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+
+networks:
+  internal_net:
+    driver: bridge
