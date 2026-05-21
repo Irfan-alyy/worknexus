@@ -23,27 +23,42 @@ const updateDepartmentSchema = z.object({
 })
 
 // Employee schemas
-const createEmployeeSchema = z.object({
-  first_name: z.string().min(1).max(255),
-  last_name: z.string().min(1).max(255),
-  employee_code: z.string().min(1).max(255),
-  department_id: z.number().int().positive(),
-  hire_date: z.string().datetime().or(z.date()),
-  payment_model: z.enum(PAYMENT_MODELS),
-  base_salary: z.number().positive().optional(),
-  hourly_rate: z.number().positive().optional(),
+const normalizeEmployeePayload = (payload = {}) => ({
+  email: payload.email,
+  password: payload.password,
+  first_name: payload.first_name ?? payload.firstName,
+  last_name: payload.last_name ?? payload.lastName,
+  department_id: payload.department_id ?? payload.departmentId,
+  payment_model: payload.payment_model ?? payload.paymentModel,
+  base_salary: payload.base_salary ?? payload.baseSalary,
+  hourly_rate: payload.hourly_rate ?? payload.hourlyRate,
 })
 
-const updateEmployeeSchema = z.object({
-  first_name: z.string().min(1).max(255).optional(),
-  last_name: z.string().min(1).max(255).optional(),
-  employee_code: z.string().min(1).max(255).optional(),
-  department_id: z.number().int().positive().optional(),
-  hire_date: z.string().datetime().or(z.date()).optional(),
-  payment_model: z.enum(PAYMENT_MODELS).optional(),
-  base_salary: z.number().positive().optional(),
-  hourly_rate: z.number().positive().optional(),
-})
+const createEmployeeSchema = z.preprocess(
+  normalizeEmployeePayload,
+  z.object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(6, "Password must be at least 6 characters").max(255),
+    first_name: z.string().min(1).max(100),
+    last_name: z.string().min(1).max(100),
+    department_id: z.number().int().positive().optional(),
+    payment_model: z.enum(PAYMENT_MODELS).default("fixed"),
+    base_salary: z.number().positive().optional(),
+    hourly_rate: z.number().positive().optional(),
+  })
+)
+
+const updateEmployeeSchema = z.preprocess(
+  normalizeEmployeePayload,
+  z.object({
+    first_name: z.string().min(1).max(100).optional(),
+    last_name: z.string().min(1).max(100).optional(),
+    department_id: z.number().int().positive().optional(),
+    payment_model: z.enum(PAYMENT_MODELS).optional(),
+    base_salary: z.number().positive().optional(),
+    hourly_rate: z.number().positive().optional(),
+  })
+)
 
 // Client schemas
 const createClientSchema = z.object({
