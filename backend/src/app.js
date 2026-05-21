@@ -1,58 +1,80 @@
 const express = require("express")
+const helmet = require("helmet")
+const corsMiddleware = require("./middleware/cors")
+const requestLogger = require("./middleware/request-logger")
+const rateLimiter = require("./middleware/rate-limiter")
+const auth = require("./middleware/auth")
+const { notFound, errorHandler } = require("./middleware/error")
+
+// Feature routes
 const authRoutes = require("./features/auth/auth.routes")
 const chatRoutes = require("./features/chat/chat.routes")
 const payrollRoutes = require("./features/payroll/payroll.routes")
 const employeeRoutes = require("./features/hr-management/employee.routes")
-const rateLimiter = require("./middleware/rate-limiter")
-const { notFound, errorHandler } = require("./middleware/error")
-const prisma = require("./config/db.config")
-
+const { successResponse } = require("./utils/response")
 const app = express()
 
+/**
+ * MIDDLEWARE SETUP
+ * Order matters: body parsers -> CORS -> security -> logging -> rate limiting -> auth -> routes
+ */
+
+// 1. Body parser and URL encoder
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+// 2. Security headers
+app.use(helmet())
+
+// 3. CORS configuration
+app.use(corsMiddleware)
+
+// 4. Request logging
+app.use(requestLogger)
+
+// 5. Rate limiting (general)
 app.use(rateLimiter({ limit: 200, windowMs: 60_000 }))
 
+/**
+ * HEALTH CHECK ENDPOINT
+ * No authentication required
+ */
 app.get("/health", (req, res) => {
-  res.json({ success: true, message: "ok" })
+  const response= successResponse("Server is healthy")
+  res.json(response)
 })
 
+/**
+ * FEATURE ROUTES
+ * Auth routes don't require authentication (handles their own)
+ */
 app.use("/api/v1/auth", authRoutes)
+
+/**
+ * Protected routes (require authentication)
+ * Apply auth middleware before protected route handlers
+ */
+app.use(auth)
+
+// Chat routes (authenticated)
 app.use("/api/v1/chat", chatRoutes)
+
+// Payroll routes (authenticated)
 app.use("/api/v1/payroll", payrollRoutes)
+
+// Employee routes (authenticated)
 app.use("/api/v1/employees", employeeRoutes)
- 
- // Test route for departments
- app.get("/api/v1/test/departments", async (req, res) => {
-  try {
-    const data= await prisma.department.findMany()
-     res.json({ success: true, message: "Database connection test endpoint", data: data })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ success: false, message: "Internal server error" })
-  }
- })
 
- // Test route to create a department (write)
- app.post("/api/v1/test/departments", async (req, res) => {
-  try {
-    const { name } = req.body || {}
-    if (!name || typeof name !== "string" || name.trim() === "") {
-      return res.status(400).json({ success: false, message: "'name' is required in request body" })
-    }
-
-    const dept = await prisma.department.create({ data: { name: name.trim() } })
-    return res.status(201).json({ success: true, message: "Department created", data: dept })
-  } catch (error) {
-    console.error(error)
-    // Prisma unique constraint error code
-    if (error && error.code === "P2002") {
-      return res.status(409).json({ success: false, message: "Department with this name already exists" })
-    }
-    return res.status(500).json({ success: false, message: "Internal server error" })
-  }
- })
-
+/**
+ * ERROR HANDLING
+ * 404 handler must come before general error handler
+ */
 app.use(notFound)
+
+/**
+ * Global error handler (must be last)
+ * Must have 4 parameters (err, req, res, next) for Express to recognize it as error handler
+ */
 app.use(errorHandler)
 
 module.exports = app
