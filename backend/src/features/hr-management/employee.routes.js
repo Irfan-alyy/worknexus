@@ -1,11 +1,27 @@
 const { Router } = require("express")
-const { listEmployeesController, createEmployeeController } = require("./employee.controller")
+const {
+	listEmployeesController,
+	getEmployeeController,
+	createEmployeeController,
+	updateEmployeeController,
+} = require("./employee.controller")
 const auth = require("../../middleware/auth")
-const rbac = require("../../middleware/rbac")
+const requireRole = require("../../middleware/rbac")
+const validateBody = require("../../middleware/validate-body")
+const { createEmployeeSchema, updateEmployeeSchema } = require("../../utils/validation-schemas")
 
 const router = Router()
 
-router.get("/", auth, rbac(["ADMIN", "HR"]), listEmployeesController)
-router.post("/", auth, rbac(["ADMIN", "HR"]), createEmployeeController)
+// GET /api/v1/employees - list all employees (admin, hr)
+router.get("/", auth, requireRole(["admin", "hr"]), listEmployeesController)
+
+// GET /api/v1/employees/:id - get single employee by id (admin, hr, employee himself)
+router.get("/:id", auth, requireRole(["admin", "hr", "employee"]), getEmployeeController)
+
+// POST /api/v1/employees - create employee profile and login account (admin, hr)
+router.post("/", auth, requireRole(["admin", "hr"]), validateBody(createEmployeeSchema), createEmployeeController)
+
+// PATCH /api/v1/employees/:id - update employee (admin, hr)
+router.patch("/:id", auth, requireRole(["admin", "hr"]), validateBody(updateEmployeeSchema), updateEmployeeController)
 
 module.exports = router
