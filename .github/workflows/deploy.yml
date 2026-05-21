@@ -73,8 +73,8 @@ jobs:
             EOF
 
             # Ensure docker compose v2 is available (command is `docker compose`)
-            docker compose pull || true
-            docker compose up -d --build
+            docker compose -f backend/docker-compose.yml pull || true
+            docker compose -f backend/docker-compose.yml up -d --build
 
       - name: Sync Frontend Build Files via SCP
         uses: appleboy/scp-action@v0.1.7
