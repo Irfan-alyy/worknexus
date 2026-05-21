@@ -50,6 +50,8 @@ jobs:
           source: "backend/docker-compose.yml"
           target: "~/worknexus"
 
+      - name: Debug List Backend Directory
+        run: ls -al backend
       - name: Upload Backend .env
         uses: appleboy/scp-action@v0.1.7
         with:
