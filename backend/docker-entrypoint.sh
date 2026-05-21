@@ -2,7 +2,7 @@
 set -e
 
 # Wait for Postgres to become available
-DB_HOST=${POSTGRES_HOST:-postgres_db}
+DB_HOST=${POSTGRES_HOST:-postgres}
 DB_PORT=${POSTGRES_PORT:-5432}
 
 echo "Waiting for database ${DB_HOST}:${DB_PORT}..."
