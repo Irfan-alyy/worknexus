@@ -29,3 +29,4 @@ npm run dev
 - Use JWT authentication for protected endpoints
 - Follow the response contract documented in the backend README
 - Keep the frontend API layer aligned with the route list in the backend README
+- HR employee onboarding is single-step: `POST /api/v1/employees` creates both user login credentials and employee profile

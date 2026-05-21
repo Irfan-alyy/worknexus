@@ -97,6 +97,20 @@ The app loads middleware in this order:
 
 ### Auth
 
+#### `POST /api/v1/auth/register`
+Register a new user account.
+
+Required body:
+```json
+{
+	"email": "employee@worknexus.com",
+	"password": "password123",
+	"role": "employee"
+}
+```
+
+Returns the created user payload and a JWT token.
+
 #### `POST /api/v1/auth/login`
 Login with email and password.
 
@@ -168,18 +182,48 @@ Returns a single employee by id.
 
 #### `POST /`
 Requires auth and roles `admin` or `hr`.
+Creates both authentication `User` and `Employee` profile in a single transaction.
 
 Required body:
 ```json
 {
+	"email": "john.doe@worknexus.com",
+	"password": "TempPass123",
 	"first_name": "John",
 	"last_name": "Doe",
-	"employee_code": "EMP-001",
 	"department_id": 1,
-	"hire_date": "2026-05-21T00:00:00.000Z",
 	"payment_model": "fixed",
-	"base_salary": 5000,
-	"hourly_rate": 0
+	"base_salary": 5000
+}
+```
+
+Notes:
+- `first_name` / `last_name` can also be sent as `firstName` / `lastName`
+- `department_id` can also be sent as `departmentId`
+- `payment_model`, `base_salary`, `hourly_rate` also accept camelCase keys
+- Created user role is forced to `employee` for this flow
+- Duplicate email fails atomically (no partial employee is created)
+
+Example success response:
+```json
+{
+	"success": true,
+	"message": "Employee account created",
+	"data": {
+		"user": {
+			"id": 42,
+			"email": "john.doe@worknexus.com",
+			"role": "employee",
+			"createdAt": "2026-05-21T12:00:00.000Z"
+		},
+		"employee": {
+			"id": 21,
+			"userId": 42,
+			"firstName": "John",
+			"lastName": "Doe",
+			"paymentModel": "fixed"
+		}
+	}
 }
 ```
 
