@@ -29,3 +29,4 @@ yarn-error.log*
 *.pem
 *.tsbuildinfo
 next-env.d.ts
+logs/
