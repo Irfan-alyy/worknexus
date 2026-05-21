@@ -32,6 +32,26 @@ app.use("/api/v1/employees", employeeRoutes)
   }
  })
 
+ // Test route to create a department (write)
+ app.post("/api/v1/test/departments", async (req, res) => {
+  try {
+    const { name } = req.body || {}
+    if (!name || typeof name !== "string" || name.trim() === "") {
+      return res.status(400).json({ success: false, message: "'name' is required in request body" })
+    }
+
+    const dept = await prisma.department.create({ data: { name: name.trim() } })
+    return res.status(201).json({ success: true, message: "Department created", data: dept })
+  } catch (error) {
+    console.error(error)
+    // Prisma unique constraint error code
+    if (error && error.code === "P2002") {
+      return res.status(409).json({ success: false, message: "Department with this name already exists" })
+    }
+    return res.status(500).json({ success: false, message: "Internal server error" })
+  }
+ })
+
 app.use(notFound)
 app.use(errorHandler)
 
