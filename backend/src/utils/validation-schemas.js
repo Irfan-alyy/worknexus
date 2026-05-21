@@ -11,18 +11,7 @@ const TASK_STATUSES = ["pending", "in_progress", "completed", "blocked"]
 const PROJECT_STATUSES = ["pending", "active", "completed"]
 const PAYMENT_STATUSES = ["pending", "processed", "paid"]
 
-// User schemas
-const createUserSchema = z.object({
-  email: z.string().email("Invalid email format").min(5).max(255),
-  password: z.string().min(6).max(255),
-  role: z.enum(ROLES).default("employee"),
-})
-
-const updateUserSchema = z.object({
-  email: z.string().email("Invalid email format").min(5).max(255).optional(),
-  password: z.string().min(6).max(255).optional(),
-  role: z.enum(ROLES).optional(),
-})
+// User schemas: moved to feature-level: src/features/users/users.schema.js
 
 // Department schemas
 const createDepartmentSchema = z.object({
@@ -156,6 +145,17 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
+const formatZodIssue = (issue) => {
+  const field = issue?.path?.length ? issue.path.join(".") : "payload"
+  const message =
+    issue?.code === "invalid_type" &&
+    String(issue?.message || "").includes("received undefined")
+      ? `${field} is required`
+      : issue?.message || "Invalid value"
+
+  return `${field}: ${message}`
+}
+
 /**
  * Validate data against a Zod schema
  * @param {z.ZodSchema} schema - Zod schema to validate against
@@ -163,24 +163,22 @@ const loginSchema = z.object({
  * @returns {Object} { valid: boolean, data?: *, errors?: string[] }
  */
 const validateSchema = (schema, data) => {
-  try {
-    const validatedData = schema.parse(data)
-    return { valid: true, data: validatedData }
-  } catch (error) {
-    if (error.errors && Array.isArray(error.errors)) {
-      const errors = error.errors.map(
-        (err) => `${err.path.join(".")}: ${err.message}`
-      )
-      return { valid: false, errors }
-    }
-    return { valid: false, errors: [error.message] }
+  const result = schema.safeParse(data ?? {})
+
+  if (result?.success) {
+    return { valid: true, data: result.data }
+  }
+
+  const errors = result?.error?.issues?.map(formatZodIssue)
+
+  return {
+    valid: false,
+    errors: errors?.length ? errors : ["Invalid request payload"],
   }
 }
 
 module.exports = {
   // Schema definitions
-  createUserSchema,
-  updateUserSchema,
   createDepartmentSchema,
   updateDepartmentSchema,
   createEmployeeSchema,

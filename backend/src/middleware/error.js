@@ -1,6 +1,18 @@
 const logger = require("../config/logger.config")
 const { errorResponse } = require("../utils/response")
 
+const formatZodIssues = (error) =>
+  error?.issues?.map((issue) => {
+    const field = issue?.path?.length ? issue.path.join(".") : "payload"
+    const message =
+      issue?.code === "invalid_type" &&
+      String(issue?.message || "").includes("received undefined")
+        ? `${field} is required`
+        : issue?.message || "Invalid value"
+
+    return { field, message }
+  })
+
 /**
  * 404 Not Found middleware
  */
@@ -44,17 +56,19 @@ const errorHandler = (error, req, res, next) => {
     message,
   }
 
+  const zodErrors = formatZodIssues(error)
+
   // Include error details in development
   if (process.env.NODE_ENV === "development") {
     response.stack = error.stack
-    if (error.errors) {
-      response.errors = error.errors
+    if (zodErrors?.length) {
+      response.errors = zodErrors
     }
   }
 
   // For operational errors, include errors array if it exists
-  if (isOperational && error.errors) {
-    response.errors = error.errors
+  if (isOperational && zodErrors?.length) {
+    response.errors = zodErrors
   }
 
   res.status(statusCode).json(response)

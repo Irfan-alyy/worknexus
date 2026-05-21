@@ -11,6 +11,9 @@ const authRoutes = require("./features/auth/auth.routes")
 const chatRoutes = require("./features/chat/chat.routes")
 const payrollRoutes = require("./features/payroll/payroll.routes")
 const employeeRoutes = require("./features/hr-management/employee.routes")
+const departmentRoutes = require("./features/departments/departments.routes")
+const clientRoutes = require("./features/clients/clients.routes")
+const userRoutes = require("./features/users/users.routes")
 const { successResponse } = require("./utils/response")
 const app = express()
 
@@ -40,8 +43,8 @@ app.use(rateLimiter({ limit: 200, windowMs: 60_000 }))
  * No authentication required
  */
 app.get("/health", (req, res) => {
-  const response= successResponse("Server is healthy")
-  res.json(response)
+  const { response, statusCode } = successResponse({ uptime: process.uptime() }, "Server is healthy")
+  res.status(statusCode).json(response)
 })
 
 /**
@@ -64,6 +67,11 @@ app.use("/api/v1/payroll", payrollRoutes)
 
 // Employee routes (authenticated)
 app.use("/api/v1/employees", employeeRoutes)
+
+// Identity routes (authenticated)
+app.use("/api/v1/departments", departmentRoutes)
+app.use("/api/v1/clients", clientRoutes)
+app.use("/api/v1/users", userRoutes)
 
 /**
  * ERROR HANDLING

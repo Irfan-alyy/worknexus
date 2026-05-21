@@ -1,5 +1,15 @@
 const { errorResponse } = require("../utils/response")
-const AppError = require("../utils/app-error")
+
+const formatZodIssue = (issue) => {
+  const field = issue?.path?.length ? issue.path.join(".") : "payload"
+  const message =
+    issue?.code === "invalid_type" &&
+    String(issue?.message || "").includes("received undefined")
+      ? `${field} is required`
+      : issue?.message || "Invalid value"
+
+  return { field, message }
+}
 
 /**
  * Body validation middleware factory
@@ -11,24 +21,27 @@ const AppError = require("../utils/app-error")
 const validateBody = (schema) => {
   return (req, res, next) => {
     try {
-      const validatedData = schema.parse(req.body)
-      req.validatedBody = validatedData
-      next()
-    } catch (error) {
-      if (error.errors && Array.isArray(error.errors)) {
-        const errors = error.errors.map((err) => ({
-          field: err.path.join("."),
-          message: err.message,
-        }))
+      const result = schema.safeParse(req.body ?? {})
+
+      if (!result?.success) {
+        const errors = result?.error?.issues?.map(formatZodIssue)
+
         const { response, statusCode } = errorResponse(
           "Validation failed",
           400,
-          errors
+          errors?.length ? errors : [{ field: "payload", message: "Invalid request payload" }]
         )
         return res.status(statusCode).json(response)
       }
 
-      const { response, statusCode } = errorResponse(error.message, 400)
+      const validatedData = result.data
+      req.validatedBody = validatedData
+      next()
+    } catch (error) {
+      const { response, statusCode } = errorResponse(
+        error?.message || "Validation failed",
+        400
+      )
       return res.status(statusCode).json(response)
     }
   }
