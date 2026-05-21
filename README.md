@@ -7,4 +7,7 @@ npm start
 # Frontend
 cd frontend
 npm install
-npm start
+npm run dev
+<!-- for build -->
+npm run build
+npm run preview
