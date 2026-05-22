@@ -23,6 +23,13 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/admin/activities", label: "Activities", icon: LayoutDashboard })
 	}
 
+	if (role === "hr") {
+		navItems.push({ to: "/recruitments", label: "Recruitments", icon: LayoutDashboard })
+		navItems.push({ to: "/projects", label: "Projects", icon: LayoutDashboard })
+		navItems.push({ to: "/clients", label: "Clients", icon: LayoutDashboard })
+		navItems.push({ to: "/employees", label: "Employees", icon: LayoutDashboard })
+	}
+
 	// push payroll near the end for allowed roles (not PM/Employee)
 	if (!(role === "pm" || role === "employee")) {
 		navItems.push({ to: "/payroll", label: "Payroll", icon: ReceiptText })

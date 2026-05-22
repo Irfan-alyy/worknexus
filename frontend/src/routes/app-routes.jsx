@@ -7,7 +7,11 @@ import { Header } from "@/components/layout/header"
 import { Sidebar } from "@/components/layout/sidebar"
 import { ChatPage } from "@/features/chat/chat-page"
 import { HrPage } from "@/features/hr-management/hr-page"
+import { RecruitmentsPage } from "@/features/hr-management/recruitments-page"
 import { PayrollPage } from "@/features/payroll/payroll-page"
+import Projects from "@/features/shared/Projects"
+import Clients from "@/features/shared/Clients"
+import Employees from "@/features/shared/Employees"
 import { DashboardPage } from "@/routes/dashboard-page"
 import { AdminPage } from "@/routes/admin-page"
 import { PmPage } from "@/routes/pm-page"
@@ -44,6 +48,12 @@ function RouteAside() {
 				bullets: roleConfig.shortLabel === "HR" || roleConfig.shortLabel === "Admin"
 					? ["Onboarding queue", "Employee records", "Department updates"]
 					: ["View tasks", "Log hours", "Update progress"],
+			},
+			"/recruitments": {
+				...dashboardRouteMeta["/recruitments"],
+				bullets: roleConfig.shortLabel === "HR" || roleConfig.shortLabel === "Admin"
+					? ["Post new jobs", "Track applicants", "Monitor hiring status"]
+					: ["View updates", "Follow status", "Check notes"],
 			},
 		}
 
@@ -93,7 +103,7 @@ function ShellLayout() {
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
 	const location = useLocation()
-	const { role, asideOpen, asideContent, asideTitle, closeAside } = useGlobalStore()
+	const { asideOpen, asideContent, asideTitle, closeAside } = useGlobalStore()
 	const isMobile = useMediaQuery("(max-width: 767px)")
 
 	useEffect(() => {
@@ -232,10 +242,14 @@ export function AppRoutes() {
 				<Route index element={<Navigate to="/dashboard" replace />} />
 				<Route path="dashboard" element={<DashboardPage />} />
 				<Route path="chat" element={<ChatPage />} />
-						<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
-						<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
-						<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
-						<Route path="pm" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
+				<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
+				<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
+				<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
+				<Route path="projects" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Projects /></RoleBarrier>} />
+				<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
+				<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
+				<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
+				<Route path="pm" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
 				<Route path="*" element={<Navigate to="/dashboard" replace />} />
 			</Route>
 			<Route path="*" element={<Navigate to="/login" replace />} />

@@ -121,4 +121,8 @@ export const dashboardRouteMeta = {
 		title: "Onboarding status",
 		description: "Guide new hires through the workspace setup and policy acknowledgements.",
 	},
+	"/recruitments": {
+		title: "Recruitment board",
+		description: "Create job openings and monitor applicant activity for active hiring roles.",
+	},
 }
