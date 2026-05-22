@@ -18,6 +18,9 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/admin/projects", label: "Projects", icon: LayoutDashboard })
 		navItems.push({ to: "/admin/clients", label: "Clients", icon: LayoutDashboard })
 		navItems.push({ to: "/admin/employees", label: "Employees", icon: LayoutDashboard })
+		navItems.push({ to: "/admin/managers", label: "Managers", icon: LayoutDashboard })
+		navItems.push({ to: "/admin/departments", label: "Departments", icon: LayoutDashboard })
+		navItems.push({ to: "/admin/activities", label: "Activities", icon: LayoutDashboard })
 	}
 
 	// push payroll near the end for allowed roles (not PM/Employee)

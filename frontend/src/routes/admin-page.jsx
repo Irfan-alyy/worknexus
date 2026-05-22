@@ -4,9 +4,12 @@ import { useLocation, useNavigate } from "react-router-dom"
 import AdminProjects from "@/features/admin/AdminProjects"
 import AdminClients from "@/features/admin/AdminClients"
 import AdminEmployees from "@/features/admin/AdminEmployees"
+import AdminManagers from "@/features/admin/AdminManagers"
+import AdminDepartments from "@/features/admin/AdminDepartments"
+import AdminActivities from "@/features/admin/AdminActivities"
 
 export function AdminPage() {
-  const { user, openAside } = useGlobalStore()
+  const { user, role, openAside } = useGlobalStore()
   const [activeTab, setActiveTab] = useState("projects")
   const location = useLocation()
   const navigate = useNavigate()
@@ -16,6 +19,9 @@ export function AdminPage() {
     if (path.endsWith("/projects")) setActiveTab("projects")
     else if (path.endsWith("/clients")) setActiveTab("clients")
     else if (path.endsWith("/employees")) setActiveTab("employees")
+    else if (path.endsWith("/managers")) setActiveTab("managers")
+    else if (path.endsWith("/departments")) setActiveTab("departments")
+    else if (path.endsWith("/activities")) setActiveTab("activities")
     else setActiveTab("projects")
   }, [location.pathname])
 
@@ -40,6 +46,19 @@ export function AdminPage() {
           <button onClick={() => navigate("/admin/employees")} className={`px-3 py-2 rounded ${activeTab === "employees" ? "bg-secondary text-foreground" : "bg-background"}`}>
             Employees
           </button>
+          {role === "admin" ? (
+            <>
+              <button onClick={() => navigate("/admin/managers")} className={`px-3 py-2 rounded ${activeTab === "managers" ? "bg-secondary text-foreground" : "bg-background"}`}>
+                Managers
+              </button>
+              <button onClick={() => navigate("/admin/departments")} className={`px-3 py-2 rounded ${activeTab === "departments" ? "bg-secondary text-foreground" : "bg-background"}`}>
+                Departments
+              </button>
+              <button onClick={() => navigate("/admin/activities")} className={`px-3 py-2 rounded ${activeTab === "activities" ? "bg-secondary text-foreground" : "bg-background"}`}>
+                Activities
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -47,6 +66,9 @@ export function AdminPage() {
         {activeTab === "projects" && <AdminProjects onEdit={openDrawer} />}
         {activeTab === "clients" && <AdminClients onEdit={openDrawer} />}
         {activeTab === "employees" && <AdminEmployees onEdit={openDrawer} />}
+        {activeTab === "managers" && role === "admin" && <AdminManagers onEdit={openDrawer} />}
+        {activeTab === "departments" && role === "admin" && <AdminDepartments onEdit={openDrawer} />}
+        {activeTab === "activities" && role === "admin" && <AdminActivities />}
       </div>
 
       {/* Aside is handled globally via the store (openAside/closeAside) */}
