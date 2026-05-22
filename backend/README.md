@@ -313,47 +313,6 @@ Optional body:
 }
 ```
 
----
-
-### Chat
-
-Base path: `/api/v1/chat`
-
-#### `GET /channels/:channelId/history`
-Requires auth.
-Returns message history for a channel.
-
-Required path params:
-- `channelId`: UUID
-
-#### `POST /messages`
-Requires auth.
-Creates a chat message.
-
-Required body:
-```json
-{
-	"content": "Hello team",
-	"channel_id": "uuid-here",
-	"parent_id": null
-}
-```
-
----
-
-### Payroll
-
-Base path: `/api/v1/payroll`
-
-#### `GET /`
-Requires auth and roles `admin` or `hr`.
-Returns payroll records.
-
-#### `POST /calculate`
-Requires auth and roles `admin` or `hr`.
-Calculates payroll for an employee or period.
-
-Required body depends on the service implementation, but should include the employee and pay period fields needed for computation.
 
 ## Feature-to-file map
 
