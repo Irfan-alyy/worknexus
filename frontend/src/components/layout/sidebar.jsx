@@ -1,4 +1,4 @@
-import { LayoutDashboard, MessageSquare, ReceiptText } from "lucide-react"
+import { LayoutDashboard, MessageSquare, ReceiptText, Folder, Users, User, UserCheck, Layers, Activity, BriefcaseBusiness, DollarSign } from "lucide-react"
 import { NavLink } from "react-router-dom"
 
 import { roleDefinitions } from "@/config/constants"
@@ -15,24 +15,24 @@ export function Sidebar({ onNavigate }) {
 
 	// admin sections grouped after primary
 	if (role === "admin") {
-		navItems.push({ to: "/admin/projects", label: "Projects", icon: LayoutDashboard })
-		navItems.push({ to: "/admin/clients", label: "Clients", icon: LayoutDashboard })
-		navItems.push({ to: "/admin/employees", label: "Employees", icon: LayoutDashboard })
-		navItems.push({ to: "/admin/managers", label: "Managers", icon: LayoutDashboard })
-		navItems.push({ to: "/admin/departments", label: "Departments", icon: LayoutDashboard })
-		navItems.push({ to: "/admin/activities", label: "Activities", icon: LayoutDashboard })
+		navItems.push({ to: "/admin/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/admin/clients", label: "Clients", icon: Users })
+		navItems.push({ to: "/admin/employees", label: "Employees", icon: User })
+		navItems.push({ to: "/admin/managers", label: "Managers", icon: UserCheck })
+		navItems.push({ to: "/admin/departments", label: "Departments", icon: Layers })
+		navItems.push({ to: "/admin/activities", label: "Activities", icon: Activity })
 	}
 
 	if (role === "hr") {
-		navItems.push({ to: "/recruitments", label: "Recruitments", icon: LayoutDashboard })
-		navItems.push({ to: "/projects", label: "Projects", icon: LayoutDashboard })
-		navItems.push({ to: "/clients", label: "Clients", icon: LayoutDashboard })
-		navItems.push({ to: "/employees", label: "Employees", icon: LayoutDashboard })
+		navItems.push({ to: "/recruitments", label: "Recruitments", icon: BriefcaseBusiness })
+		navItems.push({ to: "/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/clients", label: "Clients", icon: Users })
+		navItems.push({ to: "/employees", label: "Employees", icon: User })
 	}
 
 	// push payroll near the end for allowed roles (not PM/Employee)
 	if (!(role === "pm" || role === "employee")) {
-		navItems.push({ to: "/payroll", label: "Payroll", icon: ReceiptText })
+		navItems.push({ to: "/payroll", label: "Payroll", icon: DollarSign })
 	}
 
 	// chat at the very end

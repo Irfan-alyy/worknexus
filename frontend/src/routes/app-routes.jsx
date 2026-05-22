@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { PanelLeft } from "lucide-react"
 
@@ -99,15 +99,30 @@ function RouteAside() {
 }
 
 function ShellLayout() {
-	const [isDarkMode, setIsDarkMode] = useState(true)
+	const [isDarkMode, setIsDarkMode] = useState(() => {
+		if (typeof window === "undefined") return true
+		try {
+			const theme = window.localStorage.getItem("worknexus.theme")
+			if (!theme) return true
+			return theme === "dark"
+		} catch {
+			return true
+		}
+	})
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
 	const location = useLocation()
 	const { asideOpen, asideContent, asideTitle, closeAside } = useGlobalStore()
+	const asidePanelRef = useRef(null)
+	
+	// We'll use a ref via simple variable when rendered; create handlers below
 	const isMobile = useMediaQuery("(max-width: 767px)")
 
 	useEffect(() => {
 		document.documentElement.classList.toggle("dark", isDarkMode)
+		try {
+			window.localStorage.setItem("worknexus.theme", isDarkMode ? "dark" : "light")
+		} catch {}
 	}, [isDarkMode])
 
 	useEffect(() => {
@@ -118,6 +133,8 @@ function ShellLayout() {
 
 	useEffect(() => {
 		setIsMobileSidebarOpen(false)
+		// close aside when navigating to a new route
+		closeAside()
 	}, [location.pathname])
 
 	useEffect(() => {
@@ -180,13 +197,15 @@ function ShellLayout() {
 												<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Context</p>
 												<h2 className="mt-2 text-lg font-semibold">{asideTitle || "Context"}</h2>
 											</div>
-											<button onClick={closeAside} className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-secondary px-3 text-sm font-medium transition-colors hover:bg-accent">
-												<PanelLeft className="h-4 w-4" />
-												Close
-											</button>
+											<div>
+												<button onClick={closeAside} className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted">
+													<PanelLeft className="h-4 w-4" />
+													Close
+												</button>
+											</div>
 										</div>
 									</div>
-									<div className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
+									<div ref={(el) => (asidePanelRef.current = el)} className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
 								</div>
 							</div>
 						) : (
@@ -216,10 +235,14 @@ function ShellLayout() {
 										<div className="border-b border-border/60 p-5">
 											<div className="flex items-center justify-between">
 												<h2 className="text-lg font-semibold">{asideTitle || "Context"}</h2>
-												<button onClick={closeAside} className="text-sm text-muted-foreground">Close</button>
+												<div>
+													<button onClick={closeAside} className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted">
+														Close
+													</button>
+												</div>
 											</div>
 										</div>
-										<div className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
+										<div ref={(el) => (asidePanelRef.current = el)} className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
 									</div>
 								</ResizablePanel>
 							</>

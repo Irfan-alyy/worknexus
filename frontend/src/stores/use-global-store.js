@@ -27,13 +27,27 @@ function loadSession() {
 
 export function GlobalStoreProvider({ children }) {
 	const [session, setSession] = useState(loadSession)
-	const [asideOpen, setAsideOpen] = useState(false)
+	const [asideOpen, setAsideOpen] = useState(() => {
+		if (typeof window === "undefined") return false
+		try {
+			const raw = window.localStorage.getItem("worknexus.asideOpen")
+			return raw === "true"
+		} catch {
+			return false
+		}
+	})
 	const [asideTitle, setAsideTitle] = useState("")
 	const [asideContent, setAsideContent] = useState(null)
 
 	useEffect(() => {
 		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
 	}, [session])
+
+	useEffect(() => {
+		try {
+			window.localStorage.setItem("worknexus.asideOpen", asideOpen ? "true" : "false")
+		} catch {}
+	}, [asideOpen])
 
 	const value = useMemo(() => {
 		const authenticate = ({ name, email, role }) => {

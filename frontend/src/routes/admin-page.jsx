@@ -29,36 +29,21 @@ export function AdminPage() {
     openAside(title, content)
   }
 
+  const titles = {
+    projects: "Projects",
+    clients: "Clients",
+    employees: "Employees",
+    managers: "Managers",
+    departments: "Departments",
+    activities: "Activities",
+  }
+
   return (
     <div className="h-full overflow-y-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Admin Console</h1>
+          <h1 className="text-2xl font-semibold">{titles[activeTab] || "Admin Console"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Signed in as {user.name || "Guest"}.</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => navigate("/admin/projects")} className={`px-3 py-2 rounded ${activeTab === "projects" ? "bg-secondary text-foreground" : "bg-background"}`}>
-            Projects
-          </button>
-          <button onClick={() => navigate("/admin/clients")} className={`px-3 py-2 rounded ${activeTab === "clients" ? "bg-secondary text-foreground" : "bg-background"}`}>
-            Clients
-          </button>
-          <button onClick={() => navigate("/admin/employees")} className={`px-3 py-2 rounded ${activeTab === "employees" ? "bg-secondary text-foreground" : "bg-background"}`}>
-            Employees
-          </button>
-          {role === "admin" ? (
-            <>
-              <button onClick={() => navigate("/admin/managers")} className={`px-3 py-2 rounded ${activeTab === "managers" ? "bg-secondary text-foreground" : "bg-background"}`}>
-                Managers
-              </button>
-              <button onClick={() => navigate("/admin/departments")} className={`px-3 py-2 rounded ${activeTab === "departments" ? "bg-secondary text-foreground" : "bg-background"}`}>
-                Departments
-              </button>
-              <button onClick={() => navigate("/admin/activities")} className={`px-3 py-2 rounded ${activeTab === "activities" ? "bg-secondary text-foreground" : "bg-background"}`}>
-                Activities
-              </button>
-            </>
-          ) : null}
         </div>
       </div>
 

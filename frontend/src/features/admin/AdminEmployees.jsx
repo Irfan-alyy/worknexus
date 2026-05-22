@@ -1,3 +1,5 @@
+import ActionMenu from "@/components/ui/action-menu"
+
 const managers = [
   { id: 1, name: "HR Manager Alice", role: "HR" },
   { id: 2, name: "Project Manager Bob", role: "PM" },
@@ -17,8 +19,8 @@ export default function AdminEmployees({ onEdit }) {
               <h3 className="font-medium">{m.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">Role: {m.role}</p>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />)} className="px-3 py-1 rounded bg-secondary text-foreground">Edit</button>
+            <div>
+              <ActionMenu items={[{ label: "Edit", onClick: () => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />) }]} />
             </div>
           </div>
         ))}
@@ -34,7 +36,7 @@ function EmployeeEditor({ employee }) {
       <div className="mt-3">
         <input className="w-full rounded border p-2" defaultValue={employee.name} />
         <div className="mt-3 flex justify-end">
-          <button className="px-3 py-2 rounded bg-primary text-white">Save</button>
+          <button className="px-3 py-2 rounded bg-primary text-white aside-save">Save</button>
         </div>
       </div>
     </div>
