@@ -315,45 +315,92 @@ Optional body:
 
 ---
 
-### Chat
+### Projects
 
-Base path: `/api/v1/chat`
+Base path: `/api/v1/projects`
 
-#### `GET /channels/:channelId/history`
-Requires auth.
-Returns message history for a channel.
+This feature implements project records, role-scoped visibility, and team management endpoints. See the full API documentation and request/response examples in:
 
-Required path params:
-- `channelId`: UUID
+Base path: `/api/v1/projects`
 
-#### `POST /messages`
-Requires auth.
-Creates a chat message.
+Auth: All routes require authentication (JWT in `Authorization: Bearer <token>` or `token` cookie).
 
-Required body:
-```json
+Roles summary:
+- `admin`, `hr`: full access (create/read/update/list, manage team)
+- `pm`: can view and update projects where they are the `manager_employee_id`; can manage team for their projects
+- `employee`: can view projects where they are a team member (read-only)
+
+Endpoints
+
+1) List projects
+- Method: GET
+- Path: `/api/v1/projects`
+- Body: none
+- Response: 200, `data` is an array of projects visible to the caller (admin/hr: all; pm: managed projects; employee: assigned projects)
+
+2) Get project
+- Method: GET
+- Path: `/api/v1/projects/:id`
+- Body: none
+- Response: 200, project object. Returns 403 if caller not permitted, 404 if not found.
+
+3) Create project
+- Method: POST
+- Path: `/api/v1/projects`
+- Roles: `admin`, `hr`
+- Body (JSON):
+  - `name` (string, required)
+  - `description` (string, optional)
+  - `status` (string, optional) — one of: `pending`, `active`, `completed`, `cancelled` (default `pending`)
+  - `client_id` (integer, required) — foreign key to `clients.id`
+  - `manager_employee_id` (integer, optional) — `employees.id` of the PM
+- Validation errors: 400 with `errors` array; 409 for unique/conflict; 400 if `manager_employee_id` references non-employee.
+
+Example body:
+```
 {
-	"content": "Hello team",
-	"channel_id": "uuid-here",
-	"parent_id": null
+  "name": "Website Redesign",
+  "description": "Redesign corporate website",
+  "client_id": 3,
+  "manager_employee_id": 1
 }
 ```
 
----
+4) Update project
+- Method: PATCH
+- Path: `/api/v1/projects/:id`
+- Roles: `admin`, `hr`, `pm` (pm only if they are the `manager_employee_id` for the project)
+- Body (JSON): any of the create fields, all optional
+- Validation: same as create; attempts to set `manager_employee_id` to a non-existent or non-employee will return 404 or 400 respectively.
 
-### Payroll
+5) List project team
+- Method: GET
+- Path: `/api/v1/projects/:id/team`
+- Access: admin/hr; `pm` if manager for the project; `employee` if they are a team member
+- Response: list of `project_team` memberships with employee info
 
-Base path: `/api/v1/payroll`
+6) Add team member
+- Method: POST
+- Path: `/api/v1/projects/:id/team`
+- Roles: `admin`, `hr`, `pm` (pm must be manager)
+- Body (JSON):
+  - `employee_id` (integer, required) — `employees.id`
+- Responses: 201 on success; 404 if employee/project missing; 409 if already assigned.
 
-#### `GET /`
-Requires auth and roles `admin` or `hr`.
-Returns payroll records.
+7) Remove team member
+- Method: DELETE
+- Path: `/api/v1/projects/:id/team/:employeeId`
+- Roles: `admin`, `hr`, `pm` (pm must be manager)
+- Response: 200 on success; 404 if membership not found
 
-#### `POST /calculate`
-Requires auth and roles `admin` or `hr`.
-Calculates payroll for an employee or period.
+Notes
+- Controllers validate `manager_employee_id` prior to DB updates: it must reference an existing `employees.id` and the linked `user.role` must be `employee`.
+- Use `client_id` (integer) and `employee_id` (integer) fields in requests — the API normalizes snake_case/camelCase as needed.
+- All responses use the standardized response util: `{ success: boolean, data?, message?, errors? }`.
 
-Required body depends on the service implementation, but should include the employee and pay period fields needed for computation.
+If you want I can add example `curl` snippets and sample responses for each endpoint.
+
+
 
 ## Feature-to-file map
 

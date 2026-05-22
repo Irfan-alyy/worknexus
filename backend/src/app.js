@@ -14,6 +14,7 @@ const employeeRoutes = require("./features/hr-management/employee.routes")
 const departmentRoutes = require("./features/departments/departments.routes")
 const clientRoutes = require("./features/clients/clients.routes")
 const userRoutes = require("./features/users/users.routes")
+const projectRoutes = require("./features/projects/projects.routes")
 const { successResponse } = require("./utils/response")
 const app = express()
 
@@ -72,6 +73,8 @@ app.use("/api/v1/employees", employeeRoutes)
 app.use("/api/v1/departments", departmentRoutes)
 app.use("/api/v1/clients", clientRoutes)
 app.use("/api/v1/users", userRoutes)
+// Projects routes
+app.use("/api/v1/projects", projectRoutes)
 
 /**
  * ERROR HANDLING

@@ -8,7 +8,7 @@ const { z } = require("zod")
 const ROLES = ["admin", "hr", "pm", "employee"]
 const PAYMENT_MODELS = ["fixed", "hourly", "revenue_share"]
 const TASK_STATUSES = ["pending", "in_progress", "completed", "blocked"]
-const PROJECT_STATUSES = ["pending", "active", "completed"]
+const PROJECT_STATUSES = ["pending", "active", "completed", "cancelled"]
 const PAYMENT_STATUSES = ["pending", "processed", "paid"]
 
 // User schemas: moved to feature-level: src/features/users/users.schema.js
