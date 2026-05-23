@@ -2,7 +2,7 @@ export const roleDefinitions = {
 	admin: {
 		label: "Admin",
 		shortLabel: "Admin",
-		dashboardTitle: "System control center",
+		dashboardTitle: "Admin Dashboard",
 		dashboardDescription:
 			"Monitor users, settings, approvals, and the health of the platform.",
 		sidebarItems: ["Dashboard", "Chat", "Payroll", "HR"],

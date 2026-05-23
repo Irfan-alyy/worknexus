@@ -62,25 +62,33 @@ export default function ActionMenu({ items = [] }) {
       </button>
       {open ? (
         <div
-          className="absolute right-0 mt-2 w-44 origin-top-right rounded-md border border-border bg-popover text-foreground shadow-lg z-50"
+          className="absolute right-0 mt-2 w-auto origin-top-right rounded-md border border-border bg-popover text-foreground shadow-lg z-50"
           onMouseEnter={isDesktop ? clearCloseTimer : undefined}
           onMouseLeave={isDesktop ? scheduleClose : undefined}
         >
-          <div className="py-1">
+          <div className="py-1 px-2">
             {items && items.length > 0 ? (
-              items.map((it, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setOpen(false)
-                    it.onClick && it.onClick()
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50"
-                >
-                  {it.label}
-                </button>
-              ))
+              <div className="flex items-center gap-1">
+                {items.map((it, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpen(false)
+                      it.onClick && it.onClick()
+                    }}
+                    title={it.label}
+                    aria-label={it.label}
+                    className="inline-flex items-center justify-center rounded-md p-2 hover:bg-muted/50"
+                  >
+                    {it.icon ? (
+                      <it.icon className="h-4 w-4" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{it.label[0]}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
             ) : (
               <div className="px-3 py-2 text-sm text-muted-foreground">No actions</div>
             )}

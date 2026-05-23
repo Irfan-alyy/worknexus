@@ -1,3 +1,4 @@
+import { Eye, Edit, Mail } from "lucide-react"
 import ActionMenu from "@/components/ui/action-menu"
 
 const dummyClients = [
@@ -34,9 +35,9 @@ export default function AdminClients({ onEdit }) {
             <div>
               <ActionMenu
                 items={[
-                  { label: "View", onClick: () => onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />) },
-                  { label: "Edit", onClick: () => onEdit(`Edit client: ${c.name}`, <ClientEditor client={c} />) },
-                  { label: "Mail", onClick: () => onEdit(`Mail client: ${c.name}`, <MailClient client={c} />) },
+                  { label: "View", icon: Eye, onClick: () => onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />) },
+                  { label: "Edit", icon: Edit, onClick: () => onEdit(`Edit client: ${c.name}`, <ClientEditor client={c} />) },
+                  { label: "Mail", icon: Mail, onClick: () => onEdit(`Mail client: ${c.name}`, <MailClient client={c} />) },
                 ]}
               />
             </div>

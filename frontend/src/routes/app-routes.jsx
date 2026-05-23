@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
-import { PanelLeft } from "lucide-react"
+import { X } from "lucide-react"
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Header } from "@/components/layout/header"
@@ -55,6 +55,10 @@ function RouteAside() {
 					? ["Post new jobs", "Track applicants", "Monitor hiring status"]
 					: ["View updates", "Follow status", "Check notes"],
 			},
+		}
+
+		if (location.pathname.startsWith("/chat")) {
+			return routeMeta["/chat"]
 		}
 
 		return routeMeta[location.pathname] ?? routeMeta["/dashboard"]
@@ -158,13 +162,14 @@ function ShellLayout() {
 								<div className="fixed inset-y-0 left-0 z-40 w-[min(86vw,20rem)] border-r border-border/60 bg-background/95 shadow-2xl md:hidden">
 									<div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
 										<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Navigation</p>
-										<button
-											type="button"
-											onClick={closeMobileSidebar}
-											className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-secondary px-3 text-xs font-medium transition-colors hover:bg-accent"
-										>
-											Close
-										</button>
+											<button
+												type="button"
+												onClick={closeMobileSidebar}
+												aria-label="Close navigation overlay"
+												className="inline-flex h-9 items-center justify-center rounded-full border border-border bg-secondary px-3 text-xs font-medium transition-colors hover:bg-accent"
+											>
+												<X className="h-4 w-4" />
+											</button>
 									</div>
 									<Sidebar onNavigate={closeMobileSidebar} />
 								</div>
@@ -180,9 +185,8 @@ function ShellLayout() {
 												<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Context</p>
 												<h2 className="mt-2 text-lg font-semibold">{asideTitle || "Context"}</h2>
 											</div>
-											<button onClick={closeAside} className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-secondary px-3 text-sm font-medium transition-colors hover:bg-accent">
-												<PanelLeft className="h-4 w-4" />
-												Close
+											<button onClick={closeAside} aria-label="Close aside" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary text-sm font-medium transition-colors hover:bg-accent">
+												<X className="h-4 w-4" />
 											</button>
 										</div>
 									</div>
@@ -214,10 +218,12 @@ function ShellLayout() {
 								<ResizablePanel defaultSize={24} minSize={18} maxSize={32} className="min-h-0 border-l border-border/60">
 									<div className="flex h-full min-h-0 flex-col overflow-hidden bg-background/90">
 										<div className="border-b border-border/60 p-5">
-											<div className="flex items-center justify-between">
-												<h2 className="text-lg font-semibold">{asideTitle || "Context"}</h2>
-												<button onClick={closeAside} className="text-sm text-muted-foreground">Close</button>
-											</div>
+												<div className="flex items-center justify-between">
+													<h2 className="text-lg font-semibold">{asideTitle || "Context"}</h2>
+													<button onClick={closeAside} aria-label="Close aside" className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary/60">
+														<X className="h-4 w-4" />
+													</button>
+												</div>
 										</div>
 										<div className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
 									</div>
@@ -241,7 +247,8 @@ export function AppRoutes() {
 			<Route element={<ShellLayout />}>
 				<Route index element={<Navigate to="/dashboard" replace />} />
 				<Route path="dashboard" element={<DashboardPage />} />
-				<Route path="chat" element={<ChatPage />} />
+				<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
+				<Route path="chat/:scope/:chatId" element={<ChatPage />} />
 				<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
 				<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 				<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
