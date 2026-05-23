@@ -7,7 +7,7 @@ const logger = require("../config/logger.config")
 
 const requestLogger = (req, res, next) => {
   // Skip health check endpoint
-  if (req.path === "/health") {
+  if (req.path === "/health" || req.path === "/api/v1/health") {
     return next()
   }
 

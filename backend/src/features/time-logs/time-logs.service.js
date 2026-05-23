@@ -29,7 +29,12 @@ async function listTimeLogs(filter = {}) {
     const where = {}
     if (filter.taskId) where.taskId = filter.taskId
     if (filter.employeeId) where.employeeId = Number(filter.employeeId)
-    console.log("listTimeLogs with filter", filter, "constructed where", where)
+    
+    // Support filtering by projectIds
+    if (filter.projectIds && Array.isArray(filter.projectIds) && filter.projectIds.length > 0) {
+      where.task = { projectId: { in: filter.projectIds } }
+    }
+    
     return await prisma.timeLog.findMany({ where, include: { employee: { include: { user: { select: { id: true, email: true } } } }, task: true } })
   } catch (err) {
     throw new AppError("Failed to list time logs", 500, false)
