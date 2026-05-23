@@ -401,6 +401,787 @@ Notes
 If you want I can add example `curl` snippets and sample responses for each endpoint.
 
 
+# Tasks Module API Documentation
+
+## Overview
+The Tasks module provides REST APIs for managing project tasks with role-based access control (RBAC). Tasks are associated with projects, can be assigned to employees, and track status, priority, and due dates.
+
+## Permissions Model
+
+| Action | Admin | HR | Project Manager | Employee |
+|--------|-------|----|--------------------|----------|
+| List tasks | ✅ All | ✅ All | ✅ Their projects | ✅ Assigned/project teams |
+| Get task | ✅ All | ✅ All | ✅ Their projects | ✅ Assigned/project teams |
+| Create task | ✅ | ✅ | ✅ For their projects | ✅ Only for themselves or project teams |
+| Update task | ✅ | ✅ | ✅ For their projects | ✅ Only if assigned |
+| Delete task | ✅ | ✅ | ✅ For their projects | ❌ |
+
+## Database Schema
+
+```prisma
+model Task {
+  id          Int
+  projectId   Int
+  employeeId  Int?
+  title       String
+  description String?
+  priority    String        // "low", "medium", "high", "critical"
+  status      String        // "pending", "in_progress", "completed", "blocked"
+  dueDate     DateTime?
+  createdAt   DateTime
+  updatedAt   DateTime
+  
+  project     Project
+  employee    Employee?
+  timeLogs    TimeLog[]
+}
+```
+
+Note: Project managers must be users with role `pm` and must have a corresponding `Employee` record. Admins create user accounts (optionally supplying employee fields to create a minimal employee record). HR creates employee profiles (and may create employees with `pm` role via the employee creation endpoint). Project creation/assignment enforces that `manager_employee_id` references an employee whose linked user has role `pm`.
+
+## API Endpoints
+
+### 1. List Tasks
+**Endpoint:** `GET /api/v1/tasks`
+
+**Authentication:** Required (JWT token)
+
+**Description:** Retrieve all tasks visible to the authenticated user based on role.
+
+**Request:**
+```http
+GET /api/v1/tasks HTTP/1.1
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "projectId": 1,
+      "employeeId": 5,
+      "title": "Design database schema",
+      "description": "Create ERD and SQL schema",
+      "priority": "high",
+      "status": "in_progress",
+      "dueDate": "2026-06-15T00:00:00.000Z",
+      "createdAt": "2026-05-23T10:00:00.000Z",
+      "updatedAt": "2026-05-23T10:00:00.000Z",
+      "project": {
+        "id": 1,
+        "name": "WorkNexus Platform",
+        "clientId": 1,
+        "status": "active"
+      },
+      "employee": {
+        "id": 5,
+        "firstName": "John",
+        "lastName": "Doe",
+        "user": {
+          "id": 10,
+          "email": "john@example.com",
+          "role": "employee"
+        }
+      },
+      "timeLogs": []
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get Task by ID
+**Endpoint:** `GET /api/v1/tasks/:id`
+
+**Authentication:** Required (JWT token)
+
+**Description:** Retrieve a specific task with full details including time logs.
+
+**Request:**
+```http
+GET /api/v1/tasks/1 HTTP/1.1
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "projectId": 1,
+    "employeeId": 5,
+    "title": "Design database schema",
+    "description": "Create ERD and SQL schema",
+    "priority": "high",
+    "status": "in_progress",
+    "dueDate": "2026-06-15T00:00:00.000Z",
+    "createdAt": "2026-05-23T10:00:00.000Z",
+    "updatedAt": "2026-05-23T10:00:00.000Z",
+    "project": {
+      "id": 1,
+      "name": "WorkNexus Platform"
+    },
+    "employee": {
+      "id": 5,
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "timeLogs": [
+      {
+        "id": 1,
+        "taskId": 1,
+        "employeeId": 5,
+        "hours": 4.5,
+        "description": "Schema design",
+        "loggedAt": "2026-05-23T09:00:00.000Z",
+        "employee": {
+          "id": 5,
+          "user": {
+            "id": 10,
+            "email": "john@example.com"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+**Error Response (403 Forbidden):**
+```json
+{
+  "success": false,
+  "message": "Forbidden"
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "success": false,
+  "message": "Task not found"
+}
+```
+
+---
+
+### 3. Create Task
+**Endpoint:** `POST /api/v1/tasks`
+
+**Authentication:** Required (JWT token)
+
+**Allowed Roles:** admin, hr, pm, employee
+
+**Description:** Create a new task. Role-based restrictions enforced in controller.
+
+**Request Body:**
+```json
+{
+  "title": "Implement authentication API",
+  "description": "Build JWT-based auth endpoints",
+  "priority": "high",
+  "status": "pending",
+  "due_date": "2026-06-20T00:00:00Z",
+  "project_id": 1,
+  "employee_id": 5
+}
+```
+
+**Request:**
+```http
+POST /api/v1/tasks HTTP/1.1
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "title": "Implement authentication API",
+  "description": "Build JWT-based auth endpoints",
+  "priority": "high",
+  "status": "pending",
+  "due_date": "2026-06-20T00:00:00Z",
+  "project_id": 1,
+  "employee_id": 5
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Task created",
+  "data": {
+    "id": 2,
+    "projectId": 1,
+    "employeeId": 5,
+    "title": "Implement authentication API",
+    "description": "Build JWT-based auth endpoints",
+    "priority": "high",
+    "status": "pending",
+    "dueDate": "2026-06-20T00:00:00.000Z",
+    "createdAt": "2026-05-23T10:30:00.000Z",
+    "updatedAt": "2026-05-23T10:30:00.000Z"
+  }
+}
+```
+
+**Field Validation:**
+```
+title: string (1-255 chars, required)
+description: string (optional)
+priority: enum ["low", "medium", "high", "critical"] (optional, defaults to "medium")
+status: enum ["pending", "in_progress", "completed", "blocked"] (optional, defaults to "pending")
+due_date: ISO 8601 datetime (optional)
+project_id: integer > 0 (required)
+employee_id: integer > 0 (optional)
+```
+
+**Error Response (400 Bad Request - Validation):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "title",
+      "message": "title is required"
+    },
+    {
+      "field": "project_id",
+      "message": "project_id must be greater than 0"
+    }
+  ]
+}
+```
+
+**Error Response (403 Forbidden - Permission):**
+```json
+{
+  "success": false,
+  "message": "Only project manager can create tasks for this project"
+}
+```
+
+---
+
+### 4. Update Task
+**Endpoint:** `PATCH /api/v1/tasks/:id`
+
+**Authentication:** Required (JWT token)
+
+**Allowed Roles:** admin, hr, pm, employee
+
+**Description:** Update task details. Only assigned employee, project manager, admin/hr can update.
+
+**Request Body:**
+```json
+{
+  "title": "Implement authentication API (v2)",
+  "status": "in_progress",
+  "priority": "critical"
+}
+```
+
+**Request:**
+```http
+PATCH /api/v1/tasks/2 HTTP/1.1
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "title": "Implement authentication API (v2)",
+  "status": "in_progress",
+  "priority": "critical"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Task updated",
+  "data": {
+    "id": 2,
+    "projectId": 1,
+    "employeeId": 5,
+    "title": "Implement authentication API (v2)",
+    "description": "Build JWT-based auth endpoints",
+    "priority": "critical",
+    "status": "in_progress",
+    "dueDate": "2026-06-20T00:00:00.000Z",
+    "createdAt": "2026-05-23T10:30:00.000Z",
+    "updatedAt": "2026-05-23T11:00:00.000Z"
+  }
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "success": false,
+  "message": "Task not found"
+}
+```
+
+**Error Response (403 Forbidden):**
+```json
+{
+  "success": false,
+  "message": "Forbidden"
+}
+```
+
+---
+
+### 5. Delete Task
+**Endpoint:** `DELETE /api/v1/tasks/:id`
+
+**Authentication:** Required (JWT token)
+
+**Allowed Roles:** admin, hr, pm
+
+**Description:** Delete a task. Only admin, hr, or project manager can delete.
+
+**Request:**
+```http
+DELETE /api/v1/tasks/2 HTTP/1.1
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Task deleted",
+  "data": null
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "success": false,
+  "message": "Task not found"
+}
+```
+
+**Error Response (403 Forbidden):**
+```json
+{
+  "success": false,
+  "message": "Forbidden"
+}
+```
+
+---
+
+## Testing in Postman
+
+### Setup
+1. Create a new Postman collection: `WorkNexus - Tasks`
+2. Add a folder for Tasks endpoints
+3. Create requests for each endpoint above
+4. Set the base URL: `http://localhost:3000` (default port)
+5. Add Authorization header: `Authorization: Bearer <jwt_token>`
+
+### Example Test Scenarios
+
+**Scenario 1: Admin user (all endpoints)**
+- Login as admin / HR user
+- Get token from auth endpoint
+- Test all CRUD operations
+
+**Scenario 2: Project Manager (restricted scope)**
+- Login as project manager
+- Create task for project they manage → ✅ Success
+- Update task for project they manage → ✅ Success
+- Create task for project they don't manage → ❌ Forbidden
+- Delete task → ✅ Success
+
+**Scenario 3: Employee (restricted scope)**
+- Login as employee
+- Create task assigned to themselves → ✅ Success
+- Create task for project they're a team member of → ✅ Success
+- Update task they're assigned to → ✅ Success
+- Update task they're not assigned to → ❌ Forbidden
+- Delete task → ❌ Forbidden
+
+---
+
+## Notes
+- All timestamps are in ISO 8601 format with UTC timezone.
+- UUIDs are used for some references; integers for task IDs.
+- The `due_date` field accepts both string (ISO 8601) and date objects.
+- Task deletion cascades to related time logs if enabled in Prisma schema.
+
+
+
+
+# Time Logs Module API Documentation
+
+## Overview
+The Time Logs module provides REST APIs for tracking time spent on tasks. Employees can log work hours against assigned tasks, with role-based access control ensuring data integrity.
+
+Note: Project managers must be users with role `pm` and a corresponding `Employee` record. Admins create `User` accounts (optionally supplying employee fields to create minimal employee records). HR creates employee profiles (and may create employees with `pm` role via the employee creation endpoint). The backend enforces that project managers are users with role `pm`.
+
+## Permissions Model
+
+| Action | Admin | HR | Project Manager | Employee |
+|--------|-------|----|--------------------|----------|
+| Create time log | ✅ Any employee | ✅ Any employee | ✅ Projects they manage | ✅ Only self |
+| List time logs | ✅ All | ✅ All | ✅ Their projects | ✅ Only theirs |
+| Get time log | ✅ All | ✅ All | ✅ Their projects | ✅ Only theirs |
+
+## Database Schema
+
+```prisma
+model TimeLog {
+  id          Int
+  taskId      Int
+  employeeId  Int
+  hours       Decimal
+  description String?
+  loggedAt    DateTime
+  
+  task        Task
+  employee    Employee
+}
+```
+
+## API Endpoints
+
+### 1. Create Time Log
+**Endpoint:** `POST /api/v1/time-logs`
+
+**Authentication:** Required (JWT token)
+
+**Allowed Roles:** admin, hr, pm, employee
+
+**Description:** Log time spent on a task. Employees can only log time for themselves. PMs can log for their project tasks. Admin/HR can log for any employee.
+
+**Request Body:**
+```json
+{
+  "task_id": 1,
+  "employee_id": 5,
+  "hours": 4.5,
+  "description": "Completed schema design and documentation",
+  "logged_at": "2026-05-23T09:00:00Z"
+}
+```
+
+**Request:**
+```http
+POST /api/v1/time-logs HTTP/1.1
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "task_id": 1,
+  "employee_id": 5,
+  "hours": 4.5,
+  "description": "Completed schema design and documentation",
+  "logged_at": "2026-05-23T09:00:00Z"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Time log created",
+  "data": {
+    "id": 1,
+    "taskId": 1,
+    "employeeId": 5,
+    "hours": 4.5,
+    "description": "Completed schema design and documentation",
+    "loggedAt": "2026-05-23T09:00:00.000Z"
+  }
+}
+```
+
+**Field Validation:**
+```
+task_id: integer > 0 (required)
+employee_id: integer > 0 (required)
+hours: number > 0 and <= 24 (required)
+description: string (optional)
+logged_at: ISO 8601 datetime (optional, defaults to current time)
+```
+
+**Error Response (400 Bad Request - Validation):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "hours",
+      "message": "hours must be greater than 0"
+    },
+    {
+      "field": "task_id",
+      "message": "task_id is required"
+    }
+  ]
+}
+```
+
+**Error Response (400 Bad Request - Invalid Reference):**
+```json
+{
+  "success": false,
+  "message": "Invalid task or employee selected"
+}
+```
+
+**Error Response (403 Forbidden - Permission):**
+```json
+{
+  "success": false,
+  "message": "Cannot log time for other employees"
+}
+```
+
+**Error Response (403 Forbidden - Not Team Member):**
+```json
+{
+  "success": false,
+  "message": "Forbidden"
+}
+```
+
+---
+
+### 2. List Time Logs
+**Endpoint:** `GET /api/v1/time-logs`
+
+**Authentication:** Required (JWT token)
+
+**Allowed Roles:** admin, hr, pm, employee
+
+**Query Parameters:**
+- `taskId` (optional): Filter by task ID (integer)
+- `employeeId` (optional): Filter by employee ID (integer)
+
+**Description:** Retrieve time logs based on role and filters. Admin/HR see all, PM sees their projects, employees see their own.
+
+**Request (list all for admin/hr):**
+```http
+GET /api/v1/time-logs HTTP/1.1
+Authorization: Bearer <jwt_token>
+```
+
+**Request (filter by task):**
+```http
+GET /api/v1/time-logs?taskId=1 HTTP/1.1
+Authorization: Bearer <jwt_token>
+```
+
+**Request (filter by employee):**
+```http
+GET /api/v1/time-logs?employeeId=5 HTTP/1.1
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "taskId": 1,
+      "employeeId": 5,
+      "hours": 4.5,
+      "description": "Completed schema design and documentation",
+      "loggedAt": "2026-05-23T09:00:00.000Z",
+      "employee": {
+        "id": 5,
+        "firstName": "John",
+        "lastName": "Doe",
+        "user": {
+          "id": 10,
+          "email": "john@example.com"
+        }
+      },
+      "task": {
+        "id": 1,
+        "projectId": 1,
+        "title": "Design database schema",
+        "status": "in_progress"
+      }
+    },
+    {
+      "id": 2,
+      "taskId": 1,
+      "employeeId": 5,
+      "hours": 3.0,
+      "description": "Database review meeting",
+      "loggedAt": "2026-05-23T14:00:00.000Z",
+      "employee": {
+        "id": 5,
+        "firstName": "John",
+        "lastName": "Doe",
+        "user": {
+          "id": 10,
+          "email": "john@example.com"
+        }
+      },
+      "task": {
+        "id": 1,
+        "projectId": 1,
+        "title": "Design database schema",
+        "status": "in_progress"
+      }
+    }
+  ]
+}
+```
+
+**Error Response (403 Forbidden):**
+```json
+{
+  "success": false,
+  "message": "Forbidden"
+}
+```
+
+**Error Response (404 Not Found - Task):**
+```json
+{
+  "success": false,
+  "message": "Task not found"
+}
+```
+
+---
+
+## Time Calculation & Payroll Integration
+
+Time logs can be used for:
+1. **Project Billing**: Aggregate hours per task to calculate project costs
+2. **Payroll**: Multiply `hours` × `employee.hourlyRate` for hourly-paid employees
+3. **Capacity Planning**: Track utilization and workload distribution
+4. **Timesheets**: Generate weekly/monthly reports
+
+### Example Payroll Calculation
+```
+Employee: John Doe
+Hourly Rate: $50/hour
+
+Time Logs for May 2026:
+- Task 1: 4.5 hours → $225
+- Task 2: 3.0 hours → $150
+- Task 3: 2.5 hours → $125
+
+Total: 10 hours → $500
+```
+
+---
+
+## Testing in Postman
+
+### Setup
+1. Create a new collection folder: `WorkNexus - Time Logs`
+2. Add requests for all endpoints
+3. Use base URL: `http://localhost:3000`
+4. Set Authorization header with JWT token
+
+### Example Test Scenarios
+
+**Scenario 1: Employee logging time (self)**
+```
+1. POST /api/v1/time-logs
+   - Create time log with employee_id = current user's employee ID
+   - Expected: ✅ 201 Created
+
+2. GET /api/v1/time-logs
+   - List their own time logs
+   - Expected: ✅ 200 OK (filtered to their logs only)
+
+3. POST /api/v1/time-logs (different employee)
+   - Try logging time for another employee
+   - Expected: ❌ 403 Forbidden "Cannot log time for other employees"
+```
+
+**Scenario 2: Project Manager logging time**
+```
+1. POST /api/v1/time-logs
+   - Create time log for task in their project
+   - Expected: ✅ 201 Created
+
+2. POST /api/v1/time-logs
+   - Create time log for task NOT in their projects
+   - Expected: ❌ 403 Forbidden
+
+3. GET /api/v1/time-logs?taskId=<their_project_task>
+   - Filter by task in their project
+   - Expected: ✅ 200 OK
+```
+
+**Scenario 3: Admin/HR logging time (any employee)**
+```
+1. POST /api/v1/time-logs
+   - Create time log for any employee, any task
+   - Expected: ✅ 201 Created
+
+2. GET /api/v1/time-logs
+   - See all time logs
+   - Expected: ✅ 200 OK (all records)
+
+3. GET /api/v1/time-logs?employeeId=<any>
+   - Filter by any employee
+   - Expected: ✅ 200 OK
+```
+
+---
+
+## Integration with Tasks
+
+Each TimeLog references a Task. When viewing a task, you see all associated time logs:
+
+**Example Task Detail Response:**
+```json
+{
+  "id": 1,
+  "title": "Design database schema",
+  "status": "in_progress",
+  "timeLogs": [
+    {
+      "id": 1,
+      "hours": 4.5,
+      "description": "Schema design",
+      "loggedAt": "2026-05-23T09:00:00.000Z",
+      "employee": { ... }
+    },
+    {
+      "id": 2,
+      "hours": 3.0,
+      "description": "Review meeting",
+      "loggedAt": "2026-05-23T14:00:00.000Z",
+      "employee": { ... }
+    }
+  ],
+  "totalHours": 7.5
+}
+```
+
+---
+
+## Notes
+- Hours must be between 0 (exclusive) and 24 (inclusive)
+- The `logged_at` field defaults to the current server time if not provided
+- Time logs are immutable after creation (no update/delete endpoints)
+- Deleting a task cascades to delete all associated time logs (if enabled)
+- Time log data is retained for historical and payroll purposes
+
+
 
 ## Feature-to-file map
 
@@ -411,6 +1192,9 @@ If you want I can add example `curl` snippets and sample responses for each endp
 - Clients: `src/features/clients/`
 - Users: `src/features/users/`
 - Payroll: `src/features/payroll/`
+- Projects: `src/features/projects/`
+- Tasks: `src/features/tasks/`
+- Time Logs: `src/features/time-logs/`
 
 ## Frontend integration notes
 
