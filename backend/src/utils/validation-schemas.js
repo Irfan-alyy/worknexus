@@ -45,6 +45,7 @@ const createEmployeeSchema = z.preprocess(
     payment_model: z.enum(PAYMENT_MODELS).default("fixed"),
     base_salary: z.number().positive().optional(),
     hourly_rate: z.number().positive().optional(),
+    role: z.enum(["pm", "employee"]).default("employee"),
   })
 )
 
@@ -57,6 +58,7 @@ const updateEmployeeSchema = z.preprocess(
     payment_model: z.enum(PAYMENT_MODELS).optional(),
     base_salary: z.number().positive().optional(),
     hourly_rate: z.number().positive().optional(),
+    role: z.enum(["pm", "employee"]).optional(),
   })
 )
 
@@ -95,7 +97,7 @@ const createTaskSchema = z.object({
   priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
   status: z.enum(TASK_STATUSES).default("pending"),
   due_date: z.string().datetime().or(z.date()).optional(),
-  project_id: z.number().int().positive(),
+  project_id: z.string().uuid(),
   employee_id: z.number().int().positive().optional(),
 })
 
@@ -110,12 +112,19 @@ const updateTaskSchema = z.object({
 
 // TimeLog schemas
 const createTimeLogSchema = z.object({
-  task_id: z.number().int().positive(),
+  task_id: z.string().uuid(),
   employee_id: z.number().int().positive(),
   hours: z.number().positive().max(24),
   description: z.string().optional(),
   logged_at: z.string().datetime().or(z.date()).optional(),
 })
+// update TimeLog Schema
+const updateTimeLogSchema = z.object({
+  hours: z.number().positive().max(24).optional(),
+  description: z.string().optional(),
+  logged_at: z.string().datetime().or(z.date()).optional(),
+})
+
 
 // Payroll schemas
 const createPayrollSchema = z.object({
