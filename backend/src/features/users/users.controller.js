@@ -5,6 +5,7 @@ const {
   getUserById,
   createUser,
   updateUser,
+  ensureEmployeeExists,
 } = require("./users.service")
 
 async function listUsersController(req, res, next) {
@@ -37,6 +38,17 @@ async function createUserController(req, res, next) {
   try {
     const payload = req.validatedBody || req.body
     const created = await createUser(payload)
+    // If admin provided employee fields, create minimal employee data for the user
+    try {
+      if (req.user && req.user.role === "admin") {
+        const hasEmployeeFields = payload.firstName || payload.first_name || payload.lastName || payload.last_name
+        if (hasEmployeeFields) {
+          await ensureEmployeeExists(created.id, payload, payload.email)
+        }
+      }
+    } catch (e) {
+      console.error("createUserController: ensureEmployeeExists failed", e?.message || e)
+    }
     const { response, statusCode } = successResponse(created, "User created", 201)
     return res.status(statusCode).json(response)
   } catch (err) {

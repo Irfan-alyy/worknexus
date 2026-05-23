@@ -63,9 +63,9 @@ async function createProjectController(req, res, next) {
       if (!mgr) {
         throw AppError.notFound("manager_employee_id references a non-existent employee")
       }
-      if (mgr.user?.role !== "employee") {
+      if (mgr.user?.role !== "pm") {
         throw AppError.validationError("Invalid manager_employee_id", [
-          { field: "manager_employee_id", message: "Referenced user is not an employee" },
+          { field: "manager_employee_id", message: "Referenced user is not a project manager" },
         ])
       }
     }
@@ -96,9 +96,9 @@ async function updateProjectController(req, res, next) {
       if (!mgr) {
         throw AppError.notFound("manager_employee_id references a non-existent employee")
       }
-      if (mgr.user?.role !== "employee") {
+      if (mgr.user?.role !== "pm") {
         throw AppError.validationError("Invalid manager_employee_id", [
-          { field: "manager_employee_id", message: "Referenced user is not an employee" },
+          { field: "manager_employee_id", message: "Referenced user is not a project manager" },
         ])
       }
     }
