@@ -88,6 +88,11 @@ export default function AdminManagers({ onEdit }) {
         </div>
       </section>
 
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <p className="text-sm font-medium">Selected manager detail</p>
+        <p className="mt-2 text-sm text-muted-foreground">Click a manager above to open the full detail aside.</p>
+      </section>
+
     </div>
   )
 }
