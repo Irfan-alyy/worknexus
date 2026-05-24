@@ -3,6 +3,18 @@ const AppError = require("../../utils/app-error")
 const { log } = require("../../utils/logger")
 const projectsService = require("../projects/projects.service")
 
+function getCompletedAtForTaskStatus(status, previousTask = null) {
+  if (status === "completed") {
+    return previousTask?.completedAt || new Date()
+  }
+
+  if (previousTask?.status === "completed") {
+    return null
+  }
+
+  return undefined
+}
+
 async function listTasks(user) {
   try {
     if (!user) throw AppError.unauthorized()
@@ -41,11 +53,13 @@ async function getTaskById(id) {
 
 async function createTask(data) {
   try {
+    const completedAt = getCompletedAtForTaskStatus(data.status)
     const createData = {
       title: data.title,
       description: data.description,
       priority: data.priority,
       status: data.status,
+      completedAt,
       dueDate: data.due_date ? new Date(data.due_date) : undefined,
       projectId: data.project_id,
       employeeId: data.employee_id,
@@ -64,11 +78,18 @@ async function createTask(data) {
 
 async function updateTask(id, data) {
   try {
+    const current = await prisma.task.findUnique({ where: { id } })
+    if (!current) throw AppError.notFound("Task not found")
+
     const updateData = {}
     if (data.title !== undefined) updateData.title = data.title
     if (data.description !== undefined) updateData.description = data.description
     if (data.priority !== undefined) updateData.priority = data.priority
-    if (data.status !== undefined) updateData.status = data.status
+    if (data.status !== undefined) {
+      updateData.status = data.status
+      const completedAt = getCompletedAtForTaskStatus(data.status, current)
+      if (completedAt !== undefined) updateData.completedAt = completedAt
+    }
     if (data.due_date !== undefined) updateData.dueDate = data.due_date ? new Date(data.due_date) : null
     if (data.employee_id !== undefined) updateData.employeeId = data.employee_id
 
@@ -78,6 +99,7 @@ async function updateTask(id, data) {
     if (err && err.code === "P2025") {
       throw AppError.notFound("Task not found")
     }
+    if (err?.statusCode) throw err
     throw new AppError("Failed to update task", 500, false)
   }
 }

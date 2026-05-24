@@ -32,6 +32,8 @@ const normalizeEmployeePayload = (payload = {}) => ({
   payment_model: payload.payment_model ?? payload.paymentModel,
   base_salary: payload.base_salary ?? payload.baseSalary,
   hourly_rate: payload.hourly_rate ?? payload.hourlyRate,
+  revenue_share_percent:
+    payload.revenue_share_percent ?? payload.revenueSharePercent,
 })
 
 const createEmployeeSchema = z.preprocess(
@@ -45,6 +47,7 @@ const createEmployeeSchema = z.preprocess(
     payment_model: z.enum(PAYMENT_MODELS).default("fixed"),
     base_salary: z.number().positive().optional(),
     hourly_rate: z.number().positive().optional(),
+    revenue_share_percent: z.number().min(0).max(100).optional(),
     role: z.enum(["pm", "employee"]).default("employee"),
   })
 )
@@ -58,6 +61,7 @@ const updateEmployeeSchema = z.preprocess(
     payment_model: z.enum(PAYMENT_MODELS).optional(),
     base_salary: z.number().positive().optional(),
     hourly_rate: z.number().positive().optional(),
+    revenue_share_percent: z.number().min(0).max(100).optional(),
     role: z.enum(["pm", "employee"]).optional(),
   })
 )
@@ -139,6 +143,18 @@ const updatePayrollSchema = z.object({
   payment_status: z.enum(PAYMENT_STATUSES).optional(),
 })
 
+const calculatePayrollSchema = z.object({
+  employee_id: z.number().int().positive(),
+  pay_period_start: z.string().datetime().or(z.date()),
+  pay_period_end: z.string().datetime().or(z.date()),
+  revenue_amount: z.number().nonnegative().optional(),
+  create_record: z.boolean().optional().default(false),
+})
+
+const updatePayrollStatusSchema = z.object({
+  payment_status: z.enum(PAYMENT_STATUSES),
+})
+
 // Channel schemas
 const createChannelSchema = z.object({
   name: z.string().min(1).max(255),
@@ -216,6 +232,8 @@ module.exports = {
   createTimeLogSchema,
   createPayrollSchema,
   updatePayrollSchema,
+  calculatePayrollSchema,
+  updatePayrollStatusSchema,
   createChannelSchema,
   updateChannelSchema,
   createMessageSchema,

@@ -25,6 +25,12 @@ function normalizeEmployeeData(input = {}) {
         : input.hourly_rate !== undefined
           ? input.hourly_rate
           : undefined,
+    revenueSharePercent:
+      input.revenueSharePercent !== undefined
+        ? input.revenueSharePercent
+        : input.revenue_share_percent !== undefined
+          ? input.revenue_share_percent
+          : undefined,
   }
 }
 
