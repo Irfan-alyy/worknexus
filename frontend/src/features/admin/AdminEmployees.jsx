@@ -1,3 +1,4 @@
+import { Edit } from "lucide-react"
 import ActionMenu from "@/components/ui/action-menu"
 
 const managers = [
@@ -20,7 +21,7 @@ export default function AdminEmployees({ onEdit }) {
               <p className="mt-1 text-sm text-muted-foreground">Role: {m.role}</p>
             </div>
             <div>
-              <ActionMenu items={[{ label: "Edit", onClick: () => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />) }]} />
+              <ActionMenu items={[{ label: "Edit", icon: Edit, onClick: () => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />) }]} />
             </div>
           </div>
         ))}

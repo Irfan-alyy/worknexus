@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Edit, Trash2 } from "lucide-react"
 import ActionMenu from "@/components/ui/action-menu"
 
 const dummyProjects = [
@@ -47,8 +47,8 @@ export default function AdminProjects({ onEdit }) {
             <div>
               <ActionMenu
                 items={[
-                  { label: "Edit", onClick: () => onEdit(`Edit project: ${p.title}`, <ProjectEditor project={p} />) },
-                  { label: "Delete", onClick: () => handleDelete(p.id) },
+                  { label: "Edit", icon: Edit, onClick: () => onEdit(`Edit project: ${p.title}`, <ProjectEditor project={p} />) },
+                  { label: "Delete", icon: Trash2, onClick: () => handleDelete(p.id) },
                 ]}
               />
             </div>

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, useRef } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
-import { PanelLeft } from "lucide-react"
+import { X } from "lucide-react"
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Header } from "@/components/layout/header"
@@ -14,6 +14,7 @@ import Clients from "@/features/shared/Clients"
 import Employees from "@/features/shared/Employees"
 import { DashboardPage } from "@/routes/dashboard-page"
 import { AdminPage } from "@/routes/admin-page"
+import { EmployeePage } from "@/routes/employee-page"
 import { PmPage } from "@/routes/pm-page"
 import { ForgotPasswordPage, LoginPage } from "@/routes/auth-pages"
 import { RoleBarrier } from "@/routes/role-barrier"
@@ -57,6 +58,14 @@ function RouteAside() {
 			},
 		}
 
+		if (location.pathname.startsWith("/chat")) {
+			return routeMeta["/chat"]
+		}
+
+			if (location.pathname === "/employee" || location.pathname.startsWith("/employee/")) {
+				return routeMeta[location.pathname] ?? routeMeta["/employee/projects"]
+			}
+
 		return routeMeta[location.pathname] ?? routeMeta["/dashboard"]
 	}, [location.pathname, roleConfig.focusPoints, roleConfig.quickActions, roleConfig.shortLabel])
 
@@ -99,30 +108,15 @@ function RouteAside() {
 }
 
 function ShellLayout() {
-	const [isDarkMode, setIsDarkMode] = useState(() => {
-		if (typeof window === "undefined") return true
-		try {
-			const theme = window.localStorage.getItem("worknexus.theme")
-			if (!theme) return true
-			return theme === "dark"
-		} catch {
-			return true
-		}
-	})
+	const [isDarkMode, setIsDarkMode] = useState(true)
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
 	const location = useLocation()
 	const { asideOpen, asideContent, asideTitle, closeAside } = useGlobalStore()
-	const asidePanelRef = useRef(null)
-	
-	// We'll use a ref via simple variable when rendered; create handlers below
 	const isMobile = useMediaQuery("(max-width: 767px)")
 
 	useEffect(() => {
 		document.documentElement.classList.toggle("dark", isDarkMode)
-		try {
-			window.localStorage.setItem("worknexus.theme", isDarkMode ? "dark" : "light")
-		} catch {}
 	}, [isDarkMode])
 
 	useEffect(() => {
@@ -133,8 +127,6 @@ function ShellLayout() {
 
 	useEffect(() => {
 		setIsMobileSidebarOpen(false)
-		// close aside when navigating to a new route
-		closeAside()
 	}, [location.pathname])
 
 	useEffect(() => {
@@ -175,13 +167,14 @@ function ShellLayout() {
 								<div className="fixed inset-y-0 left-0 z-40 w-[min(86vw,20rem)] border-r border-border/60 bg-background/95 shadow-2xl md:hidden">
 									<div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
 										<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Navigation</p>
-										<button
-											type="button"
-											onClick={closeMobileSidebar}
-											className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-secondary px-3 text-xs font-medium transition-colors hover:bg-accent"
-										>
-											Close
-										</button>
+											<button
+												type="button"
+												onClick={closeMobileSidebar}
+												aria-label="Close navigation overlay"
+												className="inline-flex h-9 items-center justify-center rounded-full border border-border bg-secondary px-3 text-xs font-medium transition-colors hover:bg-accent"
+											>
+												<X className="h-4 w-4" />
+											</button>
 									</div>
 									<Sidebar onNavigate={closeMobileSidebar} />
 								</div>
@@ -197,15 +190,12 @@ function ShellLayout() {
 												<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Context</p>
 												<h2 className="mt-2 text-lg font-semibold">{asideTitle || "Context"}</h2>
 											</div>
-											<div>
-												<button onClick={closeAside} className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted">
-													<PanelLeft className="h-4 w-4" />
-													Close
-												</button>
-											</div>
+											<button onClick={closeAside} aria-label="Close aside" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary text-sm font-medium transition-colors hover:bg-accent">
+												<X className="h-4 w-4" />
+											</button>
 										</div>
 									</div>
-									<div ref={(el) => (asidePanelRef.current = el)} className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
+									<div className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
 								</div>
 							</div>
 						) : (
@@ -233,16 +223,14 @@ function ShellLayout() {
 								<ResizablePanel defaultSize={24} minSize={18} maxSize={32} className="min-h-0 border-l border-border/60">
 									<div className="flex h-full min-h-0 flex-col overflow-hidden bg-background/90">
 										<div className="border-b border-border/60 p-5">
-											<div className="flex items-center justify-between">
-												<h2 className="text-lg font-semibold">{asideTitle || "Context"}</h2>
-												<div>
-													<button onClick={closeAside} className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted">
-														Close
+												<div className="flex items-center justify-between">
+													<h2 className="text-lg font-semibold">{asideTitle || "Context"}</h2>
+													<button onClick={closeAside} aria-label="Close aside" className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary/60">
+														<X className="h-4 w-4" />
 													</button>
 												</div>
-											</div>
 										</div>
-										<div ref={(el) => (asidePanelRef.current = el)} className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
+										<div className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
 									</div>
 								</ResizablePanel>
 							</>
@@ -264,7 +252,10 @@ export function AppRoutes() {
 			<Route element={<ShellLayout />}>
 				<Route index element={<Navigate to="/dashboard" replace />} />
 				<Route path="dashboard" element={<DashboardPage />} />
-				<Route path="chat" element={<ChatPage />} />
+				<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
+				<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
+				<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
+				<Route path="chat/:scope/:chatId" element={<ChatPage />} />
 				<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
 				<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 				<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
@@ -272,7 +263,7 @@ export function AppRoutes() {
 				<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
 				<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
 				<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
-				<Route path="pm" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
+				<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
 				<Route path="*" element={<Navigate to="/dashboard" replace />} />
 			</Route>
 			<Route path="*" element={<Navigate to="/login" replace />} />

@@ -1,9 +1,16 @@
+import { useNavigate } from "react-router-dom"
 import { LogOut, Menu, Search, MoonStar, SunMedium, X } from "lucide-react"
 
 import { useGlobalStore } from "@/stores/use-global-store"
 
 export function Header({ isDarkMode, onToggleTheme, isMobile, isSidebarOpen, onToggleSidebar }) {
 	const { user, signOut } = useGlobalStore()
+	const navigate = useNavigate()
+
+	const handleSignOut = () => {
+		signOut()
+		navigate("/login", { replace: true })
+	}
 
 	return (
 		<header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -43,7 +50,7 @@ export function Header({ isDarkMode, onToggleTheme, isMobile, isSidebarOpen, onT
 				</button>
 				<button
 					type="button"
-					onClick={signOut}
+					onClick={handleSignOut}
 					className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary transition-colors hover:bg-accent"
 				>
 					<LogOut className="h-4 w-4" />
