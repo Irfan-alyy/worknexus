@@ -93,6 +93,39 @@ The app loads middleware in this order:
 - All controllers should respond through the shared response structure
 - Errors should be passed to `next(err)` so the global handler can format them consistently
 
+## Payroll scheduler
+
+- **File**: `backend/src/jobs/payroll.scheduler.js` — a simple `node-cron` job that runs periodically and invokes payroll generation for the completed task period.
+- **Behavior**: By default the job is configured to run weekly and will generate payroll records for employees based on completed tasks during the payroll period. For testing you can run it every minute.
+- **Env vars**:
+  - `PAYROLL_SCHEDULER_ENABLED` (boolean, default `true`) — enable/disable the scheduler.
+  - `PAYROLL_CRON_EXPRESSION` (string, optional) — a 5-field cron expression to override the schedule. Examples:
+    - `5 0 * * 1` — every Monday at 00:05 UTC (default weekly schedule)
+    - `*/1 * * * *` — every minute (useful for testing)
+- **Timezone**: the job uses `UTC`.
+- **Dependencies**: add `node-cron` to the backend dependencies and install it in the `backend` folder:
+
+```bash
+cd backend
+npm install node-cron
+```
+
+- **Run (testing)**:
+
+```bash
+export PAYROLL_CRON_EXPRESSION="*/1 * * * *"
+npm run dev
+```
+
+- **Run (production / weekly)**:
+
+```bash
+unset PAYROLL_CRON_EXPRESSION
+npm run start
+```
+
+The scheduler delegates actual payroll calculations and record creation to the existing payroll service (`generatePayrollsForPeriod`), which already looks for completed tasks in the configured pay period.
+
 ## Current route map
 
 ### Auth
