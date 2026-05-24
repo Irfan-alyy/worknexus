@@ -52,13 +52,13 @@ export function AdminPage() {
   const selectedDirectMessage = getAdminDirectMessage(directMessageSlug || adminDirectMessages[0]?.slug)
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="mb-6">
+    <div className="h-full overflow-y-auto p-4 sm:p-6">
+      {/* <div className="mb-6">
         <div>
           <h1 className="text-2xl font-semibold">{titles[activeTab] || "Admin Console"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Signed in as {user.name || "Guest"}.</p>
         </div>
-      </div>
+      </div> */}
 
       <div className="space-y-6">
         {activeTab === "projects" && <AdminProjects onEdit={openDrawer} />}
