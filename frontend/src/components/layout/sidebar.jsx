@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { ChevronDown, Hash, LayoutDashboard, ReceiptText, Folder, Users, Briefcase, User, UserCheck, Layers, Activity, UserPlus } from "lucide-react"
+import { ChevronDown, Hash, LayoutDashboard, ReceiptText, Folder, Users, Briefcase, User, UserCheck, Layers, Activity, UserPlus, BarChart3, CalendarDays } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 
 import { roleDefinitions } from "@/config/constants"
@@ -36,6 +36,13 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/admin/managers", label: "Managers", icon: UserCheck })
 		navItems.push({ to: "/admin/departments", label: "Departments", icon: Layers })
 		navItems.push({ to: "/admin/activities", label: "Activities", icon: Activity })
+	}
+
+	if (role === "pm") {
+		navItems.push({ to: "/pm/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/pm/activities", label: "Activities", icon: Activity })
+		navItems.push({ to: "/pm/analytics", label: "Analytics", icon: BarChart3 })
+		navItems.push({ to: "/pm/milestones", label: "Milestones", icon: CalendarDays })
 	}
 
 	if (role === "hr") {

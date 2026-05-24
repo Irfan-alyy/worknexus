@@ -53,7 +53,7 @@ export const roleDefinitions = {
 		dashboardTitle: "Delivery command center",
 		dashboardDescription:
 			"Track project progress, client communication, and team delivery health.",
-		sidebarItems: ["Dashboard", "Chat"],
+		sidebarItems: ["Dashboard", "Projects", "Activities", "Analytics", "Milestones", "Chat"],
 		stats: [
 			{ label: "Active projects", value: "7", note: "2 at risk" },
 			{ label: "Client follow-ups", value: "11", note: "3 due today" },
@@ -124,5 +124,30 @@ export const dashboardRouteMeta = {
 	"/recruitments": {
 		title: "Recruitment board",
 		description: "Create job openings and monitor applicant activity for active hiring roles.",
+	},
+	"/pm": {
+		title: "Delivery command center",
+		description: "Review projects, activities, analytics, and milestones from one simple workspace.",
+		bullets: ["Projects overview", "Activity feed", "Milestone tracking"],
+	},
+	"/pm/projects": {
+		title: "Projects",
+		description: "Manage live work, assign owners, and track project status.",
+		bullets: ["Create projects", "Edit project details", "Remove finished work"],
+	},
+	"/pm/activities": {
+		title: "Activities",
+		description: "See recent work updates and team progress in one list.",
+		bullets: ["View recent updates", "Check status changes", "Open activity details"],
+	},
+	"/pm/analytics": {
+		title: "Analytics",
+		description: "Look at delivery trends and progress summary at a glance.",
+		bullets: ["Read progress summary", "Review blocked work", "Track delivery health"],
+	},
+	"/pm/milestones": {
+		title: "Milestones",
+		description: "Follow milestone dates, completion states, and delivery checkpoints.",
+		bullets: ["Monitor milestone status", "See due dates", "Check completion rate"],
 	},
 }

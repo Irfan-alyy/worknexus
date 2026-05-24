@@ -256,7 +256,7 @@ export function AppRoutes() {
 				<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
 				<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
 				<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
-				<Route path="pm" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
+				<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
 				<Route path="*" element={<Navigate to="/dashboard" replace />} />
 			</Route>
 			<Route path="*" element={<Navigate to="/login" replace />} />
