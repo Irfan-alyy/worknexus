@@ -38,6 +38,7 @@ model Employee {
   paymentModel    PaymentModel  @default(fixed) @map("payment_model")
   baseSalary      Decimal?      @map("base_salary") @db.Decimal(10, 2)
   hourlyRate      Decimal?      @map("hourly_rate") @db.Decimal(10, 2)
+  revenueSharePercent Decimal?  @map("revenue_share_percent") @db.Decimal(5, 2)
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
   department      Department?   @relation(fields: [departmentId], references: [id])
@@ -98,6 +99,7 @@ model Task {
   description String?
   priority    TaskPriority @default(medium)
   status      TaskStatus   @default(pending)
+  completedAt DateTime?    @map("completed_at")
   dueDate     DateTime?    @map("due_date")
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
@@ -129,9 +131,11 @@ model Payroll {
   payPeriodStart DateTime      @map("pay_period_start")
   payPeriodEnd   DateTime      @map("pay_period_end")
   processedAt    DateTime?     @map("processed_at")
+  breakdown      Json?         @map("breakdown")
   createdAt      DateTime      @default(now()) @map("created_at")
   employee       Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
+  @@unique([employeeId, payPeriodStart, payPeriodEnd], map: "payroll_employee_period_key")
   @@map("payroll")
 }
 
