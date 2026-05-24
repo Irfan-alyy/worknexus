@@ -109,7 +109,7 @@ export function Sidebar({ onNavigate }) {
 					)
 				})}
 
-				{(role === "pm" || role === "employee") && (
+				{/* {(role === "pm" || role === "employee") && (
 					<div className="ml-2 mt-1">
 						<button
 							type="button"
@@ -124,7 +124,7 @@ export function Sidebar({ onNavigate }) {
 							<span className="flex-1 text-left">Tasks</span>
 						</button>
 					</div>
-				)}
+				)} */}
 
 				<section className={`rounded-2xl border p-2 ${isChatRoute ? "border-border bg-card/80" : "border-border/60 bg-card/40"}`}>
 					<div className="space-y-1">
