@@ -3,6 +3,7 @@ import { ChevronDown, Hash, LayoutDashboard, ReceiptText, Folder, Users, Briefca
 import { NavLink, useLocation } from "react-router-dom"
 
 import { roleDefinitions } from "@/config/constants"
+import { employeeActivityBadgeCount } from "@/features/employee/employee-data"
 import { chatChannels, directMessages } from "@/features/chat/chat-data"
 import { useGlobalStore } from "@/stores/use-global-store"
 
@@ -52,6 +53,12 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/employees", label: "Employees", icon: Users })
 	}
 
+	if (role === "employee") {
+		navItems.push({ to: "/employee/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/employee/activities", label: "Activities", icon: Activity, badge: employeeActivityBadgeCount })
+		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
+	}
+
 	// push payroll near the end for allowed roles (not PM/Employee)
 	if (!(role === "pm" || role === "employee")) {
 		navItems.push({ to: "/payroll", label: "Payroll", icon: ReceiptText })
@@ -84,7 +91,12 @@ export function Sidebar({ onNavigate }) {
 							}
 						>
 							<Icon className="h-4 w-4" />
-							{item.label}
+							<span className="flex-1">{item.label}</span>
+							{item.badge ? (
+								<span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+									{item.badge}
+								</span>
+							) : null}
 						</NavLink>
 					)
 				})}

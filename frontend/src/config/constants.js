@@ -150,4 +150,19 @@ export const dashboardRouteMeta = {
 		description: "Follow milestone dates, completion states, and delivery checkpoints.",
 		bullets: ["Monitor milestone status", "See due dates", "Check completion rate"],
 	},
+	"/employee/projects": {
+		title: "My projects",
+		description: "Track your assigned projects and the task status split across completed, in progress, and pending.",
+		bullets: ["Review assigned projects", "Open task details", "Track due dates and progress"],
+	},
+	"/employee/activities": {
+		title: "My activities",
+		description: "Follow your latest work updates like new tasks, channel additions, and project changes.",
+		bullets: ["See latest updates", "Open activity details", "Prioritize new items"],
+	},
+	"/employee/profile": {
+		title: "My profile",
+		description: "Manage personal details and review your payment history from a single profile section.",
+		bullets: ["Review profile details", "Edit details in popup", "Check payment records"],
+	},
 }

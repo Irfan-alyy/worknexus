@@ -14,6 +14,7 @@ import Clients from "@/features/shared/Clients"
 import Employees from "@/features/shared/Employees"
 import { DashboardPage } from "@/routes/dashboard-page"
 import { AdminPage } from "@/routes/admin-page"
+import { EmployeePage } from "@/routes/employee-page"
 import { PmPage } from "@/routes/pm-page"
 import { ForgotPasswordPage, LoginPage } from "@/routes/auth-pages"
 import { RoleBarrier } from "@/routes/role-barrier"
@@ -60,6 +61,10 @@ function RouteAside() {
 		if (location.pathname.startsWith("/chat")) {
 			return routeMeta["/chat"]
 		}
+
+			if (location.pathname === "/employee" || location.pathname.startsWith("/employee/")) {
+				return routeMeta[location.pathname] ?? routeMeta["/employee/projects"]
+			}
 
 		return routeMeta[location.pathname] ?? routeMeta["/dashboard"]
 	}, [location.pathname, roleConfig.focusPoints, roleConfig.quickActions, roleConfig.shortLabel])
@@ -247,6 +252,8 @@ export function AppRoutes() {
 			<Route element={<ShellLayout />}>
 				<Route index element={<Navigate to="/dashboard" replace />} />
 				<Route path="dashboard" element={<DashboardPage />} />
+				<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
+				<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
 				<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
 				<Route path="chat/:scope/:chatId" element={<ChatPage />} />
 				<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
