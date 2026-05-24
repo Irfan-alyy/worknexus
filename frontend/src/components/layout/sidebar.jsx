@@ -1,15 +1,17 @@
 import { useMemo, useState } from "react"
 import { ChevronDown, Hash, LayoutDashboard, ReceiptText, Folder, Users, Briefcase, User, UserCheck, Layers, Activity, UserPlus, BarChart3, CalendarDays } from "lucide-react"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 
 import { roleDefinitions } from "@/config/constants"
 import { employeeActivityBadgeCount } from "@/features/employee/employee-data"
 import { chatChannels, directMessages } from "@/features/chat/chat-data"
 import { useGlobalStore } from "@/stores/use-global-store"
+import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
 
 export function Sidebar({ onNavigate }) {
 	const location = useLocation()
-	const { role } = useGlobalStore()
+	const { role, openAside } = useGlobalStore()
+	const navigate = useNavigate()
 	const roleConfig = roleDefinitions[role] ?? roleDefinitions.employee
 	const [isChannelsOpen, setIsChannelsOpen] = useState(true)
 	const [isDmsOpen, setIsDmsOpen] = useState(true)
@@ -32,6 +34,8 @@ export function Sidebar({ onNavigate }) {
 	// admin sections grouped after primary
 	if (role === "admin") {
 		navItems.push({ to: "/admin/projects", label: "Projects", icon: Folder })
+		// global tasks overview for admins
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Folder })
 		navItems.push({ to: "/admin/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/admin/employees", label: "Employees", icon: Users })
 		navItems.push({ to: "/admin/managers", label: "Managers", icon: UserCheck })
@@ -41,6 +45,8 @@ export function Sidebar({ onNavigate }) {
 
 	if (role === "pm") {
 		navItems.push({ to: "/pm/projects", label: "Projects", icon: Folder })
+		// direct Tasks entry for PMs
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Folder })
 		navItems.push({ to: "/pm/activities", label: "Activities", icon: Activity })
 		navItems.push({ to: "/pm/analytics", label: "Analytics", icon: BarChart3 })
 		navItems.push({ to: "/pm/milestones", label: "Milestones", icon: CalendarDays })
@@ -55,6 +61,8 @@ export function Sidebar({ onNavigate }) {
 
 	if (role === "employee") {
 		navItems.push({ to: "/employee/projects", label: "Projects", icon: Folder })
+		// quick Tasks access for employees
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Folder })
 		navItems.push({ to: "/employee/activities", label: "Activities", icon: Activity, badge: employeeActivityBadgeCount })
 		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
 	}
@@ -100,6 +108,23 @@ export function Sidebar({ onNavigate }) {
 						</NavLink>
 					)
 				})}
+
+				{(role === "pm" || role === "employee") && (
+					<div className="ml-2 mt-1">
+						<button
+							type="button"
+							onClick={() => {
+								navigate('/tasks')
+								openAside('Project Tasks', <ProjectTasksPanel />)
+								onNavigate && onNavigate()
+							}}
+							className="flex w-full items-center gap-3 rounded-2xl border px-4 py-2 text-sm font-medium transition-colors border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"
+						>
+							<Folder className="h-4 w-4" />
+							<span className="flex-1 text-left">Tasks</span>
+						</button>
+					</div>
+				)}
 
 				<section className={`rounded-2xl border p-2 ${isChatRoute ? "border-border bg-card/80" : "border-border/60 bg-card/40"}`}>
 					<div className="space-y-1">

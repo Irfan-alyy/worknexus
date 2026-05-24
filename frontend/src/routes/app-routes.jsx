@@ -16,6 +16,7 @@ import { DashboardPage } from "@/routes/dashboard-page"
 import { AdminPage } from "@/routes/admin-page"
 import { EmployeePage } from "@/routes/employee-page"
 import { PmPage } from "@/routes/pm-page"
+import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
 import { ForgotPasswordPage, LoginPage } from "@/routes/auth-pages"
 import { RoleBarrier } from "@/routes/role-barrier"
 import { dashboardRouteMeta, roleDefinitions } from "@/config/constants"
@@ -260,6 +261,7 @@ export function AppRoutes() {
 				<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 				<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
 				<Route path="projects" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Projects /></RoleBarrier>} />
+				<Route path="tasks" element={<RoleBarrier allowedRoles={["pm","employee","admin"]}><ProjectTasksPanel /></RoleBarrier>} />
 				<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
 				<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
 				<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
