@@ -3,6 +3,8 @@ const { successResponse } = require("../../utils/response")
 const timeLogsService = require("./time-logs.service")
 const projectsService = require("../projects/projects.service")
 const { log } = require("../../utils/logger")
+const tasksService = require("../tasks/tasks.service")
+const prisma = require("../../config/db.config")
 
 async function createTimeLogController(req, res, next) {
   try {
@@ -17,9 +19,9 @@ async function createTimeLogController(req, res, next) {
 
     // pm: allowed if manager of the task's project
     if (req.user.role === "pm") {
-      const task = await projectsService.getTaskById ? await projectsService.getTaskById(payload.task_id) : null
+      const task = await tasksService.getTaskById(payload.task_id)
       // fallback: check project service
-      const isManager = await projectsService.isProjectManager(payload.project_id || (task && task.projectId), req.user.id)
+      const isManager = await projectsService.isProjectManager(task.projectId, req.user.id)
       if (!isManager) throw AppError.forbidden()
       const created = await timeLogsService.createTimeLog(payload)
       const { response, statusCode } = successResponse(created, "Time log created", 201)
@@ -33,9 +35,7 @@ async function createTimeLogController(req, res, next) {
       if (Number(payload.employee_id) !== employee.id) throw AppError.forbidden("Cannot log time for other employees")
 
       // ensure they belong to task's project or assigned to task
-      const task = await timeLogsService.getTimeLogById ? null : null
-      // we will fetch task via projects.service.getProjectById using task id
-      const taskRecord = await require("../tasks/tasks.service").getTaskById(payload.task_id)
+      const taskRecord = await tasksService.getTaskById(payload.task_id)
       if (!taskRecord) throw AppError.notFound("Task not found")
 
       const isMember = await projectsService.isTeamMember(taskRecord.projectId, req.user.id)
@@ -68,7 +68,7 @@ async function listTimeLogsController(req, res, next) {
     if (req.user.role === "pm") {
       // if filtering by task, ensure manager of task's project
       if (taskId) {
-        const task = await require("../tasks/tasks.service").getTaskById(taskId)
+        const task = await tasksService.getTaskById(taskId)
         if (!task) throw AppError.notFound("Task not found")
         const isManager = await projectsService.isProjectManager(task.projectId, req.user.id)
         if (!isManager) throw AppError.forbidden()
@@ -77,9 +77,17 @@ async function listTimeLogsController(req, res, next) {
         return res.status(statusCode).json(response)
       }
 
-      // otherwise show time logs for projects they manage
-      // simple approach: return all (pm limited by client) — keep conservative and return empty
-      const records = []
+      // Get all projects managed by this PM and filter time logs by those projects
+      const employee = await projectsService.getEmployeeByUserId(req.user.id)
+      if (!employee) throw AppError.forbidden()
+      
+      const managedProjects = await prisma.project.findMany({
+        where: { managerEmployeeId: employee.id },
+        select: { id: true }
+      })
+      
+      const projectIds = managedProjects.map(p => p.id)
+      const records = projectIds.length > 0 ? await timeLogsService.listTimeLogs({ projectIds, employeeId }) : []
       const { response, statusCode } = successResponse(records)
       return res.status(statusCode).json(response)
     }

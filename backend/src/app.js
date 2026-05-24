@@ -3,7 +3,6 @@ const helmet = require("helmet")
 const corsMiddleware = require("./middleware/cors")
 const requestLogger = require("./middleware/request-logger")
 const rateLimiter = require("./middleware/rate-limiter")
-const auth = require("./middleware/auth")
 const { notFound, errorHandler } = require("./middleware/error")
 
 // Feature routes
@@ -45,9 +44,9 @@ app.use(rateLimiter({ limit: 200, windowMs: 60_000 }))
  * HEALTH CHECK ENDPOINT
  * No authentication required
  */
-app.get("/health", (req, res) => {
+app.get("/api/v1/health", (req, res) => {
   const { response, statusCode } = successResponse({ uptime: process.uptime() }, "Server is healthy")
-  res.status(statusCode).json(response)
+  return res.status(statusCode).json(response)
 })
 
 /**
@@ -55,12 +54,6 @@ app.get("/health", (req, res) => {
  * Auth routes don't require authentication (handles their own)
  */
 app.use("/api/v1/auth", authRoutes)
-
-/**
- * Protected routes (require authentication)
- * Apply auth middleware before protected route handlers
- */
-app.use(auth)
 
 // Chat routes (authenticated)
 app.use("/api/v1/chat", chatRoutes)
