@@ -52,7 +52,7 @@ export function AdminPage() {
   const selectedDirectMessage = getAdminDirectMessage(directMessageSlug || adminDirectMessages[0]?.slug)
 
   return (
-    <div className="h-full overflow-y-auto p-4 sm:p-6">
+    <div className="h-full overflow-y-auto">
       {/* <div className="mb-6">
         <div>
           <h1 className="text-2xl font-semibold">{titles[activeTab] || "Admin Console"}</h1>

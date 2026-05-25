@@ -1,5 +1,4 @@
 import { Eye, Edit, Mail } from "lucide-react"
-import ActionMenu from "@/components/ui/action-menu"
 
 const dummyClients = [
   { id: 1, name: "Acme Corp", projects: ["Website Redesign"] },
@@ -8,7 +7,7 @@ const dummyClients = [
 
 export default function AdminClients({ onEdit }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Clients</h2>
       </div>
@@ -26,20 +25,51 @@ export default function AdminClients({ onEdit }) {
                 onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />)
               }
             }}
-            className="flex cursor-pointer items-start justify-between rounded-lg border border-border bg-background p-4 transition-colors hover:bg-secondary/30"
+            className="group relative flex cursor-pointer items-start justify-between rounded-lg border border-border bg-background p-4 pr-16 transition-colors hover:bg-secondary/30"
           >
             <div>
               <h3 className="font-medium">{c.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">Projects: {c.projects.join(", ")}</p>
             </div>
-            <div>
-              <ActionMenu
-                items={[
-                  { label: "View", icon: Eye, onClick: () => onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />) },
-                  { label: "Edit", icon: Edit, onClick: () => onEdit(`Edit client: ${c.name}`, <ClientEditor client={c} />) },
-                  { label: "Mail", icon: Mail, onClick: () => onEdit(`Mail client: ${c.name}`, <MailClient client={c} />) },
-                ]}
-              />
+            <div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />)
+                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  title="View"
+                  aria-label={`View ${c.name}`}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onEdit(`Edit client: ${c.name}`, <ClientEditor client={c} />)
+                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  title="Edit"
+                  aria-label={`Edit ${c.name}`}
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onEdit(`Mail client: ${c.name}`, <MailClient client={c} />)
+                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  title="Mail"
+                  aria-label={`Mail ${c.name}`}
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
