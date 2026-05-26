@@ -13,6 +13,7 @@ const { port } = getEnvConfig()
 const server = http.createServer(app)
 
 const io = new Server(server, {
+    path:"/api/socket.io",
     cors: {
         origin: "*", // Or specific origins if restricted
         methods: ["GET", "POST"]
