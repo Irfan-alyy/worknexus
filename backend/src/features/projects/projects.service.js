@@ -2,6 +2,37 @@ const prisma = require("../../config/db.config")
 const AppError = require("../../utils/app-error")
 const { log } = require("../../utils/logger")
 
+async function syncPrivateProjectChannelMemberships(projectId, employeeId, action) {
+  const channels = await prisma.channel.findMany({
+    where: { projectId, isPrivate: true },
+    select: { id: true },
+  })
+
+  if (!channels.length) return
+
+  const channelIds = channels.map((channel) => channel.id)
+
+  if (action === "add") {
+    await prisma.channelMember.createMany({
+      data: channelIds.map((channelId) => ({
+        channelId,
+        userId: employeeId,
+      })),
+      skipDuplicates: true,
+    })
+    return
+  }
+
+  if (action === "remove") {
+    await prisma.channelMember.deleteMany({
+      where: {
+        channelId: { in: channelIds },
+        userId: employeeId,
+      },
+    })
+  }
+}
+
 async function getEmployeeByUserId(userId) {
   if (!userId) return null
   return await prisma.employee.findUnique({ where: { userId: Number(userId) } })
@@ -92,17 +123,18 @@ async function updateProject(id, data) {
   }
 }
 
-async function addTeamMember(projectId, employeeId) {
+async function addTeamMember(projectId, employeeIds) {
   try {
     // ensure project exists
     const project = await prisma.project.findUnique({ where: { id: projectId } })
     if (!project) throw AppError.notFound("Project not found")
 
     // ensure employee exists
-    const employee = await prisma.employee.findUnique({ where: { id: Number(employeeId) } })
-    if (!employee) throw AppError.notFound("Employee not found")
+    const employees = await prisma.employee.findMany({ where: { id: { in: employeeIds.map(Number) } } })
+    if (employees.length !== employeeIds.length) throw AppError.notFound("One or more employees not found")
 
-    const created = await prisma.projectTeam.create({ data: { projectId, employeeId: Number(employeeId) } })
+    const created = await prisma.projectTeam.createMany({ data: employeeIds.map(id => ({ projectId, employeeId: Number(id) })) })
+    await syncPrivateProjectChannelMemberships(projectId, employeeIds.map(Number), "add")
     return created
   } catch (err) {
     if (err && err.code === "P2002") {
@@ -116,6 +148,7 @@ async function addTeamMember(projectId, employeeId) {
 async function removeTeamMember(projectId, employeeId) {
   try {
     const deleted = await prisma.projectTeam.delete({ where: { projectId_employeeId: { projectId, employeeId: Number(employeeId) } } })
+    await syncPrivateProjectChannelMemberships(projectId, Number(employeeId), "remove")
     return deleted
   } catch (err) {
     if (err && err.code === "P2025") {

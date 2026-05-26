@@ -126,6 +126,19 @@ npm run start
 
 The scheduler delegates actual payroll calculations and record creation to the existing payroll service (`generatePayrollsForPeriod`), which already looks for completed tasks in the configured pay period.
 
+## Chat, channels, and messages documentation
+
+The chat feature, including channel creation, member management, and message APIs, is documented in:
+
+- [docs/chat-channels-messages.md](docs/chat-channels-messages.md)
+
+That document covers:
+
+- channel create/list/details/update/delete
+- bulk add/remove channel members
+- message create/list
+- response shapes and permission behavior
+
 ## Current route map
 
 ### Auth

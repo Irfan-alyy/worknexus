@@ -32,7 +32,7 @@ const updateProjectSchema = z.preprocess(
 )
 
 const addTeamMemberSchema = z.object({
-  employee_id: z.number().int().positive(),
+  employee_ids: z.array(z.number().int().positive()).optional(),
 })
 
 module.exports = {

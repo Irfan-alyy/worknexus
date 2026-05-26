@@ -1,10 +1,10 @@
 const { Router } = require("express")
-const { getHistoryController, createMessageController } = require("./chat.controller")
-const auth = require("../../middleware/auth")
+const channelRoutes = require("./channels/channels.routes")
+const messageRoutes = require("./messages/messages.routes")
 
 const router = Router()
 
-router.get("/channels/:channelId/history", auth, getHistoryController)
-router.post("/messages", auth, createMessageController)
+router.use(channelRoutes)
+router.use(messageRoutes)
 
 module.exports = router
