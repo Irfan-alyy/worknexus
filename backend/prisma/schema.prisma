@@ -16,6 +16,8 @@ model User {
   employee  Employee?
   messages  Message[]
   reactions Reaction[]
+  createdChannels Channel[]      @relation("ChannelCreator")
+  channelMemberships ChannelMember[]
 
   @@map("users")
 }
@@ -76,6 +78,7 @@ model Project {
   client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   manager     Employee?     @relation(fields: [managerEmployeeId], references: [id], onDelete: SetNull)
   tasks       Task[]
+  channels    Channel[]
 
   @@map("projects")
 }
@@ -140,13 +143,36 @@ model Payroll {
 }
 
 model Channel {
-  id        String    @id @default(uuid())
-  name      String    @unique @db.VarChar(100)
-  isPrivate Boolean   @default(false) @map("is_private")
-  createdAt DateTime  @default(now()) @map("created_at")
-  messages  Message[]
+  id              String          @id @default(uuid())
+  name            String          @db.VarChar(100)
+  description     String?
+  projectId       String?         @map("project_id")
+  isPrivate       Boolean         @default(false) @map("is_private")
+  createdByUserId Int             @map("created_by_user_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  project         Project?        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy       User            @relation("ChannelCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  messages        Message[]
+  members         ChannelMember[]
+
+  @@unique([projectId, name], map: "channel_project_name_key")
+  @@index([projectId], map: "idx_channel_project")
+  @@index([createdByUserId], map: "idx_channel_created_by")
 
   @@map("channels")
+}
+
+model ChannelMember {
+  channelId String   @map("channel_id")
+  userId    Int      @map("user_id")
+  addedAt   DateTime @default(now()) @map("added_at")
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([channelId, userId])
+  @@index([userId], map: "idx_channel_member_user")
+  @@map("channel_members")
 }
 
 model Message {

@@ -138,7 +138,7 @@ async function listProjectTeamController(req, res, next) {
 async function addTeamMemberController(req, res, next) {
   try {
     const { id } = req.params
-    const { employee_id } = req.validatedBody || req.body
+    const { employee_ids} = req.validatedBody || req.body
 
     const user = req.user
     // admin/hr allowed; pm allowed only if manager
@@ -147,7 +147,7 @@ async function addTeamMemberController(req, res, next) {
       if (!ok) throw AppError.forbidden()
     }
 
-    const created = await addTeamMember(id, employee_id)
+    const created = await addTeamMember(id, employee_ids)
     const { response, statusCode } = successResponse(created, "Team member added", 201)
     return res.status(statusCode).json(response)
   } catch (err) {
