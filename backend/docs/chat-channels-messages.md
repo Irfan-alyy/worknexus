@@ -313,3 +313,169 @@ That means if a user is added to the project team, the backend can also add them
 - `src/features/chat/messages/messages.controller.js`
 - `src/features/chat/messages/messages.service.js`
 - `src/features/chat/channel-permissions.js`
+- `src/features/chat/chat.socket.js`
+- `src/socket.js`
+
+## Direct Messages (DMs) API
+
+DMs use the identical unified database architecture as `Channels`. Under the hood, a DM is just a private channel between two users.
+
+### `POST /dms/:receiverId`
+
+Finds or creates a direct message channel between the current user and the target `receiverId`.
+
+The backend deterministically generates a hidden channel name (e.g., `dm_4_9`) so calling this multiple times always safely returns the same unique DM instance.
+
+Example success response:
+```json
+{
+  "success": true,
+  "message": "DM channel retrieved",
+  "data": {
+    "id": "channel-uuid",
+    "name": "dm_4_9",
+    "isPrivate": true,
+    "projectId": null,
+    "members": [ ... ],
+    "currentUserIsMember": true
+  }
+}
+```
+**Usage:** Once you get the UI or channel object back from this route, you can instantly load history using `GET /channels/:channelId/messages`, and send a new message exactly the same way using `POST /messages` with the returned DM `channelId`!
+
+## Reactions API
+
+Reactions allow users to tag specific messages with emojis. 
+
+### `POST /reactions`
+
+Adds a reaction. Uses `upsert` under the hood, meaning identical emojis by the same user are safely ignored/overwritten.
+
+Required body:
+```json
+{
+  "emoji": "👍",
+  "message_id": "message-uuid"
+}
+```
+
+### `DELETE /messages/:messageId/reactions/:emoji`
+
+Removes a specific reaction made by the current user on the specified message.
+
+## Real-Time WebSocket (Socket.io) Integration
+
+The backend leverages Socket.io for all instantaneous read broadcasts (typing, new messages, presence, and reactions).
+
+### Connection & Authentication
+
+The socket must be authenticated exactly like a REST request using the given user's JWT standard `token`.
+
+- You can pass it in via `auth` payload:
+```javascript
+const socket = io("http://localhost:3000", {
+  auth: {
+    token: "YOUR_JWT_TOKEN"
+  }
+});
+```
+
+### Emitting Client Events
+
+To properly tunnel subscriptions safely per channel/DM room, your UI client must emit subscription join commands.
+
+- **Join Room:** `socket.emit("chat:join", { channelId: "uuid" })`
+- **Leave Room:** `socket.emit("chat:leave", { channelId: "uuid" })`
+- **Typing Indicator:** `socket.emit("chat:typing", { channelId: "uuid", isTyping: true })`
+
+### Listening to Server Events
+
+Once connected and joined to a channel, listen for these pushed events to update standard React State arrays.
+
+- **Online Presence:** `user:online` and `user:offline` (returns `{ userId: 4 }`)
+- **New Message:** `chat:message` (returns the full complete `Message` object)
+- **New Reaction:** `chat:reaction:add` (returns full updated DB `Reaction` object)
+- **Removed Reaction:** `chat:reaction:remove` (returns `{ messageId, userId, emoji }`)
+- **Someone Typing:** `chat:typing` (returns `{ channelId, userId, isTyping }`)
+
+## Frontend Integration Guide (React)
+
+Make sure you have `socket.io-client` installed on the frontend:
+```bash
+npm install socket.io-client
+```
+
+A common frontend abstraction hook/plugin setup looks like this (`frontend/src/lib/socket.js`):
+
+```javascript
+import { io } from 'socket.io-client';
+import { getAuthToken } from './utils'; // however you store JWTs locally
+
+let socket;
+
+export const initiateSocket = () => {
+    const token = getAuthToken();
+    if (!token) return null;
+
+    socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+        auth: { token }
+    });
+
+    socket.on('connect', () => {
+        console.log('Successfully securely connected to socket server!');
+    });
+
+    return socket;
+};
+
+export const getSocket = () => {
+    if (!socket) {
+        return initiateSocket();
+    }
+    return socket;
+};
+
+export const joinChatRoom = (channelId) => {
+    if(socket) socket.emit("chat:join", { channelId });
+};
+
+export const leaveChatRoom = (channelId) => {
+    if(socket) socket.emit("chat:leave", { channelId });
+};
+```
+
+In your React Components (e.g., `ChatWindow.jsx`):
+```javascript
+import { useEffect, useState } from 'react';
+import { getSocket, joinChatRoom, leaveChatRoom } from '../lib/socket.js';
+
+export default function ChatWindow({ channelId }) {
+    const [messages, setMessages] = useState([]);
+    
+    useEffect(() => {
+        const socket = getSocket();
+        
+        // Subscribe to the channel room explicitly
+        joinChatRoom(channelId);
+
+        // Listen for new messages globally tunneled natively from this room
+        socket.on("chat:message", (newMessage) => {
+            if (newMessage.channelId === channelId) {
+                setMessages(prev => [...prev, newMessage]);
+            }
+        });
+
+        return () => {
+            // Unmount phase: cleanup listener and physically untether room on exit
+            socket.off("chat:message");
+            leaveChatRoom(channelId);
+        };
+    }, [channelId]);
+
+    return (
+        <div>
+           {/* Render messages properly mapping items here... */}
+        </div>
+    )
+}
+```
