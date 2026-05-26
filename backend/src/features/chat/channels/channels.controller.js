@@ -3,6 +3,7 @@ const {
   listChannelsForUser,
   getProjectChannels,
   getChannelById,
+  findOrCreateDM,
   updateChannel,
   deleteChannel,
   listChannelMembers,
@@ -11,6 +12,16 @@ const {
   removeChannelMember,
 } = require("./channels.service")
 const { successResponse } = require("../../../utils/response")
+
+async function findOrCreateDMController(req, res, next) {
+  try {
+    const data = await findOrCreateDM(req.params.receiverId, req.user)
+    const { response, statusCode } = successResponse(data, "DM channel retrieved")
+    return res.status(statusCode).json(response)
+  } catch (err) {
+    return next(err)
+  }
+}
 
 async function listChannelsController(req, res, next) {
   try {
@@ -113,6 +124,7 @@ async function removeChannelMemberController(req, res, next) {
 }
 
 module.exports = {
+  findOrCreateDMController,
   listChannelsController,
   listProjectChannelsController,
   getChannelController,
