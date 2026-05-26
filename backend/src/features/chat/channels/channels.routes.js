@@ -3,6 +3,7 @@ const requireRole = require("../../../middleware/rbac")
 const auth = require("../../../middleware/auth")
 const validateBody = require("../../../middleware/validate-body")
 const {
+  findOrCreateDMController,
   listChannelsController,
   listProjectChannelsController,
   getChannelController,
@@ -19,6 +20,7 @@ const router = Router()
 
 router.get("/channels", auth, listChannelsController)
 router.get("/projects/:projectId/channels", auth, listProjectChannelsController)
+router.post("/dms/:receiverId", auth, findOrCreateDMController)
 router.get("/channels/:channelId", auth, getChannelController)
 router.post(
   "/channels",

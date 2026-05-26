@@ -80,7 +80,59 @@ async function createMessage(payload, user) {
   })
 }
 
+async function toggleReaction(messageId, emoji, user, action) {
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: { id: true, channelId: true }
+  })
+  
+  if (!message) {
+    throw AppError.notFound("Message not found")
+  }
+
+  // Authorize check for channel access
+  await getChannelById(message.channelId, user)
+
+  const userId = Number(user.id)
+
+  if (action === "add") {
+    const reaction = await prisma.reaction.upsert({
+      where: {
+        messageId_userId_emoji: {
+          messageId,
+          userId,
+          emoji,
+        },
+      },
+      update: {},
+      create: {
+        messageId,
+        userId,
+        emoji,
+      },
+      include: {
+        user: { select: { id: true, email: true, role: true } }
+      }
+    })
+    return { reaction, channelId: message.channelId }
+  } else if (action === "remove") {
+    await prisma.reaction.delete({
+      where: {
+        messageId_userId_emoji: {
+          messageId,
+          userId,
+          emoji,
+        },
+      },
+    }).catch(() => {
+      // Ignore if doesn't exist
+    })
+    return { channelId: message.channelId }
+  }
+}
+
 module.exports = {
   listChannelMessages,
   createMessage,
+  toggleReaction,
 }

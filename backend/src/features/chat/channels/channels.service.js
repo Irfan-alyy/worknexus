@@ -198,6 +198,64 @@ async function getChannelById(channelId, user) {
   }
 }
 
+async function findOrCreateDM(receiverId, user) {
+  const senderId = Number(user.id)
+  const targetId = Number(receiverId)
+
+  if (senderId === targetId) {
+    throw AppError.validationError("Cannot create a DM with yourself", [
+      { field: "receiverId", message: "Cannot DM self" }
+    ])
+  }
+
+  // Ensure receiver exists
+  const targetUser = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true } })
+  if (!targetUser) {
+    throw AppError.notFound("Receiver not found")
+  }
+
+  // Generate deterministic channel name for 1-1 DM
+  const sortedIds = [senderId, targetId].sort((a, b) => a - b)
+  const dmName = `dm_${sortedIds[0]}_${sortedIds[1]}`
+
+  // Try to find the existing DM
+  let channel = await prisma.channel.findFirst({
+    where: {
+      name: dmName,
+      isPrivate: true,
+      projectId: null,
+    }
+  })
+
+  if (!channel) {
+    // Create new DM channel silently
+    channel = await prisma.$transaction(async (tx) => {
+      const created = await tx.channel.create({
+        data: {
+          name: dmName,
+          description: "Direct Message",
+          projectId: null,
+          isPrivate: true,
+          createdByUserId: senderId,
+        }
+      })
+
+      // Add both members
+      await tx.channelMember.createMany({
+        data: [
+          { channelId: created.id, userId: senderId },
+          { channelId: created.id, userId: targetId }
+        ]
+      })
+
+      return created
+    })
+  }
+
+  // Use existing get function to fetch rich include payload
+  return await getChannelById(channel.id, user)
+}
+
 async function updateChannel(channelId, payload, user) {
   const existing = await prisma.channel.findUnique({
     where: { id: channelId },
@@ -419,6 +477,7 @@ module.exports = {
   listChannelsForUser,
   getProjectChannels,
   getChannelById,
+  findOrCreateDM,
   updateChannel,
   deleteChannel,
   listChannelMembers,
