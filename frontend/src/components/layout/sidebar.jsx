@@ -1,17 +1,21 @@
 import { useMemo, useState } from "react"
 import { ChevronDown, Hash, LayoutDashboard, ReceiptText, Folder, Users, Briefcase, User, UserCheck, Layers, Activity, UserPlus, BarChart3, CalendarDays } from "lucide-react"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 
 import { roleDefinitions } from "@/config/constants"
 import { employeeActivityBadgeCount } from "@/features/employee/employee-data"
-import { chatChannels, directMessages } from "@/features/chat/chat-data"
+import { directMessages } from "@/features/chat/chat-data"
+import * as projectService from "@/features/projects/projects-service"
 import { useGlobalStore } from "@/stores/use-global-store"
+import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
 
 export function Sidebar({ onNavigate }) {
 	const location = useLocation()
-	const { role } = useGlobalStore()
+	const { role, openAside } = useGlobalStore()
+	const navigate = useNavigate()
 	const roleConfig = roleDefinitions[role] ?? roleDefinitions.employee
 	const [isChannelsOpen, setIsChannelsOpen] = useState(true)
+	const [openProjects, setOpenProjects] = useState({})
 	const [isDmsOpen, setIsDmsOpen] = useState(true)
 
 	const isChatRoute = location.pathname.startsWith("/chat")
@@ -31,7 +35,9 @@ export function Sidebar({ onNavigate }) {
 
 	// admin sections grouped after primary
 	if (role === "admin") {
-		navItems.push({ to: "/admin/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/admin/projects", label: "Projects", icon: Briefcase })
+		// global tasks overview for admins
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Briefcase })
 		navItems.push({ to: "/admin/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/admin/employees", label: "Employees", icon: Users })
 		navItems.push({ to: "/admin/managers", label: "Managers", icon: UserCheck })
@@ -40,7 +46,9 @@ export function Sidebar({ onNavigate }) {
 	}
 
 	if (role === "pm") {
-		navItems.push({ to: "/pm/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/pm/projects", label: "Projects", icon: Briefcase })
+		// direct Tasks entry for PMs
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Briefcase })
 		navItems.push({ to: "/pm/activities", label: "Activities", icon: Activity })
 		navItems.push({ to: "/pm/analytics", label: "Analytics", icon: BarChart3 })
 		navItems.push({ to: "/pm/milestones", label: "Milestones", icon: CalendarDays })
@@ -48,13 +56,15 @@ export function Sidebar({ onNavigate }) {
 
 	if (role === "hr") {
 		navItems.push({ to: "/recruitments", label: "Recruitments", icon: UserPlus })
-		navItems.push({ to: "/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/projects", label: "Projects", icon: Briefcase })
 		navItems.push({ to: "/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/employees", label: "Employees", icon: Users })
 	}
 
 	if (role === "employee") {
-		navItems.push({ to: "/employee/projects", label: "Projects", icon: Folder })
+		navItems.push({ to: "/employee/projects", label: "Projects", icon: Briefcase })
+		// quick Tasks access for employees
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Folder })
 		navItems.push({ to: "/employee/activities", label: "Activities", icon: Activity, badge: employeeActivityBadgeCount })
 		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
 	}
@@ -101,6 +111,23 @@ export function Sidebar({ onNavigate }) {
 					)
 				})}
 
+				{/* {(role === "pm" || role === "employee") && (
+					<div className="ml-2 mt-1">
+						<button
+							type="button"
+							onClick={() => {
+								navigate('/tasks')
+								openAside('Project Tasks', <ProjectTasksPanel />)
+								onNavigate && onNavigate()
+							}}
+							className="flex w-full items-center gap-3 rounded-2xl border px-4 py-2 text-sm font-medium transition-colors border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"
+						>
+							<Folder className="h-4 w-4" />
+							<span className="flex-1 text-left">Tasks</span>
+						</button>
+					</div>
+				)} */}
+
 				<section className={`rounded-2xl border p-2 ${isChatRoute ? "border-border bg-card/80" : "border-border/60 bg-card/40"}`}>
 					<div className="space-y-1">
 						<button
@@ -114,25 +141,38 @@ export function Sidebar({ onNavigate }) {
 						</button>
 						{isChannelsOpen && (
 							<div className="space-y-1 pb-1">
-								{chatChannels.map((channel) => {
-									const isActive = activeChannelId === channel.id
+								{projectService.getProjects().map((proj) => {
+									const projOpen = !!openProjects[proj.id]
+									const channelId = (proj.channel || proj.title).replace(/^#/, "").replace(/\s+/g, "-").toLowerCase()
+									const isActive = activeChannelId === channelId
 									return (
-										<NavLink
-											key={channel.id}
-											to={`/chat/channels/${channel.id}`}
-											onClick={onNavigate}
-											className={`flex items-center justify-between rounded-xl border px-2.5 py-2 text-sm transition-colors ${isActive ? "border-border bg-accent text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"}`}
-										>
-											<span className="flex items-center gap-2">
-												<Hash className="h-3.5 w-3.5" />
-												{channel.name}
-											</span>
-											{channel.unread > 0 ? (
-												<span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
-													{channel.unread}
+										<div key={proj.id}>
+											<button
+												type="button"
+												onClick={() => setOpenProjects((s) => ({ ...s, [proj.id]: !s[proj.id] }))}
+												className={`flex w-full items-center justify-between rounded-xl px-2 py-2 text-left text-sm font-medium ${projOpen ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-secondary/70'}`}
+											>
+												<span className="flex items-center gap-2">
+													<Briefcase className="h-3.5 w-3.5" />
+													{proj.title}
 												</span>
-											) : null}
-										</NavLink>
+												<ChevronDown className={`h-4 w-4 transition-transform ${projOpen ? 'rotate-180' : ''}`} />
+											</button>
+											{projOpen && (
+												<div className="mt-1 space-y-1 pl-4">
+													<NavLink
+														to={`/chat/channels/${channelId}`}
+														onClick={onNavigate}
+														className={`flex items-center justify-between rounded-xl border px-2.5 py-2 text-sm transition-colors ${isActive ? "border-border bg-accent text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"}`}
+													>
+														<span className="flex items-center gap-2">
+															<Hash className="h-3.5 w-3.5" />
+															{proj.channel || proj.title}
+														</span>
+													</NavLink>
+												</div>
+											)}
+										</div>
 									)
 								})}
 							</div>

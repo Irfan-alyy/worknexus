@@ -22,6 +22,21 @@ import { dashboardRouteMeta, roleDefinitions } from "@/config/constants"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useGlobalStore } from "@/stores/use-global-store"
 
+const THEME_STORAGE_KEY = "worknexus.themeDark"
+
+function loadThemePreference() {
+	if (typeof window === "undefined") {
+		return true
+	}
+
+	try {
+		const raw = window.localStorage.getItem(THEME_STORAGE_KEY)
+		return raw === null ? true : raw === "true"
+	} catch {
+		return true
+	}
+}
+
 function RouteAside() {
 	const location = useLocation()
 	const { role } = useGlobalStore()
@@ -108,7 +123,7 @@ function RouteAside() {
 }
 
 function ShellLayout() {
-	const [isDarkMode, setIsDarkMode] = useState(true)
+	const [isDarkMode, setIsDarkMode] = useState(loadThemePreference)
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
 	const location = useLocation()
@@ -117,6 +132,9 @@ function ShellLayout() {
 
 	useEffect(() => {
 		document.documentElement.classList.toggle("dark", isDarkMode)
+		try {
+			window.localStorage.setItem(THEME_STORAGE_KEY, isDarkMode ? "true" : "false")
+		} catch {}
 	}, [isDarkMode])
 
 	useEffect(() => {

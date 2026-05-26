@@ -1,5 +1,4 @@
 import { Edit } from "lucide-react"
-import ActionMenu from "@/components/ui/action-menu"
 
 const managers = [
   { id: 1, name: "HR Manager Alice", role: "HR" },
@@ -8,21 +7,27 @@ const managers = [
 
 export default function AdminEmployees({ onEdit }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Employees & Managers</h2>
       </div>
 
       <div className="space-y-3">
         {managers.map((m) => (
-          <div key={m.id} className="rounded-lg border border-border bg-background p-4 flex items-start justify-between">
+          <div key={m.id} className="group relative flex items-start justify-between rounded-lg border border-border bg-background p-4 pr-12">
             <div>
               <h3 className="font-medium">{m.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">Role: {m.role}</p>
             </div>
-            <div>
-              <ActionMenu items={[{ label: "Edit", icon: Edit, onClick: () => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />) }]} />
-            </div>
+            <button
+              type="button"
+              onClick={() => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />)}
+              className="absolute -top-4 right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 shadow-sm transition-all duration-150 hover:border-primary hover:bg-primary hover:text-primary-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+              title="Edit"
+              aria-label={`Edit ${m.name}`}
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </button>
           </div>
         ))}
       </div>

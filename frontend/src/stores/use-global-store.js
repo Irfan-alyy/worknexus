@@ -27,15 +27,7 @@ function loadSession() {
 
 export function GlobalStoreProvider({ children }) {
 	const [session, setSession] = useState(loadSession)
-	const [asideOpen, setAsideOpen] = useState(() => {
-		if (typeof window === "undefined") return false
-		try {
-			const raw = window.localStorage.getItem("worknexus.asideOpen")
-			return raw === "true"
-		} catch {
-			return false
-		}
-	})
+	const [asideOpen, setAsideOpen] = useState(false)
 	const [asideTitle, setAsideTitle] = useState("")
 	const [asideContent, setAsideContent] = useState(null)
 
@@ -43,14 +35,11 @@ export function GlobalStoreProvider({ children }) {
 		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
 	}, [session])
 
-	useEffect(() => {
-		try {
-			window.localStorage.setItem("worknexus.asideOpen", asideOpen ? "true" : "false")
-		} catch {}
-	}, [asideOpen])
-
 	const value = useMemo(() => {
 		const authenticate = ({ name, email, role }) => {
+			setAsideOpen(false)
+			setAsideContent(null)
+			setAsideTitle("")
 			setSession({
 				user: {
 					name,
@@ -72,12 +61,19 @@ export function GlobalStoreProvider({ children }) {
 			setAsideTitle("")
 		}
 
+		function signOut() {
+			setAsideOpen(false)
+			setAsideContent(null)
+			setAsideTitle("")
+			setSession(defaultSession)
+		}
+
 		return {
 			session,
 			user: session.user,
 			role: session.user.role,
 			authenticate,
-			signOut: () => setSession(defaultSession),
+			signOut,
 			// aside controls (transient UI)
 			asideOpen,
 			asideTitle,
