@@ -371,9 +371,11 @@ The backend leverages Socket.io for all instantaneous read broadcasts (typing, n
 
 The socket must be authenticated exactly like a REST request using the given user's JWT standard `token`.
 
-- You can pass it in via `auth` payload:
+The Socket.io server is configured at the path `/api/socket.io`. You can pass the JWT auth token via the `auth` payload:
+
 ```javascript
 const socket = io("http://localhost:3000", {
+  path: "/api/socket.io",
   auth: {
     token: "YOUR_JWT_TOKEN"
   }
@@ -418,6 +420,7 @@ export const initiateSocket = () => {
     if (!token) return null;
 
     socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+        path: '/api/socket.io',
         auth: { token }
     });
 
