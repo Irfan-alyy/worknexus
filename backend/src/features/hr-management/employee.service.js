@@ -2,6 +2,49 @@ const prisma = require("../../config/db.config")
 const AppError = require("../../utils/app-error")
 const { hashPassword } = require("../auth/auth.service")
 
+function mapProjectSummary(project) {
+  if (!project) return null
+
+  return {
+    id: project.id,
+    name: project.name,
+    status: project.status,
+    clientId: project.clientId,
+    managerEmployeeId: project.managerEmployeeId,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+    client: project.client
+      ? {
+          id: project.client.id,
+          name: project.client.name,
+          company: project.client.company,
+        }
+      : undefined,
+  }
+}
+
+function mapTaskSummary(task) {
+  if (!task) return null
+
+  return {
+    id: task.id,
+    title: task.title,
+    status: task.status,
+    priority: task.priority,
+    projectId: task.projectId,
+    dueDate: task.dueDate,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    project: task.project
+      ? {
+          id: task.project.id,
+          name: task.project.name,
+          status: task.project.status,
+        }
+      : undefined,
+  }
+}
+
 function normalizeEmployeeData(input = {}) {
   return {
     firstName: input.firstName ?? input.first_name,
@@ -51,15 +94,66 @@ async function listEmployees() {
 
 async function getEmployeeById(id) {
   try {
+    const employeeId = Number(id)
     const employee = await prisma.employee.findUnique({
-      where: { id: Number(id) },
+      where: { id: employeeId },
       include: {
         user: {
-          select: { id: true, email: true, role: true, createdAt: true },
+          select: { id: true, email: true, role: true, createdAt: true, updatedAt: true },
+        },
+        department: {
+          select: { id: true, name: true, createdAt: true },
+        },
+        managedProjects: {
+          include: {
+            client: {
+              select: { id: true, name: true, company: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        teamMemberships: {
+          include: {
+            project: {
+              include: {
+                client: {
+                  select: { id: true, name: true, company: true },
+                },
+              },
+            },
+          },
+          orderBy: { assignedAt: "desc" },
+        },
+        tasks: {
+          include: {
+            project: {
+              select: { id: true, name: true, status: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
         },
       },
     })
-    return employee
+
+    if (!employee) return null
+
+    const managedProjects = employee.user?.role === "pm"
+      ? employee.managedProjects.map(mapProjectSummary).filter(Boolean)
+      : []
+
+    const teamProjects = employee.user?.role === "employee"
+      ? employee.teamMemberships.map((membership) => mapProjectSummary(membership.project)).filter(Boolean)
+      : []
+
+    const recentTasks = employee.tasks.map(mapTaskSummary).filter(Boolean)
+
+    return {
+      ...employee,
+      managedProjects,
+      teamProjects,
+      recentTasks,
+    }
   } catch (err) {
     throw new AppError("Failed to fetch employee", 500, false)
   }
