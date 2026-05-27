@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Edit, Eye, Loader2, Plus, X } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import apiClient from "@/lib/axios"
@@ -23,7 +23,9 @@ const roleLabel = (role) => roleOptions.find((option) => option.value === role)?
 
 export default function AdminEmployees() {
   const { openAside } = useGlobalStore()
+  const location = useLocation()
   const queryClient = useQueryClient()
+  const lastOpenedEmployeeIdRef = useRef(null)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
   const [modalState, setModalState] = useState({ open: false, mode: "create", employee: null })
   const [formError, setFormError] = useState("")
@@ -39,6 +41,15 @@ export default function AdminEmployees() {
     revenue_share_percent: "",
     role: "employee",
   })
+
+  const urlEmployeeId = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    const rawEmployeeId = params.get("employeeId")
+    if (!rawEmployeeId) return null
+
+    const parsedEmployeeId = Number(rawEmployeeId)
+    return Number.isInteger(parsedEmployeeId) && parsedEmployeeId > 0 ? parsedEmployeeId : null
+  }, [location.search])
 
   const { data: employeesResponse, isLoading, isError, error } = useQuery({
     queryKey: queryKeys.hr.employees(),
@@ -61,10 +72,29 @@ export default function AdminEmployees() {
   })
 
   useEffect(() => {
-    if (!selectedEmployeeId && employees.length) {
+    if (!employees.length) return
+
+    if (urlEmployeeId) {
+      const employeeFromUrl = employees.find((employee) => employee.id === urlEmployeeId)
+      if (employeeFromUrl) {
+        setSelectedEmployeeId(employeeFromUrl.id)
+        
+        if (lastOpenedEmployeeIdRef.current !== employeeFromUrl.id) {
+          lastOpenedEmployeeIdRef.current = employeeFromUrl.id
+          openAside(
+            `Employee detail: ${employeeFromUrl?.user?.email || "Employee"}`,
+            <EmployeeDetailPanel employeeId={employeeFromUrl.id} fallbackEmployee={employeeFromUrl} />
+          )
+        }
+
+        return
+      }
+    }
+
+    if (!selectedEmployeeId) {
       setSelectedEmployeeId(employees[0].id)
     }
-  }, [employees, selectedEmployeeId])
+  }, [employees, openAside, selectedEmployeeId, urlEmployeeId])
 
   const selectedEmployee = employees.find((employee) => employee.id === selectedEmployeeId) || employees[0]
 
