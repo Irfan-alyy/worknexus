@@ -93,14 +93,6 @@ function ThreadPanel({
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Thread</p>
             <p className="mt-1 text-sm text-muted-foreground">Reply with the shared composer below.</p>
           </div>
-          <button
-            type="button"
-            onClick={onCloseThread}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Close thread"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
         <div className="mt-3">
           <MessageBubble
@@ -309,6 +301,7 @@ export function ChatPage() {
 
   useEffect(() => {
     if (!activeThreadMessage) {
+      closeAside()
       return
     }
 
@@ -321,7 +314,6 @@ export function ChatPage() {
         onOpenThread={(messageId) => setActiveThreadMessageId(messageId)}
         onCloseThread={() => {
 			setActiveThreadMessageId(null)
-			closeAside()
 		}}
         onReplySubmit={(text) => handleReply(activeThreadMessage.id, text)}
         onReact={handleReact}
@@ -337,18 +329,17 @@ export function ChatPage() {
       />,
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeThreadMessage, currentUser, openAside])
+  }, [activeThreadMessage, currentUser])
 
   useEffect(() => {
     if (!editingMessage) return
     setEditingDraft(editingMessage.text)
   }, [editingMessage])
 
+  // Reset thread when navigating to different chat
   useEffect(() => {
-    if (activeThreadMessageId && !asideOpen) {
-      setActiveThreadMessageId(null)
-    }
-  }, [activeThreadMessageId, asideOpen])
+    setActiveThreadMessageId(null)
+  }, [scope, chatId])
 
   if (!scope || !chatId) {
     return <Navigate to="/chat/channels/general" replace />
@@ -421,7 +412,8 @@ export function ChatPage() {
   }
 
   function openReplyThread(messageId) {
-    setActiveThreadMessageId(messageId)
+    // Toggle: if clicking the same thread, close it; otherwise open the new one
+    setActiveThreadMessageId((currentId) => (currentId === messageId ? null : messageId))
   }
 
   function handleStartEdit(messageId) {
@@ -512,17 +504,17 @@ export function ChatPage() {
     const shouldDelete = window.confirm("Delete this message?")
     if (!shouldDelete) return
 
+    // If deleting the currently open thread, close it first
+    if (activeThreadMessageId === messageId) {
+      setActiveThreadMessageId(null)
+    }
+
     setMessages((existingMessages) =>
       existingMessages.filter((message) => message.id !== messageId).map((message) => ({
         ...message,
         replies: (message.replies ?? []).filter((reply) => reply.id !== messageId),
       })),
     )
-
-    if (activeThreadMessageId === messageId) {
-      setActiveThreadMessageId(null)
-      closeAside()
-    }
   }
 
   function handleForward(message) {
