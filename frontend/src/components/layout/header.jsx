@@ -1,15 +1,23 @@
 import { useNavigate } from "react-router-dom"
 import { LogOut, Menu, Search, MoonStar, SunMedium, X } from "lucide-react"
 
+import { useLogoutMutation } from "@/features/auth"
 import { useGlobalStore } from "@/stores/use-global-store"
 
 export function Header({ isDarkMode, onToggleTheme, isMobile, isSidebarOpen, onToggleSidebar }) {
 	const { user, signOut } = useGlobalStore()
 	const navigate = useNavigate()
+	const { mutateAsync: logout } = useLogoutMutation()
 
-	const handleSignOut = () => {
-		signOut()
-		navigate("/login", { replace: true })
+	const handleSignOut = async () => {
+		try {
+			await logout()
+		} catch (error) {
+			console.error("Logout failed", error)
+		} finally {
+			signOut()
+			navigate("/login", { replace: true })
+		}
 	}
 
 	return (
