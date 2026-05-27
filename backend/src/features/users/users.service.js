@@ -15,7 +15,7 @@ async function listUsers() {
 
 async function getUserById(id) {
   try {
-    return await prisma.user.findUnique({ where: { id: Number(id) }, select: { id: true, email: true, role: true } })
+    return await prisma.user.findUnique({ where: { id: Number(id) }, select: { id: true, email: true, role: true, employee: { select: { id: true, firstName: true, lastName: true } } } })
   } catch (err) {
     throw new AppError("Failed to fetch user", 500, false)
   }
