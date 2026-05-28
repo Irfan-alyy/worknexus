@@ -10,7 +10,7 @@ import { useGlobalStore } from "@/stores/use-global-store"
 
 export function PmPage() {
 	const location = useLocation()
-	const { user, openAside } = useGlobalStore()
+	const { user, openAside, openModal } = useGlobalStore()
 	const [activeTab, setActiveTab] = useState("projects")
 	const [projects, setProjects] = useState(pmProjectSeeds)
 	const [selectedActivity, setSelectedActivity] = useState(pmActivitySeeds[0])
@@ -19,8 +19,8 @@ export function PmPage() {
 		setActiveTab(tabFromPath(location.pathname))
 	}, [location.pathname])
 
-	function openDrawer(title, content) {
-		openAside(title, content)
+	function openEditor(title, content) {
+		openModal(title, content)
 	}
 
 	return (
@@ -31,10 +31,10 @@ export function PmPage() {
 			</div>
 
 			<div className="space-y-6">
-				{activeTab === "projects" && <PmProjectsSection projects={projects} setProjects={setProjects} onEdit={openDrawer} />}
-				{activeTab === "activities" && <PmActivitiesSection items={pmActivitySeeds} selectedActivity={selectedActivity} setSelectedActivity={setSelectedActivity} onEdit={openDrawer} />}
+				{activeTab === "projects" && <PmProjectsSection projects={projects} setProjects={setProjects} onEdit={openEditor} onOpenDetail={openAside} />}
+				{activeTab === "activities" && <PmActivitiesSection items={pmActivitySeeds} selectedActivity={selectedActivity} setSelectedActivity={setSelectedActivity} onOpenDetail={openAside} />}
 				{activeTab === "analytics" && <PmAnalyticsSection />}
-				{activeTab === "milestones" && <PmMilestonesSection items={pmMilestoneSeeds} onEdit={openDrawer} />}
+				{activeTab === "milestones" && <PmMilestonesSection items={pmMilestoneSeeds} onOpenDetail={openAside} />}
 			</div>
 		</div>
 	)

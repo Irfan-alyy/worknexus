@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { X } from "lucide-react"
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { Dialog } from "@/components/ui/dialog"
 import { Header } from "@/components/layout/header"
 import { Sidebar } from "@/components/layout/sidebar"
 import { ChatPage } from "@/features/chat/chat-page"
@@ -127,7 +128,7 @@ function ShellLayout() {
 	const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
 	const location = useLocation()
-	const { asideOpen, asideContent, asideTitle, closeAside } = useGlobalStore()
+	const { asideOpen, asideContent, asideTitle, closeAside, modalOpen, modalContent, modalTitle, closeModal } = useGlobalStore()
 	const isMobile = useMediaQuery("(max-width: 767px)")
 
 	useEffect(() => {
@@ -172,6 +173,10 @@ function ShellLayout() {
 			/>
 
 			<div className="relative min-h-0 flex-1 overflow-hidden">
+				<Dialog open={modalOpen} title={modalTitle} onClose={closeModal}>
+					{modalContent}
+				</Dialog>
+
 				{isMobile ? (
 					<>
 						{isMobileSidebarOpen && (

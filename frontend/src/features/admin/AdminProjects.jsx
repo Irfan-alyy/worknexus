@@ -81,10 +81,11 @@ function statusBadgeClass(status) {
   return "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
 }
 
-export default function AdminProjects({ onEdit }) {
+export default function AdminProjects({ onEdit, onOpenDetail }) {
   const { user, openAside } = useGlobalStore()
   const [items, setItems] = useState(dummyProjects)
-  const openDetail = onEdit ?? openAside
+  const openDetail = onOpenDetail ?? openAside
+  const openEditor = onEdit ?? openAside
 
   function handleAdd() {
     const id = items.length + 1
@@ -148,7 +149,7 @@ export default function AdminProjects({ onEdit }) {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        openDetail(`Edit project: ${p.title}`, <ProjectEditor project={p} />)
+                        openEditor(`Edit project: ${p.title}`, <ProjectEditor project={p} />)
                       }}
                       className="inline-flex items-center gap-1 px-2 py-1 text-sm"
                       title="Edit"

@@ -60,7 +60,7 @@ export default function AdminManagers({ onEdit }) {
           </div>
           <button
             type="button"
-            onClick={() => onEdit("Add manager", <ManagerEditor manager={{ name: "New Manager", role: "HR Manager" }} />)}
+            onClick={() => onEdit?.("Add manager", <ManagerEditor manager={{ name: "New Manager", role: "HR Manager" }} />)}
             className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
             Add manager

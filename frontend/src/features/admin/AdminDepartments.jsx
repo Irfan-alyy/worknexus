@@ -40,7 +40,7 @@ export default function AdminDepartments({ onEdit }) {
         </div>
         <button
           type="button"
-          onClick={() => onEdit("Add department", <DepartmentEditor department={{ name: "New Department", createdAt: "2026-01-01", projectManager: "Assign later", teams: [], projects: [], notes: "" }} />)}
+          onClick={() => onEdit?.("Add department", <DepartmentEditor department={{ name: "New Department", createdAt: "2026-01-01", projectManager: "Assign later", teams: [], projects: [], notes: "" }} />)}
           className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
         >
           Add department
