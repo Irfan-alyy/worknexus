@@ -251,11 +251,23 @@ function ManagerDetailPanel({ userId, fallbackManager }) {
 
   const user = userResponse?.data || fallbackManager || null
   const isPm = user?.role === "pm"
-  const managedProjects = Array.isArray(user?.managedProjects) ? user.managedProjects : Array.isArray(user?.employee?.managedProjects) ? user.employee.managedProjects : []
-  const recentTasks = Array.isArray(user?.recentTasks) ? user.recentTasks : Array.isArray(user?.employee?.recentTasks) ? user.employee.recentTasks : []
+  const employeeId = user?.employee?.id
+
+  const { data: employeeResponse, isLoading: isLoadingEmployee } = useQuery({
+    queryKey: queryKeys.hr.employee(employeeId),
+    queryFn: async () => {
+      const response = await apiClient.get(`/employees/${employeeId}`)
+      return response.data
+    },
+    enabled: Boolean(isPm && employeeId),
+  })
+
+  const employee = employeeResponse?.data || null
+  const managedProjects = Array.isArray(employee?.managedProjects) ? employee.managedProjects : []
+  const recentTasks = Array.isArray(employee?.recentTasks) ? employee.recentTasks : []
   const accountDetails = [
     { label: "User ID", value: user?.id },
-    {label: "Employee ID", value: user?.employee?.id || null },
+    { label: "Employee ID", value: user?.employee?.id || null },
     { label: "Name", value: user?.employee ? `${user.employee.firstName} ${user.employee.lastName}` : null },
     { label: "Role", value: user?.role ? roleLabel(user.role) : null },
     { label: "Email", value: user?.email },
@@ -266,14 +278,6 @@ function ManagerDetailPanel({ userId, fallbackManager }) {
   const openProject = (projectId) => {
     if (!projectId) return
     navigate(`/projects?projectId=${projectId}`)
-  }
-
-  const openTask = (taskId, projectId) => {
-    if (!taskId) return
-    const params = new URLSearchParams()
-    if (projectId) params.set("projectId", projectId)
-    params.set("taskId", taskId)
-    navigate(`/projects?${params.toString()}`)
   }
 
   return (
@@ -326,7 +330,7 @@ function ManagerDetailPanel({ userId, fallbackManager }) {
                 </button>
               )) : (
                 <p className="text-sm text-muted-foreground">
-                  Managed projects will appear here when the user details endpoint includes PM project data.
+                  No managed projects found.
                 </p>
               )}
             </div>

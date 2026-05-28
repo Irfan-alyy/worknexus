@@ -11,7 +11,18 @@ async function listDepartments() {
 
 async function getDepartmentById(id) {
   try {
-    return await prisma.department.findUnique({ where: { id: Number(id) } })
+    return await prisma.department.findUnique({ where: { id: Number(id) }, select: {id:true, name:true, createdAt:true,  employees: {
+      select:{
+        id:true,
+        firstName:true,
+        lastName:true,
+        user:{
+          select:{
+            role:true
+          }
+        }
+      }
+    } } })
   } catch (err) {
     throw new AppError("Failed to get department", 500, false)
   }
