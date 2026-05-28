@@ -119,10 +119,13 @@ function LoginPageTemplate({ title, description, ctaLabel, alternateLabel, alter
           </button>
         </form>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between gap-4 text-sm">
           <Link to={alternateTo} className="font-medium text-primary hover:underline">
             {alternateLabel}
           </Link>
+          <a href="/" className="font-medium text-primary hover:underline">
+            Back to homepage
+          </a>
         </div>
       </div>
     </AuthShell>

@@ -13,6 +13,7 @@ import Projects from "@/features/shared/Projects"
 import Clients from "@/features/shared/Clients"
 import Employees from "@/features/shared/Employees"
 import { DashboardPage } from "@/routes/dashboard-page"
+import { HomePage } from "@/routes/home-page"
 import { AdminPage } from "@/routes/admin-page"
 import { EmployeePage } from "@/routes/employee-page"
 import { PmPage } from "@/routes/pm-page"
@@ -264,13 +265,12 @@ function ShellLayout() {
 export function AppRoutes() {
 	return (
 		<Routes>
-			<Route path="/" element={<Navigate to="/login" replace />} />
+			<Route path="/" element={<HomePage />} />
 			<Route path="/login" element={<LoginPage />} />
 			<Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
 			<Route element={<ProtectedRoute />}>
 				<Route element={<ShellLayout />}>
-					<Route index element={<Navigate to="/dashboard" replace />} />
 					<Route path="dashboard" element={<DashboardPage />} />
 					<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
 					<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
@@ -284,10 +284,10 @@ export function AppRoutes() {
 					<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
 					<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
 					<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm", "admin"]}><PmPage /></RoleBarrier>} />
-					<Route path="*" element={<Navigate to="/dashboard" replace />} />
+
 				</Route>
 			</Route>
-			<Route path="*" element={<Navigate to="/login" replace />} />
+			<Route path="*" element={<Navigate to="/" replace />} />
 		</Routes>
 	)
 }
