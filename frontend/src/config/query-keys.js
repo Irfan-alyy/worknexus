@@ -34,6 +34,8 @@ const adminKeys = {
   managers: () => [...adminKeys.all, "managers"],
   manager: (userId) => [...adminKeys.all, "manager", userId],
   clients: () => [...adminKeys.all, "clients"],
+  projects: () => [...adminKeys.all, "projects"],
+  project: (projectId) => [...adminKeys.all, "project", projectId],
 }
 
 export const queryKeys = {
