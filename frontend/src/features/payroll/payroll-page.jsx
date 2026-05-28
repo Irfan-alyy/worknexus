@@ -14,7 +14,7 @@ const payrollCards = [
 ]
 
 export function PayrollPage() {
-  const { user, role, openAside } = useGlobalStore()
+  const { user } = useGlobalStore()
   const [activeTab, setActiveTab] = useState("overview")
   const location = useLocation()
   const navigate = useNavigate()
@@ -26,10 +26,6 @@ export function PayrollPage() {
     else if (path.endsWith("/history")) setActiveTab("history")
     else setActiveTab("overview")
   }, [location.pathname])
-
-  function openDrawer(title, content) {
-    openAside(title, content)
-  }
 
   const titles = {
     overview: "payroll overview",
@@ -77,7 +73,7 @@ export function PayrollPage() {
         </section>
 
         <div className="space-y-6">
-          <AllowanceModal onEdit={openDrawer} />
+          <AllowanceModal />
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Finance note</p>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">

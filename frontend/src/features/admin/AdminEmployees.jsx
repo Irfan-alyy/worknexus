@@ -21,7 +21,7 @@ export default function AdminEmployees({ onEdit }) {
             </div>
             <button
               type="button"
-              onClick={() => onEdit(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />)}
+              onClick={() => onEdit?.(`Edit user: ${m.name}`, <EmployeeEditor employee={m} />)}
               className="absolute -top-4 right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 shadow-sm transition-all duration-150 hover:border-primary hover:bg-primary hover:text-primary-foreground group-hover:opacity-100 group-focus-within:opacity-100"
               title="Edit"
               aria-label={`Edit ${m.name}`}

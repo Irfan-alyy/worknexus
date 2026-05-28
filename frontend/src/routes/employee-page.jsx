@@ -8,11 +8,15 @@ import { useGlobalStore } from "@/stores/use-global-store"
 
 export function EmployeePage() {
 	const location = useLocation()
-	const { user, role, authenticate, openAside } = useGlobalStore()
+	const { user, role, authenticate, openAside, openModal } = useGlobalStore()
 	const activeTab = employeeTabFromPath(location.pathname)
 
 	function openDrawer(title, content) {
 		openAside(title, content)
+	}
+
+	function openEditor(title, content) {
+		openModal(title, content)
 	}
 
 	return (
@@ -23,7 +27,7 @@ export function EmployeePage() {
 			</div>
 
 			<div className="space-y-6">
-				{activeTab === "projects" ? <EmployeeProjectsSection onOpenDetail={openDrawer} /> : null}
+				{activeTab === "projects" ? <EmployeeProjectsSection onOpenDetail={openDrawer} onEdit={openEditor} /> : null}
 				{activeTab === "activities" ? <EmployeeActivitiesSection onOpenDetail={openDrawer} /> : null}
 				{activeTab === "profile" ? <EmployeeProfileSection user={user} role={role} onSaveUser={authenticate} /> : null}
 			</div>

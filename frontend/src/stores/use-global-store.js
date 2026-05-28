@@ -30,6 +30,9 @@ export function GlobalStoreProvider({ children }) {
 	const [asideOpen, setAsideOpen] = useState(false)
 	const [asideTitle, setAsideTitle] = useState("")
 	const [asideContent, setAsideContent] = useState(null)
+	const [modalOpen, setModalOpen] = useState(false)
+	const [modalTitle, setModalTitle] = useState("")
+	const [modalContent, setModalContent] = useState(null)
 
 	useEffect(() => {
 		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
@@ -40,6 +43,9 @@ export function GlobalStoreProvider({ children }) {
 			setAsideOpen(false)
 			setAsideContent(null)
 			setAsideTitle("")
+			setModalOpen(false)
+			setModalContent(null)
+			setModalTitle("")
 			setSession({
 				user: {
 					name,
@@ -61,10 +67,25 @@ export function GlobalStoreProvider({ children }) {
 			setAsideTitle("")
 		}
 
+		function openModal(title, content) {
+			setModalTitle(title)
+			setModalContent(content)
+			setModalOpen(true)
+		}
+
+		function closeModal() {
+			setModalOpen(false)
+			setModalContent(null)
+			setModalTitle("")
+		}
+
 		function signOut() {
 			setAsideOpen(false)
 			setAsideContent(null)
 			setAsideTitle("")
+			setModalOpen(false)
+			setModalContent(null)
+			setModalTitle("")
 			setSession(defaultSession)
 		}
 
@@ -80,8 +101,13 @@ export function GlobalStoreProvider({ children }) {
 			asideContent,
 			openAside,
 			closeAside,
+			modalOpen,
+			modalTitle,
+			modalContent,
+			openModal,
+			closeModal,
 		}
-	}, [session, asideOpen, asideTitle, asideContent])
+	}, [session, asideOpen, asideTitle, asideContent, modalOpen, modalTitle, modalContent])
 
 	return createElement(GlobalStoreContext.Provider, { value }, children)
 }

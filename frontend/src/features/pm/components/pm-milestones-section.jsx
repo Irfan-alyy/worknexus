@@ -1,6 +1,6 @@
 import { CalendarDays } from "lucide-react"
 
-export function PmMilestonesSection({ items, onEdit }) {
+export function PmMilestonesSection({ items, onOpenDetail }) {
 	return (
 		<div className="space-y-4">
 			<div>
@@ -11,7 +11,7 @@ export function PmMilestonesSection({ items, onEdit }) {
 			<div className="grid gap-3">
 				{items.map((milestone) => (
 					<div key={milestone.id} className="flex items-start justify-between rounded-2xl border border-border bg-background p-4">
-						<button type="button" onClick={() => onEdit(`Milestone: ${milestone.name}`, <MilestoneDetail milestone={milestone} />)} className="text-left">
+						<button type="button" onClick={() => onOpenDetail?.(`Milestone: ${milestone.name}`, <MilestoneDetail milestone={milestone} />)} className="text-left">
 							<h3 className="font-medium">{milestone.name}</h3>
 							<p className="mt-1 text-sm text-muted-foreground">{milestone.project}</p>
 							<p className="mt-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">{milestone.status} • due {milestone.due}</p>

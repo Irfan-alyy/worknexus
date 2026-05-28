@@ -1,4 +1,4 @@
-export function PmActivitiesSection({ items, selectedActivity, setSelectedActivity, onEdit }) {
+export function PmActivitiesSection({ items, selectedActivity, setSelectedActivity, onOpenDetail }) {
 	return (
 		<div className="space-y-4">
 			<div>
@@ -13,7 +13,7 @@ export function PmActivitiesSection({ items, selectedActivity, setSelectedActivi
 						type="button"
 						onClick={() => {
 							setSelectedActivity(activity)
-							onEdit(`Activity: ${activity.title}`, <ActivityDetail activity={activity} />)
+							onOpenDetail?.(`Activity: ${activity.title}`, <ActivityDetail activity={activity} />)
 						}}
 						className={`rounded-2xl border p-4 text-left transition-colors ${selectedActivity.id === activity.id ? "border-border bg-secondary/60" : "border-border bg-background hover:bg-secondary/30"}`}
 					>

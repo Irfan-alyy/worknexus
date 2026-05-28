@@ -1,11 +1,15 @@
 import { Eye, Edit, Mail } from "lucide-react"
 
+import { useGlobalStore } from "@/stores/use-global-store"
+
 const dummyClients = [
   { id: 1, name: "Acme Corp", projects: ["Website Redesign"] },
   { id: 2, name: "Beta Ltd.", projects: ["API Migration"] },
 ]
 
 export default function AdminClients({ onEdit }) {
+  const { openAside } = useGlobalStore()
+
   return (
     <div className="space-y-4 p-6">
       <div className="flex items-center justify-between">
@@ -18,11 +22,11 @@ export default function AdminClients({ onEdit }) {
             key={c.id}
             role="button"
             tabIndex={0}
-            onClick={() => onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />)}
+            onClick={() => openAside(`Client details: ${c.name}`, <ClientDetail client={c} />)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault()
-                onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />)
+                openAside(`Client details: ${c.name}`, <ClientDetail client={c} />)
               }
             }}
             className="group relative flex cursor-pointer items-start justify-between rounded-lg border border-border bg-background p-4 pr-16 transition-colors hover:bg-secondary/30"
@@ -37,7 +41,7 @@ export default function AdminClients({ onEdit }) {
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation()
-                    onEdit(`Client details: ${c.name}`, <ClientDetail client={c} />)
+                    openAside(`Client details: ${c.name}`, <ClientDetail client={c} />)
                   }}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   title="View"
@@ -49,7 +53,7 @@ export default function AdminClients({ onEdit }) {
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation()
-                    onEdit(`Edit client: ${c.name}`, <ClientEditor client={c} />)
+                    onEdit?.(`Edit client: ${c.name}`, <ClientEditor client={c} />)
                   }}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   title="Edit"
@@ -61,7 +65,7 @@ export default function AdminClients({ onEdit }) {
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation()
-                    onEdit(`Mail client: ${c.name}`, <MailClient client={c} />)
+                    openAside(`Mail client: ${c.name}`, <MailClient client={c} />)
                   }}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   title="Mail"

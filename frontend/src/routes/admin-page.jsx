@@ -11,7 +11,7 @@ import { AdminConversationPanel } from "@/features/admin/AdminConversationPanel"
 import { adminChannels, adminDirectMessages, getAdminChannel, getAdminDirectMessage } from "@/features/admin/admin-communications"
 
 export function AdminPage() {
-  const { user, role, openAside } = useGlobalStore()
+  const { user, role, openAside, openModal } = useGlobalStore()
   const [activeTab, setActiveTab] = useState("projects")
   const location = useLocation()
   const navigate = useNavigate()
@@ -33,8 +33,8 @@ export function AdminPage() {
     else setActiveTab("projects")
   }, [location.pathname])
 
-  function openDrawer(title, content) {
-    openAside(title, content)
+  function openEditor(title, content) {
+    openModal(title, content)
   }
 
   const titles = {
@@ -61,11 +61,11 @@ export function AdminPage() {
       </div> */}
 
       <div className="space-y-6">
-        {activeTab === "projects" && <AdminProjects onEdit={openDrawer} />}
-        {activeTab === "clients" && <AdminClients onEdit={openDrawer} />}
-        {activeTab === "employees" && <AdminEmployees onEdit={openDrawer} />}
-        {activeTab === "managers" && role === "admin" && <AdminManagers onEdit={openDrawer} />}
-        {activeTab === "departments" && role === "admin" && <AdminDepartments onEdit={openDrawer} />}
+        {activeTab === "projects" && <AdminProjects onEdit={openEditor} onOpenDetail={openAside} />}
+        {activeTab === "clients" && <AdminClients onEdit={openEditor} />}
+        {activeTab === "employees" && <AdminEmployees onEdit={openEditor} />}
+        {activeTab === "managers" && role === "admin" && <AdminManagers onEdit={openEditor} />}
+        {activeTab === "departments" && role === "admin" && <AdminDepartments onEdit={openEditor} />}
         {activeTab === "activities" && role === "admin" && <AdminActivities />}
         {activeTab === "channels" && role === "admin" && (
           <AdminConversationPanel
