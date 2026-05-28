@@ -2,16 +2,15 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { ArrowRight, Lock, Mail, RefreshCw } from "lucide-react"
 
-import { authRoleOptions } from "@/config/constants"
 import { AuthShell } from "@/components/shared/auth-shell"
-import { RoleSelector } from "@/components/shared/role-selector"
 import { useGlobalStore } from "@/stores/use-global-store"
+import { useLoginMutation } from "@/features/auth"
 
 const authHighlights = [
   { title: "Role aware", description: "Each sign-in lands on a dashboard tailored to the selected role." },
   { title: "Responsive", description: "The form stack and the marketing panel adapt to small and large screens." },
   { title: "Reusable", description: "A shared auth shell keeps the pages consistent and easy to extend." },
-  { title: "Route safe", description: "The login page only changes the selected temporary role." },
+  { title: "Secure", description: "Sign in with your organization credentials to access the workspace." },
 ]
 
 function LoginFields({ form, setForm }) {
@@ -24,6 +23,7 @@ function LoginFields({ form, setForm }) {
           <input
             type="text"
             value={form.email}
+            required
             onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             placeholder="name@company.com or username"
@@ -37,6 +37,7 @@ function LoginFields({ form, setForm }) {
           <Lock className="h-4 w-4 text-muted-foreground" />
           <input
             type="password"
+            required
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
@@ -51,22 +52,35 @@ function LoginFields({ form, setForm }) {
 function LoginPageTemplate({ title, description, ctaLabel, alternateLabel, alternateTo }) {
   const navigate = useNavigate()
   const { authenticate } = useGlobalStore()
+  const { mutateAsync: login } = useLoginMutation()
+  const [errorMessage, setErrorMessage] = useState("")
   const [form, setForm] = useState({
-    email: "waqar@worknexus.dev",
-    password: "worknexus123",
-    role: "employee",
+    email: "",
+    password: "",
   })
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setErrorMessage("")
 
-    authenticate({
-      name: form.email || "WorkNexus User",
-      email: form.email,
-      role: form.role,
-    })
+    try {
+      const response = await login({ email: form.email, password: form.password })
+      const user = response?.data?.user
+      const token = response?.data?.token
 
-    navigate("/dashboard", { replace: true })
+      authenticate({
+        user: {
+          ...user,
+          name: user?.name || user?.email || form.email,
+        },
+        token,
+      })
+
+      navigate("/dashboard", { replace: true })
+    } catch (error) {
+      const message = error?.response?.data?.message || "Login failed. Check your credentials and try again."
+      setErrorMessage(message)
+    }
   }
 
   return (
@@ -81,14 +95,11 @@ function LoginPageTemplate({ title, description, ctaLabel, alternateLabel, alter
         <form className="space-y-5" onSubmit={handleSubmit}>
           <LoginFields form={form} setForm={setForm} />
 
-          <div className="space-y-2">
-            <span className="text-sm font-medium">Temporary role buttons</span>
-            <RoleSelector
-              value={form.role}
-              options={authRoleOptions}
-              onChange={(role) => setForm((current) => ({ ...current, role }))}
-            />
-          </div>
+          {errorMessage ? (
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600">
+              {errorMessage}
+            </div>
+          ) : null}
 
           <button
             type="submit"
@@ -113,7 +124,7 @@ export function LoginPage() {
   return (
     <LoginPageTemplate
       title="Welcome back"
-      description="Pick a temporary role and enter the workspace without authentication."
+      description="Use your organization account to access the workspace."
       ctaLabel="Sign in"
       alternateLabel="Forgot password?"
       alternateTo="/forgot-password"

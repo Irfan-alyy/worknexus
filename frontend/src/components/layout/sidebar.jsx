@@ -35,13 +35,13 @@ export function Sidebar({ onNavigate }) {
 
 	// admin sections grouped after primary
 	if (role === "admin") {
+		navItems.push({ to: "/admin/departments", label: "Departments", icon: Layers })
 		navItems.push({ to: "/admin/projects", label: "Projects", icon: Briefcase })
+		navItems.push({ to: "/admin/clients", label: "Clients", icon: Briefcase })
+		navItems.push({ to: "/admin/managers", label: "Managers", icon: UserCheck })
+		navItems.push({ to: "/admin/employees", label: "Employees", icon: Users })
 		// global tasks overview for admins
 		navItems.push({ to: "/tasks", label: "Tasks", icon: Briefcase })
-		navItems.push({ to: "/admin/clients", label: "Clients", icon: Briefcase })
-		navItems.push({ to: "/admin/employees", label: "Employees", icon: Users })
-		navItems.push({ to: "/admin/managers", label: "Managers", icon: UserCheck })
-		navItems.push({ to: "/admin/departments", label: "Departments", icon: Layers })
 		navItems.push({ to: "/admin/activities", label: "Activities", icon: Activity })
 	}
 

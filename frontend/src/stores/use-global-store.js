@@ -1,5 +1,7 @@
 import { createContext, createElement, useContext, useEffect, useMemo, useState } from "react"
 
+import { setAuthToken } from "@/lib/axios"
+
 const STORAGE_KEY = "worknexus.session"
 
 const GlobalStoreContext = createContext(null)
@@ -10,6 +12,7 @@ const defaultSession = {
 		email: "",
 		role: "employee",
 	},
+	token: null,
 }
 
 function loadSession() {
@@ -38,21 +41,33 @@ export function GlobalStoreProvider({ children }) {
 		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
 	}, [session])
 
+	useEffect(() => {
+		setAuthToken(session?.token)
+	}, [session?.token])
+
 	const value = useMemo(() => {
-		const authenticate = ({ name, email, role }) => {
+		const authenticate = ({ user, name, email, role, token }) => {
+			const resolvedUser = user ?? {
+				name,
+				email,
+				role,
+			}
+
 			setAsideOpen(false)
 			setAsideContent(null)
 			setAsideTitle("")
 			setModalOpen(false)
 			setModalContent(null)
 			setModalTitle("")
-			setSession({
+			setSession((current) => ({
+				...current,
 				user: {
-					name,
-					email,
-					role,
+					...current.user,
+					...resolvedUser,
+					name: resolvedUser?.name || resolvedUser?.email || "WorkNexus User",
 				},
-			})
+				token: token ?? current.token ?? null,
+			}))
 		}
 
 		function openAside(title, content) {
@@ -93,6 +108,7 @@ export function GlobalStoreProvider({ children }) {
 			session,
 			user: session.user,
 			role: session.user.role,
+			isAuthenticated: Boolean(session.token),
 			authenticate,
 			signOut,
 			// aside controls (transient UI)

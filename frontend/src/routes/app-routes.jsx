@@ -18,6 +18,7 @@ import { AdminPage } from "@/routes/admin-page"
 import { EmployeePage } from "@/routes/employee-page"
 import { PmPage } from "@/routes/pm-page"
 import { ForgotPasswordPage, LoginPage } from "@/routes/auth-pages"
+import { ProtectedRoute } from "@/routes/protected-route"
 import { RoleBarrier } from "@/routes/role-barrier"
 import { dashboardRouteMeta, roleDefinitions } from "@/config/constants"
 import { useMediaQuery } from "@/hooks/use-media-query"
@@ -272,22 +273,24 @@ export function AppRoutes() {
 			<Route path="/login" element={<LoginPage />} />
 			<Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-			<Route element={<ShellLayout />}>
-				<Route index element={<Navigate to="/dashboard" replace />} />
-				<Route path="dashboard" element={<DashboardPage />} />
-				<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
-				<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
-				<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
-				<Route path="chat/:scope/:chatId" element={<ChatPage />} />
-				<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
-				<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
-				<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
-				<Route path="projects" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Projects /></RoleBarrier>} />
-				<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
-				<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
-				<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
-				<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm","admin"]}><PmPage /></RoleBarrier>} />
-				<Route path="*" element={<Navigate to="/dashboard" replace />} />
+			<Route element={<ProtectedRoute />}>
+				<Route element={<ShellLayout />}>
+					<Route index element={<Navigate to="/dashboard" replace />} />
+					<Route path="dashboard" element={<DashboardPage />} />
+					<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
+					<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
+					<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
+					<Route path="chat/:scope/:chatId" element={<ChatPage />} />
+					<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
+					<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
+					<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
+					<Route path="projects" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Projects /></RoleBarrier>} />
+					<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
+					<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
+					<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
+					<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm", "admin"]}><PmPage /></RoleBarrier>} />
+					<Route path="*" element={<Navigate to="/dashboard" replace />} />
+				</Route>
 			</Route>
 			<Route path="*" element={<Navigate to="/login" replace />} />
 		</Routes>

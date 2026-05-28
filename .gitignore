@@ -29,6 +29,7 @@ yarn-error.log*
 *.pem
 *.tsbuildinfo
 next-env.d.ts
+logs/
 # add _sdd_extract and its all files to .gitignore
 _sdd_extract/
 SDD.zip

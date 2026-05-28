@@ -1,0 +1,27 @@
+const { Router } = require("express")
+const {
+	listEmployeesController,
+	getEmployeeController,
+	createEmployeeController,
+	updateEmployeeController,
+} = require("./employee.controller")
+const auth = require("../../middleware/auth")
+const requireRole = require("../../middleware/rbac")
+const validateBody = require("../../middleware/validate-body")
+const { createEmployeeSchema, updateEmployeeSchema } = require("../../utils/validation-schemas")
+
+const router = Router()
+
+// GET /api/v1/employees - list all employees (admin, hr, pm)
+router.get("/", auth, requireRole(["admin", "hr", "pm"]), listEmployeesController)
+
+// GET /api/v1/employees/:id - get single employee by id (admin, hr, employee himself)
+router.get("/:id", auth, requireRole(["admin", "hr", "employee"]), getEmployeeController)
+
+// POST /api/v1/employees - create employee profile and login account (admin, hr)
+router.post("/", auth, requireRole(["admin", "hr"]), validateBody(createEmployeeSchema), createEmployeeController)
+
+// PATCH /api/v1/employees/:id - update employee (admin, hr)
+router.patch("/:id", auth, requireRole(["admin", "hr"]), validateBody(updateEmployeeSchema), updateEmployeeController)
+
+module.exports = router
