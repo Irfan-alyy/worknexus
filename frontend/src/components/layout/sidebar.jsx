@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { ChevronDown, Hash, LayoutDashboard, ReceiptText, Folder, Users, Briefcase, User, UserCheck, Layers, Activity, UserPlus, BarChart3, CalendarDays } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 
 import { roleDefinitions } from "@/config/constants"
+import { queryKeys } from "@/config/query-keys"
 import { employeeActivityBadgeCount } from "@/features/employee/employee-data"
 import { directMessages } from "@/features/chat/chat-data"
 import * as projectService from "@/features/projects/projects-service"
@@ -17,6 +19,11 @@ export function Sidebar({ onNavigate }) {
 	const [isChannelsOpen, setIsChannelsOpen] = useState(true)
 	const [openProjects, setOpenProjects] = useState({})
 	const [isDmsOpen, setIsDmsOpen] = useState(true)
+	const { data: projectsResponse } = useQuery({
+		queryKey: queryKeys.projects.list("sidebar"),
+		queryFn: async () => projectService.getProjects(),
+	})
+	const sidebarProjects = useMemo(() => projectsResponse?.data || [], [projectsResponse])
 
 	const isChatRoute = location.pathname.startsWith("/chat")
 	const activeChannelId = useMemo(() => {
@@ -141,9 +148,9 @@ export function Sidebar({ onNavigate }) {
 						</button>
 						{isChannelsOpen && (
 							<div className="space-y-1 pb-1">
-								{projectService.getProjects().map((proj) => {
+								{sidebarProjects.map((proj) => {
 									const projOpen = !!openProjects[proj.id]
-									const channelId = (proj.channel || proj.title).replace(/^#/, "").replace(/\s+/g, "-").toLowerCase()
+									const channelId = (proj.channel || proj.title)?.replace(/^#/, "").replace(/\s+/g, "-").toLowerCase()
 									const isActive = activeChannelId === channelId
 									return (
 										<div key={proj.id}>

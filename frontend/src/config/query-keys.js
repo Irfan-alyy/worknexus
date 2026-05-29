@@ -38,6 +38,14 @@ const adminKeys = {
   project: (projectId) => [...adminKeys.all, "project", projectId],
 }
 
+const projectKeys = {
+  all: ["projects"],
+  list: (scope = "default") => [...projectKeys.all, "list", scope],
+  detail: (projectId, scope = "default") => [...projectKeys.all, "detail", projectId, scope],
+  tasks: (projectId, scope = "default") => [...projectKeys.all, "tasks", projectId, scope],
+  task: (taskId, scope = "default") => [...projectKeys.all, "task", taskId, scope],
+}
+
 export const queryKeys = {
   auth: authKeys,
   chat: chatKeys,
@@ -45,4 +53,5 @@ export const queryKeys = {
   hr: hrKeys,
   settings: settingsKeys,
   admin: adminKeys,
+  projects: projectKeys,
 }
