@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Plus } from "lucide-react"
+import { useSearchParams } from "react-router-dom"
 import { useGlobalStore } from "@/stores/use-global-store"
 import * as service from "./projects-service"
 import TaskCard from "./TaskCard"
@@ -9,6 +10,8 @@ import TaskDetail from "./TaskDetail"
 export default function ProjectTasksPanel() {
   const { user, role, openAside, authenticate } = useGlobalStore()
   const [projects, setProjects] = useState([])
+  const [searchParams] = useSearchParams()
+  const projectIdParam = searchParams.get("projectId")
 
   function load() {
     setProjects(service.getProjects())
@@ -19,6 +22,7 @@ export default function ProjectTasksPanel() {
   }, [])
 
   const visible = projects.filter((p) => {
+    if (projectIdParam) return String(p.id) === projectIdParam
     if (role === "pm") return true
     return (p.members || []).includes(user.name)
   })
@@ -44,6 +48,10 @@ export default function ProjectTasksPanel() {
   const pageSize = 5
   const totalPages = Math.max(1, Math.ceil(visible.length / pageSize))
   const paged = visible.slice((page - 1) * pageSize, page * pageSize)
+
+  useEffect(() => {
+    setPage(1)
+  }, [projectIdParam])
 
   const [expanded, setExpanded] = useState({})
   function toggleExpanded(projectId) {
