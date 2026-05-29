@@ -11,8 +11,8 @@ const checklist = [
 
 export function HrPage() {
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+    <div className="h-full overflow-y-auto p-4 sm:p-6">
+      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">HR onboarding</p>
         <h2 className="mt-1 text-2xl font-semibold">New hire setup</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -20,10 +20,10 @@ export function HrPage() {
         </p>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <OnboardingWizard />
 
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             <h3 className="text-lg font-semibold">Readiness checklist</h3>
