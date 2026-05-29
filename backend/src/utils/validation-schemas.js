@@ -34,6 +34,7 @@ const normalizeEmployeePayload = (payload = {}) => ({
   hourly_rate: payload.hourly_rate ?? payload.hourlyRate,
   revenue_share_percent:
     payload.revenue_share_percent ?? payload.revenueSharePercent,
+  role: payload.role,
 })
 
 const createEmployeeSchema = z.preprocess(
@@ -55,6 +56,7 @@ const createEmployeeSchema = z.preprocess(
 const updateEmployeeSchema = z.preprocess(
   normalizeEmployeePayload,
   z.object({
+    email: z.string().email("Invalid email format").optional(),
     first_name: z.string().min(1).max(100).optional(),
     last_name: z.string().min(1).max(100).optional(),
     department_id: z.number().int().positive().optional(),

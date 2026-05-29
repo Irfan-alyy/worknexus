@@ -46,6 +46,13 @@ async function updateEmployeeController(req, res, next) {
   try {
     const { id } = req.params
     const payload = req.validatedBody || req.body
+    const userRole = req.user?.role
+
+    // Only admin and hr can update email and role
+    if ((payload.email || payload.role) && userRole !== "admin" && userRole !== "hr") {
+      throw AppError.forbidden("Only admin and HR can update email and role")
+    }
+
     const updated = await updateEmployee(id, payload)
     const { response, statusCode } = successResponse(updated, "Employee updated")
     return res.status(statusCode).json(response)

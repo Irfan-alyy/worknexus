@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Edit, Eye, Plus, X, Trash2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import apiClient from "@/lib/axios"
@@ -30,14 +31,37 @@ const statusBadgeStyles = {
   cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
 }
 
+const taskStatusBadgeStyles = {
+  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  in_progress: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  blocked: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+}
+
 function formatStatus(status) {
   if (!status) return "Unknown"
   const match = statusOptions.find((option) => option.value === status)
   return match?.label || status
 }
 
+function formatTaskStatus(status) {
+  if (!status) return "Unknown"
+  return status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
+function formatEmployeeRole(role) {
+  if (!role) return "Unknown"
+  return role.charAt(0).toUpperCase() + role.slice(1)
+}
+
 export default function AdminProjects({ onEdit }) {
   const { user, openAside } = useGlobalStore()
+  const currentRole = user?.role
+  const canCreateProject = currentRole === "admin" || currentRole === "hr"
+  const canEditProject = canCreateProject || currentRole === "pm"
   const queryClient = useQueryClient()
   const [selectedProjectId, setSelectedProjectId] = useState(null)
   const [modalState, setModalState] = useState({ open: false, mode: "create", project: null })
@@ -103,7 +127,12 @@ export default function AdminProjects({ onEdit }) {
 
   const updateProject = useMutation({
     mutationFn: ({ id, payload }) => apiClient.patch(`/projects/${id}`, payload).then((res) => res.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.projects() }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.projects() })
+      if (data?.data?.id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.project(data.data.id) })
+      }
+    },
   })
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || projects[0]
@@ -226,16 +255,18 @@ export default function AdminProjects({ onEdit }) {
             <p className="mt-1 text-sm text-muted-foreground">Signed in as {user?.email || user?.name || "Guest"}.</p>
           </div>
 
-          <button
-            type="button"
-            onClick={openCreateModal}
-            title="Add project"
-            aria-label="Add project"
-            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
-          >
-            <Plus className="h-4 w-4" />
-            Add project
-          </button>
+          {canCreateProject ? (
+            <button
+              type="button"
+              onClick={openCreateModal}
+              title="Add project"
+              aria-label="Add project"
+              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+            >
+              <Plus className="h-4 w-4" />
+              Add project
+            </button>
+          ) : null}
         </div>
 
         <section className="grid gap-4 sm:grid-cols-3">
@@ -293,18 +324,20 @@ export default function AdminProjects({ onEdit }) {
                     >
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        openEditModal(project)
-                      }}
-                      className="inline-flex items-center gap-1 px-2 py-1 text-sm"
-                      title="Edit"
-                      aria-label={`Edit ${project.name}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
+                    {canEditProject ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openEditModal(project)
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-sm"
+                        title={currentRole === "pm" ? "Edit status" : "Edit"}
+                        aria-label={`${currentRole === "pm" ? "Edit status for" : "Edit"} ${project.name}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
 
@@ -350,15 +383,17 @@ export default function AdminProjects({ onEdit }) {
         isSaving={isSaving}
         clients={clients}
         managerOptions={managerOptions}
+        userRole={currentRole}
       />
     </div>
   )
 }
 
-function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMessage, isSaving, clients, managerOptions }) {
+function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMessage, isSaving, clients, managerOptions, userRole }) {
   if (!modalState.open) return null
 
   const isEdit = modalState.mode === "edit"
+  const isPmEdit = isEdit && userRole === "pm"
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -370,6 +405,9 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
             <p className="mt-2 text-sm text-muted-foreground">
               {isEdit ? "Update project details and ownership." : "Create a new project record."}
             </p>
+            {isPmEdit ? (
+              <p className="mt-2 text-xs text-muted-foreground">Project managers can only update the project status.</p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -389,6 +427,7 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
               value={form.name}
               onChange={(event) => onChange("name", event.target.value)}
               placeholder="WorkNexus Platform"
+              disabled={isPmEdit}
             />
           </div>
 
@@ -400,6 +439,7 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
               onChange={(event) => onChange("description", event.target.value)}
               placeholder="What is this project about?"
               rows={3}
+              disabled={isPmEdit}
             />
           </div>
 
@@ -410,6 +450,7 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 value={form.client_id}
                 onChange={(event) => onChange("client_id", event.target.value)}
+                disabled={isPmEdit}
               >
                 <option value="">Select client</option>
                 {clients.map((client) => (
@@ -426,6 +467,7 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 value={form.manager_employee_id}
                 onChange={(event) => onChange("manager_employee_id", event.target.value)}
+                disabled={isPmEdit}
               >
                 <option value="">Unassigned</option>
                 {managerOptions.map((employee) => (
@@ -482,7 +524,8 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
 
 function ProjectDetailPanel({ projectId, fallbackProject, managerMap }) {
   const queryClient = useQueryClient()
-  const { user } = useGlobalStore()
+  const navigate = useNavigate()
+  const { user, closeAside } = useGlobalStore()
   const [showAddMemberModal, setShowAddMemberModal] = useState(false)
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState(new Set())
   const [addMemberError, setAddMemberError] = useState("")
@@ -508,7 +551,7 @@ function ProjectDetailPanel({ projectId, fallbackProject, managerMap }) {
   const managerLabel = managerMap?.get(project?.managerEmployeeId) || "Unassigned"
   const employees = useMemo(() => employeesResponse?.data || [], [employeesResponse])
   const members = useMemo(() => project?.teamMembers || [], [project?.teamMembers])
-
+  const recentTasks = useMemo(() => project?.tasks || [], [project?.tasks])
   // Get available employees (those not already in the team)
   // If user is PM, exclude other PMs from the list (show only employees)
   // If user is admin/hr, show all available (including PMs)
@@ -591,6 +634,11 @@ function ProjectDetailPanel({ projectId, fallbackProject, managerMap }) {
     })
   }
 
+  function openProjectTasks() {
+    closeAside()
+    navigate(`/tasks?projectId=${projectId}`)
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -664,6 +712,53 @@ function ProjectDetailPanel({ projectId, fallbackProject, managerMap }) {
         </div>
       </section>
 
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">Recent tasks</p>
+            <p className="mt-1 text-xs text-muted-foreground">Latest 5 tasks from this project.</p>
+          </div>
+          <button
+            type="button"
+            onClick={openProjectTasks}
+            className="rounded-full border border-border px-3 py-1.5 text-xs font-medium"
+          >
+            View all
+          </button>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {recentTasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No tasks found for this project.</p>
+          ) : (
+            recentTasks.map((task) => {
+              const assignee = task.employee
+                ? `${task.employee.firstName || ""} ${task.employee.lastName || ""}`.trim() || task.employee.user?.email
+                : "Unassigned"
+
+              return (
+                <div key={task.id} className="rounded-xl border border-border bg-background px-3 py-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{task.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {assignee} • Due {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "N/A"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 text-[11px] font-semibold">
+                      <span className={`rounded-full px-2 py-1 ${taskStatusBadgeStyles[task.status] || "bg-zinc-200 text-zinc-700"}`}>
+                        {formatTaskStatus(task.status)}
+                      </span>
+                      <span className="rounded-full bg-secondary px-2 py-1 text-foreground">{task.priority}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </section>
+
       {showAddMemberModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
@@ -710,6 +805,9 @@ function ProjectDetailPanel({ projectId, fallbackProject, managerMap }) {
                           </p>
                           <p className="text-xs text-muted-foreground">{employee.user?.email}</p>
                         </div>
+                        <span className={`text-xs rounded-full px-2 py-0.5 completed:text-emerald-700 ${employee.user?.role === "pm" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>
+                          {formatEmployeeRole(employee.user?.role)}
+                        </span>
                       </label>
                     ))
                   )}
