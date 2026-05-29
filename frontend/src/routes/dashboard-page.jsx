@@ -4,6 +4,7 @@ import { DashboardActivityFeed } from "@/components/shared/dashboard-activity-fe
 import { DashboardHero } from "@/components/shared/dashboard-hero"
 import { DashboardMetricGrid } from "@/components/shared/dashboard-metric-grid"
 import { DashboardRolePanel } from "@/components/shared/dashboard-role-panel"
+import { RoleGuideFlow } from "@/components/shared/role-guide-flow"
 
 export function DashboardPage() {
   const { role, user } = useGlobalStore()
@@ -17,7 +18,9 @@ export function DashboardPage() {
           title={roleConfig.dashboardTitle}
           description={`${roleConfig.dashboardDescription} Signed in as ${user.name || "Guest User"}.`}
         />
-
+        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <RoleGuideFlow tabs={roleConfig.guideTabs} roleLabel={roleConfig.label} />
+        </section>
         <DashboardMetricGrid items={roleConfig.stats} />
 
         <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">

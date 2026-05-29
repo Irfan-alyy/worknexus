@@ -2,7 +2,48 @@ const prisma = require("../../config/db.config")
 const AppError = require("../../utils/app-error")
 const { log } = require("../../utils/logger")
 
-async function syncPrivateProjectChannelMemberships(projectId, employeeId, action) {
+function mapEmployeeSummary(employee) {
+  if (!employee) return null
+
+  return {
+    id: employee.id,
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    user: employee.user
+      ? {
+          id: employee.user.id,
+          email: employee.user.email,
+          role: employee.user.role,
+        }
+      : undefined,
+  }
+}
+
+function mapTaskSummary(task) {
+  if (!task) return null
+
+  const totalHours = Array.isArray(task.timeLogs)
+    ? task.timeLogs.reduce((sum, entry) => sum + Number(entry?.hours || 0), 0)
+    : 0
+
+  return {
+    id: task.id,
+    projectId: task.projectId,
+    employeeId: task.employeeId,
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    status: task.status,
+    dueDate: task.dueDate,
+    completedAt: task.completedAt,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    totalHours,
+    employee: mapEmployeeSummary(task.employee),
+  }
+}
+
+async function syncPrivateProjectChannelMemberships(projectId, employeeIds, action) {
   const channels = await prisma.channel.findMany({
     where: { projectId, isPrivate: true },
     select: { id: true },
@@ -11,23 +52,47 @@ async function syncPrivateProjectChannelMemberships(projectId, employeeId, actio
   if (!channels.length) return
 
   const channelIds = channels.map((channel) => channel.id)
+  // Normalize employeeIds to an array
+  const ids = Array.isArray(employeeIds) ? employeeIds.map(Number) : [Number(employeeIds)]
 
   if (action === "add") {
-    await prisma.channelMember.createMany({
-      data: channelIds.map((channelId) => ({
-        channelId,
-        userId: employeeId,
-      })),
-      skipDuplicates: true,
-    })
+    // Create a channel member entry for each combination of channel and employee
+    const data = []
+    for (const channelId of channelIds) {
+      for (const employeeId of ids) {
+        const user = await prisma.employee.findUnique({
+          where: { id: employeeId },
+          select: { userId: true },
+        })
+        if (user) {
+          data.push({
+            channelId,
+            userId: user.userId,
+          })
+        }
+      }
+    }
+    if (data.length > 0) {
+      await prisma.channelMember.createMany({
+        data,
+        skipDuplicates: true,
+      })
+    }
     return
   }
 
   if (action === "remove") {
+    // Find userIds from employeeIds
+    const employees = await prisma.employee.findMany({
+      where: { id: { in: ids } },
+      select: { userId: true },
+    })
+    const userIds = employees.map((e) => e.userId)
+
     await prisma.channelMember.deleteMany({
       where: {
         channelId: { in: channelIds },
-        userId: employeeId,
+        userId: { in: userIds },
       },
     })
   }
@@ -51,7 +116,17 @@ async function listProjects(user) {
     if (!user) throw AppError.unauthorized()
 
     if (user.role === "admin" || user.role === "hr") {
-      return await prisma.project.findMany({ include: { client: true } })
+      return await prisma.project.findMany({
+        include: {
+          client: true,
+          manager: {
+            include: {
+              user: { select: { id: true, email: true, role: true } },
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      })
     }
 
     // resolve employee
@@ -59,11 +134,33 @@ async function listProjects(user) {
     if (!employee) return []
 
     if (user.role === "pm") {
-      return await prisma.project.findMany({ where: { managerEmployeeId: employee.id }, include: { client: true } })
+      return await prisma.project.findMany({
+        where: { managerEmployeeId: employee.id },
+        include: {
+          client: true,
+          manager: {
+            include: {
+              user: { select: { id: true, email: true, role: true } },
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      })
     }
 
     // employee
-    return await prisma.project.findMany({ where: { teamMembers: { some: { employeeId: employee.id } } }, include: { client: true } })
+    return await prisma.project.findMany({
+      where: { teamMembers: { some: { employeeId: employee.id } } },
+      include: {
+        client: true,
+        manager: {
+          include: {
+            user: { select: { id: true, email: true, role: true } },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    })
   } catch (err) {
     log("error", "projects.service listProjects error", { message: err?.message, stack: err?.stack })
     throw new AppError("Failed to list projects", 500, false)
@@ -72,10 +169,81 @@ async function listProjects(user) {
 
 async function getProjectById(id) {
   try {
-    return await prisma.project.findUnique({ where: { id }, include: { client: true, teamMembers: { include: { employee: { include: { user: { select: { id: true, email: true, role: true } } } } } } } })
+    return await prisma.project.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        manager: {
+          include: {
+            user: { select: { id: true, email: true, role: true } },
+          },
+        },
+        teamMembers: {
+          include: {
+            employee: {
+              include: {
+                user: { select: { id: true, email: true, role: true } },
+              },
+            },
+          },
+        },
+        tasks: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: {
+            employee: {
+              include: {
+                user: { select: { id: true, email: true, role: true } },
+              },
+            },
+          },
+        },
+      },
+    })
   } catch (err) {
     console.log("Error in getProjectById:", err)
     throw new AppError("Failed to fetch project", 500, false)
+  }
+}
+
+async function listProjectTasks(projectId, { page = 1, limit = 5 } = {}) {
+  try {
+    const safePage = Math.max(1, Number(page) || 1)
+    const safeLimit = Math.min(20, Math.max(1, Number(limit) || 5))
+    const skip = (safePage - 1) * safeLimit
+
+    const [total, tasks] = await Promise.all([
+      prisma.task.count({ where: { projectId } }),
+      prisma.task.findMany({
+        where: { projectId },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: safeLimit,
+        include: {
+          employee: {
+            include: {
+              user: { select: { id: true, email: true, role: true } },
+            },
+          },
+          timeLogs: {
+            select: { hours: true },
+          },
+        },
+      }),
+    ])
+
+    const mappedTasks = tasks.map(mapTaskSummary).filter(Boolean)
+
+    return {
+      tasks: mappedTasks,
+      page: safePage,
+      limit: safeLimit,
+      total,
+      hasMore: skip + mappedTasks.length < total,
+    }
+  } catch (err) {
+    log("error", "projects.service listProjectTasks error", { message: err?.message, stack: err?.stack })
+    throw new AppError("Failed to list project tasks", 500, false)
   }
 }
 
@@ -132,11 +300,12 @@ async function addTeamMember(projectId, employeeIds) {
     // ensure employee exists
     const employees = await prisma.employee.findMany({ where: { id: { in: employeeIds.map(Number) } } })
     if (employees.length !== employeeIds.length) throw AppError.notFound("One or more employees not found")
-
+    
     const created = await prisma.projectTeam.createMany({ data: employeeIds.map(id => ({ projectId, employeeId: Number(id) })) })
     await syncPrivateProjectChannelMemberships(projectId, employeeIds.map(Number), "add")
     return created
   } catch (err) {
+    console.log("Error in addTeamMember:", err)
     if (err && err.code === "P2002") {
       throw AppError.conflict("Employee already assigned to project")
     }
@@ -184,6 +353,7 @@ async function isProjectManager(projectId, userId) {
 module.exports = {
   listProjects,
   getProjectById,
+  listProjectTasks,
   createProject,
   updateProject,
   addTeamMember,
@@ -193,4 +363,5 @@ module.exports = {
   getEmployeeById,
   isTeamMember,
   isProjectManager,
+  mapTaskSummary,
 }

@@ -9,10 +9,12 @@ import { ChatPage } from "@/features/chat/chat-page"
 import { HrPage } from "@/features/hr-management/hr-page"
 import { RecruitmentsPage } from "@/features/hr-management/recruitments-page"
 import { PayrollPage } from "@/features/payroll/payroll-page"
+import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
 import Projects from "@/features/shared/Projects"
 import Clients from "@/features/shared/Clients"
 import Employees from "@/features/shared/Employees"
 import { DashboardPage } from "@/routes/dashboard-page"
+import { HomePage } from "@/routes/home-page"
 import { AdminPage } from "@/routes/admin-page"
 import { EmployeePage } from "@/routes/employee-page"
 import { PmPage } from "@/routes/pm-page"
@@ -264,18 +266,18 @@ function ShellLayout() {
 export function AppRoutes() {
 	return (
 		<Routes>
-			<Route path="/" element={<Navigate to="/login" replace />} />
+			<Route path="/" element={<HomePage />} />
 			<Route path="/login" element={<LoginPage />} />
 			<Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
 			<Route element={<ProtectedRoute />}>
 				<Route element={<ShellLayout />}>
-					<Route index element={<Navigate to="/dashboard" replace />} />
 					<Route path="dashboard" element={<DashboardPage />} />
 					<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
 					<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
 					<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
 					<Route path="chat/:scope/:chatId" element={<ChatPage />} />
+					<Route path="tasks" element={<RoleBarrier allowedRoles={["admin", "pm", "employee"]}><ProjectTasksPanel /></RoleBarrier>} />
 					<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
 					<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 					<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
@@ -284,10 +286,10 @@ export function AppRoutes() {
 					<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
 					<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
 					<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm", "admin"]}><PmPage /></RoleBarrier>} />
-					<Route path="*" element={<Navigate to="/dashboard" replace />} />
+
 				</Route>
 			</Route>
-			<Route path="*" element={<Navigate to="/login" replace />} />
+			<Route path="*" element={<Navigate to="/" replace />} />
 		</Routes>
 	)
 }

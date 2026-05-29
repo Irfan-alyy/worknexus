@@ -12,8 +12,8 @@ const { createEmployeeSchema, updateEmployeeSchema } = require("../../utils/vali
 
 const router = Router()
 
-// GET /api/v1/employees - list all employees (admin, hr)
-router.get("/", auth, requireRole(["admin", "hr"]), listEmployeesController)
+// GET /api/v1/employees - list all employees (admin, hr, pm)
+router.get("/", auth, requireRole(["admin", "hr", "pm"]), listEmployeesController)
 
 // GET /api/v1/employees/:id - get single employee by id (admin, hr, employee himself)
 router.get("/:id", auth, requireRole(["admin", "hr", "employee"]), getEmployeeController)
