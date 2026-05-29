@@ -35,6 +35,7 @@ const normalizeEmployeePayload = (payload = {}) => ({
   revenue_share_percent:
     payload.revenue_share_percent ?? payload.revenueSharePercent,
   role: payload.role,
+  password: payload.password
 })
 
 const createEmployeeSchema = z.preprocess(
@@ -65,6 +66,7 @@ const updateEmployeeSchema = z.preprocess(
     hourly_rate: z.number().positive().optional(),
     revenue_share_percent: z.number().min(0).max(100).optional(),
     role: z.enum(["pm", "employee"]).optional(),
+    password: z.string().min(6, "Password must be at least 6 characters").max(255).optional(),
   })
 )
 

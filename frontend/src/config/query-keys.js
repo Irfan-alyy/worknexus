@@ -16,6 +16,11 @@ const payrollKeys = {
   detail: (payrollId) => [...payrollKeys.all, "detail", payrollId],
 }
 
+const userKeys = {
+  all: ["users"],
+  detail: (userId) => [...userKeys.all, "detail", userId],
+}
+
 const hrKeys = {
   all: ["hr"],
   employees: (filters = {}) => [...hrKeys.all, "employees", filters],
@@ -50,6 +55,7 @@ export const queryKeys = {
   auth: authKeys,
   chat: chatKeys,
   payroll: payrollKeys,
+  users: userKeys,
   hr: hrKeys,
   settings: settingsKeys,
   admin: adminKeys,

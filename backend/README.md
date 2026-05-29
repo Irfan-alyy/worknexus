@@ -223,7 +223,7 @@ Requires auth and roles `admin` or `hr`.
 Returns all employees.
 
 #### `GET /:id`
-Requires auth and roles `admin`, `hr`, or `employee`.
+Requires auth and roles `admin`, `hr`, `pm`, or `employee`.
 Returns a single employee by id.
 
 #### `POST /`
@@ -274,7 +274,10 @@ Example success response:
 ```
 
 #### `PATCH /:id`
-Requires auth and roles `admin` or `hr`.
+Requires auth and roles `admin`, `hr`, `pm`, or `employee`.
+
+Admin and HR can update any employee fields.
+PMs and employees can update only their own profile fields: email, password, first name, and last name.
 
 Optional body:
 ```json

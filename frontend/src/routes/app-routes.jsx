@@ -274,7 +274,7 @@ export function AppRoutes() {
 				<Route element={<ShellLayout />}>
 					<Route path="dashboard" element={<DashboardPage />} />
 					<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
-					<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
+					<Route path="employee/*" element={<RoleBarrier allowedRoles={["admin", "hr", "pm", "employee"]}><EmployeePage /></RoleBarrier>} />
 					<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
 					<Route path="chat/:scope/:chatId" element={<ChatPage />} />
 					<Route path="tasks" element={<RoleBarrier allowedRoles={["admin", "pm", "employee"]}><ProjectTasksPanel /></RoleBarrier>} />
