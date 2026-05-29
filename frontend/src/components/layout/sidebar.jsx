@@ -59,6 +59,7 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/pm/activities", label: "Activities", icon: Activity })
 		navItems.push({ to: "/pm/analytics", label: "Analytics", icon: BarChart3 })
 		navItems.push({ to: "/pm/milestones", label: "Milestones", icon: CalendarDays })
+		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
 	}
 
 	if (role === "hr") {
@@ -66,6 +67,7 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/projects", label: "Projects", icon: Briefcase })
 		navItems.push({ to: "/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/employees", label: "Employees", icon: Users })
+		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
 	}
 
 	if (role === "employee") {
