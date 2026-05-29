@@ -88,6 +88,11 @@ async function updateProjectController(req, res, next) {
     if (user.role === "pm") {
       const ok = await isProjectManager(id, user.id)
       if (!ok) throw AppError.forbidden()
+      const allowedKeys = new Set(["status"])
+      const disallowedFields = Object.keys(payload || {}).filter((key) => !allowedKeys.has(key) && payload[key] !== undefined)
+      if (disallowedFields.length) {
+        throw AppError.forbidden("Project managers can only update project status")
+      }
     }
 
     // Validate manager_employee_id if provided

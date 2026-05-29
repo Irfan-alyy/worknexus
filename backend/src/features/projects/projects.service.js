@@ -75,7 +75,7 @@ async function listProjects(user) {
     if (!user) throw AppError.unauthorized()
 
     if (user.role === "admin" || user.role === "hr") {
-      return await prisma.project.findMany({ include: { client: true } })
+      return await prisma.project.findMany({ include: { client: true }, orderBy: { updatedAt: "desc" } })
     }
 
     // resolve employee
@@ -83,11 +83,11 @@ async function listProjects(user) {
     if (!employee) return []
 
     if (user.role === "pm") {
-      return await prisma.project.findMany({ where: { managerEmployeeId: employee.id }, include: { client: true } })
+      return await prisma.project.findMany({ where: { managerEmployeeId: employee.id }, include: { client: true }, orderBy: { updatedAt: "desc" } })
     }
 
     // employee
-    return await prisma.project.findMany({ where: { teamMembers: { some: { employeeId: employee.id } } }, include: { client: true } })
+    return await prisma.project.findMany({ where: { teamMembers: { some: { employeeId: employee.id } } }, include: { client: true }, orderBy: { updatedAt: "desc" } })
   } catch (err) {
     log("error", "projects.service listProjects error", { message: err?.message, stack: err?.stack })
     throw new AppError("Failed to list projects", 500, false)
@@ -96,7 +96,32 @@ async function listProjects(user) {
 
 async function getProjectById(id) {
   try {
-    return await prisma.project.findUnique({ where: { id }, include: { client: true, teamMembers: { include: { employee: { include: { user: { select: { id: true, email: true, role: true } } } } } } } })
+    return await prisma.project.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        teamMembers: {
+          include: {
+            employee: {
+              include: {
+                user: { select: { id: true, email: true, role: true } },
+              },
+            },
+          },
+        },
+        tasks: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: {
+            employee: {
+              include: {
+                user: { select: { id: true, email: true, role: true } },
+              },
+            },
+          },
+        },
+      },
+    })
   } catch (err) {
     console.log("Error in getProjectById:", err)
     throw new AppError("Failed to fetch project", 500, false)
