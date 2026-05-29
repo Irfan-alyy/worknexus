@@ -2,6 +2,47 @@ const prisma = require("../../config/db.config")
 const AppError = require("../../utils/app-error")
 const { log } = require("../../utils/logger")
 
+function mapEmployeeSummary(employee) {
+  if (!employee) return null
+
+  return {
+    id: employee.id,
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    user: employee.user
+      ? {
+          id: employee.user.id,
+          email: employee.user.email,
+          role: employee.user.role,
+        }
+      : undefined,
+  }
+}
+
+function mapTaskSummary(task) {
+  if (!task) return null
+
+  const totalHours = Array.isArray(task.timeLogs)
+    ? task.timeLogs.reduce((sum, entry) => sum + Number(entry?.hours || 0), 0)
+    : 0
+
+  return {
+    id: task.id,
+    projectId: task.projectId,
+    employeeId: task.employeeId,
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    status: task.status,
+    dueDate: task.dueDate,
+    completedAt: task.completedAt,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    totalHours,
+    employee: mapEmployeeSummary(task.employee),
+  }
+}
+
 async function syncPrivateProjectChannelMemberships(projectId, employeeIds, action) {
   const channels = await prisma.channel.findMany({
     where: { projectId, isPrivate: true },
@@ -75,7 +116,17 @@ async function listProjects(user) {
     if (!user) throw AppError.unauthorized()
 
     if (user.role === "admin" || user.role === "hr") {
-      return await prisma.project.findMany({ include: { client: true }, orderBy: { updatedAt: "desc" } })
+      return await prisma.project.findMany({
+        include: {
+          client: true,
+          manager: {
+            include: {
+              user: { select: { id: true, email: true, role: true } },
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      })
     }
 
     // resolve employee
@@ -83,11 +134,33 @@ async function listProjects(user) {
     if (!employee) return []
 
     if (user.role === "pm") {
-      return await prisma.project.findMany({ where: { managerEmployeeId: employee.id }, include: { client: true }, orderBy: { updatedAt: "desc" } })
+      return await prisma.project.findMany({
+        where: { managerEmployeeId: employee.id },
+        include: {
+          client: true,
+          manager: {
+            include: {
+              user: { select: { id: true, email: true, role: true } },
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+      })
     }
 
     // employee
-    return await prisma.project.findMany({ where: { teamMembers: { some: { employeeId: employee.id } } }, include: { client: true }, orderBy: { updatedAt: "desc" } })
+    return await prisma.project.findMany({
+      where: { teamMembers: { some: { employeeId: employee.id } } },
+      include: {
+        client: true,
+        manager: {
+          include: {
+            user: { select: { id: true, email: true, role: true } },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    })
   } catch (err) {
     log("error", "projects.service listProjects error", { message: err?.message, stack: err?.stack })
     throw new AppError("Failed to list projects", 500, false)
@@ -100,6 +173,11 @@ async function getProjectById(id) {
       where: { id },
       include: {
         client: true,
+        manager: {
+          include: {
+            user: { select: { id: true, email: true, role: true } },
+          },
+        },
         teamMembers: {
           include: {
             employee: {
@@ -125,6 +203,47 @@ async function getProjectById(id) {
   } catch (err) {
     console.log("Error in getProjectById:", err)
     throw new AppError("Failed to fetch project", 500, false)
+  }
+}
+
+async function listProjectTasks(projectId, { page = 1, limit = 5 } = {}) {
+  try {
+    const safePage = Math.max(1, Number(page) || 1)
+    const safeLimit = Math.min(20, Math.max(1, Number(limit) || 5))
+    const skip = (safePage - 1) * safeLimit
+
+    const [total, tasks] = await Promise.all([
+      prisma.task.count({ where: { projectId } }),
+      prisma.task.findMany({
+        where: { projectId },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: safeLimit,
+        include: {
+          employee: {
+            include: {
+              user: { select: { id: true, email: true, role: true } },
+            },
+          },
+          timeLogs: {
+            select: { hours: true },
+          },
+        },
+      }),
+    ])
+
+    const mappedTasks = tasks.map(mapTaskSummary).filter(Boolean)
+
+    return {
+      tasks: mappedTasks,
+      page: safePage,
+      limit: safeLimit,
+      total,
+      hasMore: skip + mappedTasks.length < total,
+    }
+  } catch (err) {
+    log("error", "projects.service listProjectTasks error", { message: err?.message, stack: err?.stack })
+    throw new AppError("Failed to list project tasks", 500, false)
   }
 }
 
@@ -234,6 +353,7 @@ async function isProjectManager(projectId, userId) {
 module.exports = {
   listProjects,
   getProjectById,
+  listProjectTasks,
   createProject,
   updateProject,
   addTeamMember,
@@ -243,4 +363,5 @@ module.exports = {
   getEmployeeById,
   isTeamMember,
   isProjectManager,
+  mapTaskSummary,
 }

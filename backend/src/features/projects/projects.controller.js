@@ -1,6 +1,7 @@
 const {
   listProjects,
   getProjectById,
+  listProjectTasks,
   createProject,
   updateProject,
   addTeamMember,
@@ -48,6 +49,33 @@ async function getProjectController(req, res, next) {
     const member = await isTeamMember(id, user.id)
     if (!member) throw AppError.forbidden()
     const { response, statusCode } = successResponse(project)
+    return res.status(statusCode).json(response)
+  } catch (err) {
+    return next(err)
+  }
+}
+
+async function listProjectTasksController(req, res, next) {
+  try {
+    const { id } = req.params
+    const project = await getProjectById(id)
+    if (!project) throw AppError.notFound("Project not found")
+
+    const user = req.user
+    if (user.role !== "admin" && user.role !== "hr") {
+      if (user.role === "pm") {
+        const ok = await isProjectManager(id, user.id)
+        if (!ok) throw AppError.forbidden()
+      } else {
+        const member = await isTeamMember(id, user.id)
+        if (!member) throw AppError.forbidden()
+      }
+    }
+
+    const page = Number(req.query.page || 1)
+    const limit = Number(req.query.limit || 5)
+    const data = await listProjectTasks(id, { page, limit })
+    const { response, statusCode } = successResponse({ projectId: id, ...data })
     return res.status(statusCode).json(response)
   } catch (err) {
     return next(err)
@@ -180,6 +208,7 @@ async function removeTeamMemberController(req, res, next) {
 module.exports = {
   listProjectsController,
   getProjectController,
+  listProjectTasksController,
   createProjectController,
   updateProjectController,
   listProjectTeamController,

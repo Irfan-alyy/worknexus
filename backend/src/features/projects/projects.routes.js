@@ -6,6 +6,7 @@ const validateBody = require("../../middleware/validate-body")
 const {
   listProjectsController,
   getProjectController,
+  listProjectTasksController,
   createProjectController,
   updateProjectController,
   listProjectTeamController,
@@ -22,6 +23,9 @@ router.get("/", auth, listProjectsController)
 
 // GET /api/v1/projects/:id - get project (scoped by role)
 router.get("/:id", auth, getProjectController)
+
+// GET /api/v1/projects/:id/tasks - paginated tasks for a project
+router.get("/:id/tasks", auth, listProjectTasksController)
 
 // POST /api/v1/projects - create project (admin, hr)
 router.post("/", auth, requireRole(["admin", "hr"]), validateBody(createProjectSchema), createProjectController)
