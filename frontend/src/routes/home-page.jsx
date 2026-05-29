@@ -25,44 +25,44 @@ import { roleDefinitions } from "@/config/constants"
 const highlights = [
 	{
 		title: "One product, many journeys",
-		description: "Every audience sees the same platform from a different angle, so the story stays clear from the first scroll.",
+		description: "Every role sees the same platform through a focused view, so the experience stays clear and consistent.",
 		icon: Workflow,
 	},
 	{
 		title: "Operations without clutter",
-		description: "Projects, chat, HR, and payroll sit together in a calm interface instead of feeling like separate products.",
+		description: "Projects, chat, HR, and payroll sit in one calm interface instead of feeling scattered across separate tools.",
 		icon: Briefcase,
 	},
 	{
 		title: "Built to look production-ready",
-		description: "Strong hierarchy, premium spacing, and polished previews make the page feel like a real SaaS launch.",
+		description: "Strong hierarchy, premium spacing, and clean surfaces give the homepage a finished commercial feel.",
 		icon: ShieldCheck,
 	},
 ]
 
 const storyCards = [
 	{
-		title: "It starts with clarity",
-		description: "WorkNexus gives a team one place to understand what is happening, who owns it, and what should happen next.",
-		meta: "Simple first impression",
+		title: "Clear from the first glance",
+		description: "WorkNexus gives teams one place to understand what is happening, who owns it, and what comes next.",
+		meta: "Home page",
 		icon: LayoutDashboard,
 	},
 	{
-		title: "Then the work splits by role",
-		description: "Guests, employees, PMs, HR, and admins all move through the same system, but with different access and different priorities.",
-		meta: "Role-aware experience",
+		title: "Different roles, same platform",
+		description: "Guests, employees, PMs, HR, and admins use the same product with different access and priorities.",
+		meta: "Role-based views",
 		icon: Users,
 	},
 	{
-		title: "Finally, everything stays connected",
-		description: "Tasks, messages, approvals, and progress updates stay tied together so the platform feels like a working product, not a mockup.",
+		title: "Everything stays connected",
+		description: "Tasks, messages, approvals, and progress updates stay tied together so the product feels complete.",
 		meta: "Connected workflow",
 		icon: MessageSquare,
 	},
 	{
-		title: "The result is easy to trust",
-		description: "The homepage behaves like a live demo: polished enough for a recruiter, clear enough for an examiner, and practical enough for a team.",
-		meta: "Recruiter-ready presentation",
+		title: "Easy to trust",
+		description: "The homepage feels polished enough for a recruiter, clear enough for an examiner, and practical enough for a team.",
+		meta: "Product confidence",
 		icon: BadgeCheck,
 	},
 ]
@@ -182,64 +182,64 @@ const roleSequence = ["guest", "employee", "pm", "hr", "admin"]
 
 const roleAtlas = {
 	guest: {
-		badge: "Public entry",
+		badge: "Public view",
 		icon: UserRound,
 		accent: "from-sky-400/20 via-white/10 to-cyan-300/10",
 		panelGlow: "shadow-[0_35px_120px_rgba(56,189,248,0.16)]",
-		tone: "Public-facing",
+		tone: "Visitor experience",
 		headline: "Guest / Visitor",
-		summary: "A visitor can quickly understand the product, scan the value, and move toward login or a demo without friction.",
+		summary: "A visitor can understand the product, see the value quickly, and move toward login or a demo without friction.",
 		journey: ["Sees the promise", "Checks the visual demo", "Moves to login"],
-		focus: ["Understand the platform", "Compare roles at a glance", "Reach the sign-in path quickly"],
-		cta: "Explore homepage",
+		focus: ["Understand the platform", "Compare roles quickly", "Reach the sign-in path easily"],
+		cta: "Explore the homepage",
 	},
 	employee: {
 		badge: "Daily execution",
 		icon: Users,
 		accent: "from-emerald-400/20 via-white/10 to-teal-300/10",
 		panelGlow: "shadow-[0_35px_120px_rgba(16,185,129,0.16)]",
-		tone: "Personal workbench",
+		tone: "Daily workspace",
 		headline: "Registered User / Employee",
-		summary: "The employee view is deliberately focused: tasks, updates, hours, and personal progress sit together in one quiet work area.",
+		summary: "The employee view stays focused: tasks, updates, hours, and personal progress sit together in one work area.",
 		journey: ["Opens assigned work", "Updates progress", "Keeps the board current"],
 		focus: ["Track assigned tasks", "Review hours and updates", "Stay aligned with team work"],
-		cta: "Open my workbench",
+		cta: "Open the workspace",
 	},
 	pm: {
 		badge: "Delivery control",
 		icon: Briefcase,
 		accent: "from-amber-400/20 via-white/10 to-orange-300/10",
 		panelGlow: "shadow-[0_35px_120px_rgba(245,158,11,0.16)]",
-		tone: "Command center",
+		tone: "Delivery overview",
 		headline: "Project Manager / Delivery Lead",
-		summary: "The PM view surfaces project status, milestones, risks, and client follow-ups so delivery can be steered without losing context.",
+		summary: "The PM view surfaces project status, milestones, risks, and client follow-ups so delivery stays on track.",
 		journey: ["Checks project health", "Reviews milestones", "Unblocks delivery risks"],
 		focus: ["Monitor active projects", "Track client feedback", "Keep milestones moving"],
-		cta: "Review delivery board",
+		cta: "Review delivery",
 	},
 	hr: {
 		badge: "People operations",
 		icon: CalendarDays,
 		accent: "from-fuchsia-400/20 via-white/10 to-violet-300/10",
 		panelGlow: "shadow-[0_35px_120px_rgba(217,70,239,0.16)]",
-		tone: "Operations center",
+		tone: "People operations",
 		headline: "HR Manager / People Ops",
-		summary: "HR gets a clean operational surface for onboarding, employee records, payroll readiness, and policy coordination.",
+		summary: "HR gets a clean surface for onboarding, employee records, payroll readiness, and policy coordination.",
 		journey: ["Reviews onboarding", "Updates employee records", "Prepares payroll"],
 		focus: ["Manage employee records", "Coordinate onboarding", "Finalize payroll readiness"],
-		cta: "Open people operations",
+		cta: "Open HR tools",
 	},
 	admin: {
 		badge: "System governance",
 		icon: ShieldCheck,
 		accent: "from-slate-200/20 via-white/10 to-cyan-300/10",
 		panelGlow: "shadow-[0_35px_120px_rgba(148,163,184,0.16)]",
-		tone: "Oversight layer",
+		tone: "System oversight",
 		headline: "Admin / Platform Owner",
-		summary: "Admin combines access control, approvals, account oversight, and system health into one authoritative view.",
+		summary: "Admin combines access control, approvals, account oversight, and system health in one view.",
 		journey: ["Reviews access", "Checks audit state", "Keeps governance tight"],
 		focus: ["Manage roles and permissions", "Review system health", "Approve key actions"],
-		cta: "Inspect the platform",
+		cta: "Inspect system health",
 	},
 }
 
@@ -347,7 +347,7 @@ function RolePreview({ role }) {
 				</div>
 				<div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-slate-950/30 px-3 py-2 text-xs font-medium text-white/75 backdrop-blur-sm">
 					<CircleDot className="h-3.5 w-3.5 text-emerald-300" />
-					Unique panel for this role
+					Role-specific view
 				</div>
 			</div>
 
@@ -355,12 +355,12 @@ function RolePreview({ role }) {
 				<div className="rounded-[1.75rem] border border-white/10 bg-slate-950/45 p-5 shadow-[0_20px_60px_rgba(2,6,23,0.12)] backdrop-blur-xl">
 					<div className="flex items-center justify-between gap-3">
 						<div>
-							<p className="text-xs uppercase tracking-[0.24em] text-white/45">Dashboard feel</p>
+							<p className="text-xs uppercase tracking-[0.24em] text-white/45">Role snapshot</p>
 							<h4 className="mt-2 text-lg font-semibold text-white">{roleData.tone}</h4>
 						</div>
 						<div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-2 text-right text-xs text-white/68">
 							<p>{roleData.cta}</p>
-							<p className="mt-1 font-medium text-white">Professional workflow</p>
+							<p className="mt-1 font-medium text-white">Clear next step</p>
 						</div>
 					</div>
 
@@ -376,7 +376,7 @@ function RolePreview({ role }) {
 
 					<div className="mt-4 grid gap-3 sm:grid-cols-2">
 						<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
-							<p className="text-xs uppercase tracking-[0.2em] text-white/45">What they do</p>
+							<p className="text-xs uppercase tracking-[0.2em] text-white/45">Primary actions</p>
 							<div className="mt-3 flex flex-wrap gap-2">
 								{quickActions.slice(0, 4).map((action) => (
 									<span key={action} className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-medium text-white/78">
@@ -386,7 +386,7 @@ function RolePreview({ role }) {
 							</div>
 						</div>
 						<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
-							<p className="text-xs uppercase tracking-[0.2em] text-white/45">What it feels like</p>
+							<p className="text-xs uppercase tracking-[0.2em] text-white/45">User experience</p>
 							<ul className="mt-3 space-y-2 text-sm text-white/72">
 								{focusPoints.map((point) => (
 									<li key={point} className="flex gap-2">
@@ -401,7 +401,7 @@ function RolePreview({ role }) {
 
 				<div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_55px_rgba(2,6,23,0.12)] backdrop-blur-sm">
 					<div className="flex items-center justify-between gap-3">
-						<p className="text-xs uppercase tracking-[0.24em] text-white/45">Journey inside the role</p>
+						<p className="text-xs uppercase tracking-[0.24em] text-white/45">How it moves</p>
 						<SlidersHorizontal className="h-4 w-4 text-white/45" />
 					</div>
 					<div className="mt-4 space-y-3">
@@ -417,7 +417,7 @@ function RolePreview({ role }) {
 					</div>
 
 						<div className="mt-4 rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
-						<p className="text-xs uppercase tracking-[0.2em] text-white/45">Dashboard reference</p>
+							<p className="text-xs uppercase tracking-[0.2em] text-white/45">Workspace reference</p>
 						<p className="mt-2 text-sm leading-6 text-white/72">{roleConfig?.dashboardTitle ?? roleData.headline}</p>
 						<p className="mt-2 text-xs leading-5 text-white/55">{roleConfig?.dashboardDescription ?? roleData.summary}</p>
 						<div className="mt-3 flex flex-wrap gap-2">
@@ -435,7 +435,7 @@ function RolePreview({ role }) {
 }
 
 export function HomePage() {
-	const [activeRole, setActiveRole] = useState("guest")
+	const [activeRole, setActiveRole] = useState("admin")
 	const selectedRole = audienceCards.find((role) => role.key === activeRole) ?? audienceCards[0]
 
 	return (
@@ -469,11 +469,11 @@ export function HomePage() {
 					<div className="space-y-8">
 						<div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/7 px-4 py-2 text-sm text-white/80 shadow-[0_10px_24px_rgba(2,6,23,0.12)] backdrop-blur-sm">
 							<Sparkles className="h-4 w-4 text-sky-300" />
-							Live presentation page for recruiters, examiners, and curious visitors.
+							Role-based workspace for HR, delivery, and operations teams.
 						</div>
 
 						<div className="space-y-5">
-							<SectionEyebrow>Product story</SectionEyebrow>
+							<SectionEyebrow>Overview</SectionEyebrow>
 							<h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
 								A modern workspace demo that shows how every role gets work done.
 							</h1>
@@ -488,10 +488,10 @@ export function HomePage() {
 								<ArrowRight className="h-4 w-4" />
 							</Link>
 							<a href="#roles" className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/6 px-5 text-sm font-semibold text-white/85 transition-colors hover:bg-white/10">
-								Explore roles
+								Explore the experience
 							</a>
 							<a href="#flow" className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/3 px-5 text-sm font-semibold text-white/75 transition-colors hover:bg-white/8">
-								View demo flow
+								See how it works
 							</a>
 						</div>
 
@@ -508,63 +508,63 @@ export function HomePage() {
 								<div className="rounded-[1.5rem] border border-white/10 bg-slate-950/60 p-5 shadow-[0_20px_50px_rgba(2,6,23,0.14)]">
 								<div className="flex items-center justify-between gap-3">
 									<div>
-										<SectionEyebrow>Demo preview</SectionEyebrow>
-										<h2 className="mt-2 text-xl font-semibold text-white">Product view</h2>
+										<SectionEyebrow>Workspace overview</SectionEyebrow>
+										<h2 className="mt-2 text-xl font-semibold text-white">At a glance</h2>
 									</div>
 									<span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
-										Scroll-ready
+										Always visible
 									</span>
 								</div>
 
 								<div className="mt-6 grid gap-3 sm:grid-cols-2">
 									<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
-										<p className="text-[11px] uppercase tracking-[0.22em] text-white/48">What this page does</p>
-										<p className="mt-2 text-sm leading-6 text-white/78">It acts like a live product demo and gives every visitor a clear explanation of the platform before login.</p>
+												<p className="text-[11px] uppercase tracking-[0.22em] text-white/48">For visitors</p>
+												<p className="mt-2 text-sm leading-6 text-white/78">They can understand the platform, the roles, and the entry point without needing to sign in.</p>
 									</div>
 									<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
-										<p className="text-[11px] uppercase tracking-[0.22em] text-white/48">What it avoids</p>
-										<p className="mt-2 text-sm leading-6 text-white/78">No API talk, no database talk, and no documentation style. Just a real product story.</p>
+												<p className="text-[11px] uppercase tracking-[0.22em] text-white/48">For teams</p>
+												<p className="mt-2 text-sm leading-6 text-white/78">The page keeps the story focused on the product and the people who use it.</p>
 									</div>
 								</div>
 
 								<div className="mt-5 grid gap-3 sm:grid-cols-2">
 									<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
 										<div className="flex items-center justify-between">
-											<p className="text-xs uppercase tracking-[0.2em] text-white/50">Role clarity</p>
+											<p className="text-xs uppercase tracking-[0.2em] text-white/50">Why it works</p>
 											<BadgeCheck className="h-4 w-4 text-emerald-300" />
 										</div>
-										<p className="mt-3 text-sm font-semibold text-white">Everyone understands their place</p>
-										<p className="mt-2 text-sm leading-6 text-white/70">The homepage tells you who uses the product and what they can do, without needing any account access.</p>
+										<p className="mt-3 text-sm font-semibold text-white">The entry path is obvious</p>
+										<p className="mt-2 text-sm leading-6 text-white/70">The homepage makes the product easy to understand before any login.</p>
 									</div>
 									<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_10px_24px_rgba(2,6,23,0.08)]">
 										<div className="flex items-center justify-between">
-											<p className="text-xs uppercase tracking-[0.2em] text-white/50">Visual feel</p>
+											<p className="text-xs uppercase tracking-[0.2em] text-white/50">Design language</p>
 											<Sparkle className="h-4 w-4 text-sky-300" />
 										</div>
 										<p className="mt-3 text-sm font-semibold text-white">Minimal, premium, and polished</p>
-										<p className="mt-2 text-sm leading-6 text-white/70">The mockup uses gradients, glass, and clean cards to feel like a commercial product site.</p>
+										<p className="mt-2 text-sm leading-6 text-white/70">Gradients, glass, and clean cards give the page a commercial SaaS finish.</p>
 									</div>
 								</div>
 
 								<div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_12px_30px_rgba(2,6,23,0.1)]">
 									<div className="flex items-center justify-between gap-3">
 										<div>
-											<p className="text-xs uppercase tracking-[0.22em] text-white/48">Live preview strip</p>
-											<p className="mt-2 text-sm text-white/75">The homepage feels like a product walkthrough, not a brochure.</p>
+											<p className="text-xs uppercase tracking-[0.22em] text-white/48">Quick snapshot</p>
+											<p className="mt-2 text-sm text-white/75">The homepage reads like a complete product page, not a slide deck.</p>
 										</div>
 										<div className="rounded-full border border-white/10 bg-white/7 px-3 py-1 text-xs text-white/65">Responsive</div>
 									</div>
 									<div className="mt-4 grid gap-3 md:grid-cols-3">
 										<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_8px_22px_rgba(2,6,23,0.08)]">
-											<p className="text-xs uppercase tracking-[0.2em] text-white/45">Navigation</p>
+											<p className="text-xs uppercase tracking-[0.2em] text-white/45">Top line</p>
 											<p className="mt-2 text-sm font-semibold text-white">Story, roles, flow</p>
 										</div>
 										<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_8px_22px_rgba(2,6,23,0.08)]">
-											<p className="text-xs uppercase tracking-[0.2em] text-white/45">CTA</p>
+											<p className="text-xs uppercase tracking-[0.2em] text-white/45">Action</p>
 											<p className="mt-2 text-sm font-semibold text-white">Login or explore</p>
 										</div>
 										<div className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_8px_22px_rgba(2,6,23,0.08)]">
-											<p className="text-xs uppercase tracking-[0.2em] text-white/45">Demo</p>
+											<p className="text-xs uppercase tracking-[0.2em] text-white/45">Focus</p>
 											<p className="mt-2 text-sm font-semibold text-white">Role previews</p>
 										</div>
 									</div>
@@ -583,10 +583,10 @@ export function HomePage() {
 				<section id="roles" className="py-10 lg:py-14">
 					<div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 						<div className="max-w-2xl space-y-3">
-							<SectionEyebrow>Role-based experience</SectionEyebrow>
-							<h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">See every actor in the system, visually.</h2>
+							<SectionEyebrow>Roles</SectionEyebrow>
+							<h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Every role has a distinct, professional workspace.</h2>
 							<p className="text-sm leading-7 text-white/70 sm:text-base">
-								The most important part of the homepage is the role section. It shows how the product feels for visitors, employees, managers, HR, and admins through preview panels instead of documentation.
+								The role section shows how the product feels for visitors, employees, managers, HR, and admins through distinct workspace panels.
 							</p>
 						</div>
 						<div className="flex flex-wrap gap-2">
@@ -612,10 +612,10 @@ export function HomePage() {
 
 				<section id="flow" className="py-10 lg:py-14">
 					<div className="max-w-2xl space-y-3">
-						<SectionEyebrow>User journey</SectionEyebrow>
-						<h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">A visitor can understand the whole flow in one pass.</h2>
+							<SectionEyebrow>How it works</SectionEyebrow>
+							<h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">A visitor can understand the flow in one pass.</h2>
 						<p className="text-sm leading-7 text-white/70 sm:text-base">
-							The flow section shows the system as a journey: the guest arrives, signs in, gets the right role, performs actions, and sees the result inside a connected workspace.
+								The page moves from visitor entry to sign-in, role access, action, and result in a clear sequence.
 						</p>
 					</div>
 
@@ -628,10 +628,10 @@ export function HomePage() {
 
 				<section className="py-10 lg:py-14">
 					<div className="mb-6 max-w-2xl space-y-3">
-						<SectionEyebrow>Feature experience</SectionEyebrow>
-						<h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Features as user experiences, not technical features.</h2>
+							<SectionEyebrow>Experience</SectionEyebrow>
+							<h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">The features feel like everyday product use.</h2>
 						<p className="text-sm leading-7 text-white/70 sm:text-base">
-							Every card below speaks in terms of what people feel and do in the product, so the homepage stays product-led and easy to scan.
+								Each card below describes what people do inside the product and how it feels in practice.
 						</p>
 					</div>
 
@@ -644,10 +644,10 @@ export function HomePage() {
 
 				<section className="grid gap-6 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:py-14">
 					<div className="rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-sm backdrop-blur-sm">
-						<SectionEyebrow>Why it feels real</SectionEyebrow>
-						<h2 className="mt-3 text-2xl font-semibold text-white">Commercial polish, clear workflows, and visible role clarity.</h2>
+							<SectionEyebrow>Why it works</SectionEyebrow>
+							<h2 className="mt-3 text-2xl font-semibold text-white">Commercial polish, clear workflows, and role clarity.</h2>
 						<p className="mt-3 max-w-xl text-sm leading-7 text-white/70">
-							This page is designed to feel like a production SaaS landing page rather than a student project. The cards, motion, and preview panels keep the experience credible and easy to navigate.
+								The page is designed to feel like a production SaaS landing page with premium cards, motion, and clear hierarchy.
 						</p>
 
 						<ul className="mt-6 space-y-3 text-sm text-white/78">
@@ -670,10 +670,10 @@ export function HomePage() {
 				<section className="mt-2 rounded-[2rem] border border-white/10 bg-white/6 px-6 py-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)] backdrop-blur-sm sm:px-8">
 					<div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 						<div className="max-w-2xl">
-							<SectionEyebrow>Final impact</SectionEyebrow>
-							<h2 className="mt-3 text-2xl font-semibold text-white">A complete working system, presented like a launch-ready product.</h2>
+							<SectionEyebrow>Closing</SectionEyebrow>
+							<h2 className="mt-3 text-2xl font-semibold text-white">A complete working system with a polished public front door.</h2>
 							<p className="mt-2 text-sm leading-6 text-white/70">
-								The homepage closes by reinforcing that the platform is production-ready in presentation, recruiter-friendly in structure, and easy to understand before a single login.
+								The homepage ends by reinforcing that the platform is clear, professional, and ready to present.
 							</p>
 						</div>
 
