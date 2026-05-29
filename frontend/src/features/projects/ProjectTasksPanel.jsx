@@ -36,7 +36,7 @@ function ProjectTaskSection({ project, onEdit, onOpenDetail }) {
   }
 
   return (
-    <article className="rounded-3xl border bg-card p-5 shadow-sm">
+    <article className="">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="text-lg font-semibold text-foreground">{project.name || project.title || "Untitled project"}</h3>
@@ -52,7 +52,7 @@ function ProjectTaskSection({ project, onEdit, onOpenDetail }) {
           <button
             type="button"
             onClick={() => onEdit(project, null)}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary/60"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 w-34 md:w-fit cursor-pointer text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary/60"
           >
             <Plus className="h-4 w-4" />
             Add Task
