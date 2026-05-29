@@ -310,7 +310,7 @@ export default function AdminProjects({ onEdit }) {
                 }}
                 className={`group relative cursor-pointer rounded-3xl border bg-card p-5 shadow-sm transition-colors ${selectedProject?.id === project.id ? "bg-secondary/60" : "hover:bg-secondary/30"}`}
               >
-                <div className="absolute -top-4 right-4 z-10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <div className="absolute -top-4 right-4 z-10 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                   <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 shadow-sm">
                     <button
                       type="button"

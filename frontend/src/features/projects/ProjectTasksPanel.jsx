@@ -180,9 +180,9 @@ export default function ProjectTasksPanel() {
 
       {editModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-2xl">
+          <div className="w-full max-w-xl rounded-2xl bg-card p-4 shadow-2xl sm:max-w-2xl sm:p-6">
             <div className="flex items-start justify-between gap-4">
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="min-w-0 break-words text-lg font-semibold text-foreground">
                 {editModal.task ? `Edit task: ${editModal.task.title}` : `New task`}
               </h3>
               <button onClick={closeEditModal} className="rounded-full border border-border bg-secondary px-2 py-1 text-sm text-foreground">

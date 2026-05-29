@@ -20,7 +20,7 @@ export function AdminConversationPanel({ title, subtitle, membersLabel, messages
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
-      <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
         <div>
           <h3 className="mt-1 text-lg font-semibold">{title}</h3>
         </div>
@@ -38,7 +38,7 @@ export function AdminConversationPanel({ title, subtitle, membersLabel, messages
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-5">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
         <div className="space-y-4">
           {messages.map((message) => (
             <MessageBubble key={`${message.author}-${message.time}`} {...message} isMine={message.author === user.name} />
@@ -46,7 +46,7 @@ export function AdminConversationPanel({ title, subtitle, membersLabel, messages
         </div>
       </div>
 
-      <div className="border-t border-border/60 p-5">
+      <div className="border-t border-border/60 p-4 sm:p-5">
         <ChatInput />
       </div>
     </div>
