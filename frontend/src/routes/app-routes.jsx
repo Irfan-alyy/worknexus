@@ -9,6 +9,7 @@ import { ChatPage } from "@/features/chat/chat-page"
 import { HrPage } from "@/features/hr-management/hr-page"
 import { RecruitmentsPage } from "@/features/hr-management/recruitments-page"
 import { PayrollPage } from "@/features/payroll/payroll-page"
+import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
 import Projects from "@/features/shared/Projects"
 import Clients from "@/features/shared/Clients"
 import Employees from "@/features/shared/Employees"
@@ -276,6 +277,7 @@ export function AppRoutes() {
 					<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
 					<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
 					<Route path="chat/:scope/:chatId" element={<ChatPage />} />
+					<Route path="tasks" element={<RoleBarrier allowedRoles={["admin", "pm", "employee"]}><ProjectTasksPanel /></RoleBarrier>} />
 					<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
 					<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 					<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
