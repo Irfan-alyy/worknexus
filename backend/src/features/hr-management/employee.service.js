@@ -226,7 +226,7 @@ async function updateEmployee(id, data) {
   try {
     const employeeId = Number(id)
     const normalizedData = normalizeEmployeeData(data)
-    const { email, role } = data
+    const { email, role, password } = data
 
     // Get the employee to find their userId
     const employee = await prisma.employee.findUnique({
@@ -240,10 +240,11 @@ async function updateEmployee(id, data) {
 
     const updated = await prisma.$transaction(async (tx) => {
       // Update User model if email or role is provided
-      if (email || role) {
+      if (email || role || password) {
         const userUpdateData = {}
         if (email) userUpdateData.email = email
         if (role) userUpdateData.role = role
+  		if (password) userUpdateData.password = await hashPassword(password)
 
         // Check if email already exists (if updating email)
         if (email) {

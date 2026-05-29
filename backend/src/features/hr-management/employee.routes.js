@@ -15,13 +15,13 @@ const router = Router()
 // GET /api/v1/employees - list all employees (admin, hr, pm)
 router.get("/", auth, requireRole(["admin", "hr", "pm"]), listEmployeesController)
 
-// GET /api/v1/employees/:id - get single employee by id (admin, hr, employee himself)
-router.get("/:id", auth, requireRole(["admin", "hr", "employee"]), getEmployeeController)
+// GET /api/v1/employees/:id - get single employee by id (admin, hr, pm, employee himself)
+router.get("/:id", auth, requireRole(["admin", "hr", "pm", "employee"]), getEmployeeController)
 
 // POST /api/v1/employees - create employee profile and login account (admin, hr)
 router.post("/", auth, requireRole(["admin", "hr"]), validateBody(createEmployeeSchema), createEmployeeController)
 
-// PATCH /api/v1/employees/:id - update employee (admin, hr)
-router.patch("/:id", auth, requireRole(["admin", "hr"]), validateBody(updateEmployeeSchema), updateEmployeeController)
+// PATCH /api/v1/employees/:id - update employee (admin, hr, pm, employee himself)
+router.patch("/:id", auth, requireRole(["admin", "hr", "pm", "employee"]), validateBody(updateEmployeeSchema), updateEmployeeController)
 
 module.exports = router
