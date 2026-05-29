@@ -4,7 +4,7 @@ export function AllowanceModal() {
 	const [open, setOpen] = useState(true)
 
 	return (
-		<section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+		<section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
 			<div className="flex items-start justify-between gap-4">
 				<div>
 					<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Allowance review</p>

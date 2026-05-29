@@ -1,6 +1,6 @@
 export function DashboardRolePanel({ focusPoints, quickActions }) {
   return (
-    <aside className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+    <aside className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
       <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Role focus</p>
 
       <div className="mt-4 space-y-3">

@@ -37,10 +37,10 @@ const TAB_ICONS = {
 }
 
 export function RoleGuideFlow({ tabs = [], roleLabel }) {
-	const [activeIndex, setActiveIndex] = useState(0)
+	const [activeIndex, setActiveIndex] = useState(-1)
 
 	useEffect(() => {
-		setActiveIndex(tabs.length ? 0 : -1)
+		setActiveIndex(-1)
 	}, [tabs])
 
 	const activeTab = useMemo(() => {

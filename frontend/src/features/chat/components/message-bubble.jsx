@@ -42,7 +42,7 @@ export function MessageBubble({
 		.join("")
 		.toUpperCase()
 
-	const containerClasses = `rounded-3xl border p-4 shadow-sm ${palette} ${isMine ? "ml-auto" : ""} max-w-[90%] sm:max-w-[70%] w-fit whitespace-pre-wrap break-words`
+	const containerClasses = `rounded-3xl border p-4 shadow-sm ${palette} ${isMine ? "ml-auto" : ""} max-w-[92%] sm:max-w-[70%] w-fit whitespace-pre-wrap break-words`
 	const rowClasses = `flex items-start gap-3 ${isMine ? "flex-row-reverse" : ""}`
 
 	const { openAside } = useGlobalStore()
@@ -87,7 +87,7 @@ export function MessageBubble({
 
 	return (
 		<article className={`group relative ${containerClasses}`}>
-			<div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border border-border/70 bg-background/95 px-1 py-1 opacity-0 shadow-sm transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+			<div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border border-border/70 bg-background/95 px-1 py-1 opacity-100 shadow-sm transition duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
 				{quickReactions.map((emoji) => (
 					<button
 						key={emoji}
@@ -190,11 +190,11 @@ export function MessageBubble({
 					{initials}
 				</div>
 				<div className="min-w-0 flex-1">
-					<div className="flex items-baseline justify-between gap-3">
-						<button type="button" onClick={showUserDetail} className="text-sm font-semibold hover:underline text-left">
+					<div className="flex items-start justify-between gap-3">
+						<button type="button" onClick={showUserDetail} className="min-w-0 break-words text-left text-sm font-semibold hover:underline">
 							{author}
 						</button>
-						<span className="text-xs text-muted-foreground">{time}</span>
+						<span className="shrink-0 text-xs text-muted-foreground">{time}</span>
 					</div>
 					{isEditing ? (
 						<div className="mt-2 space-y-3">

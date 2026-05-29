@@ -219,7 +219,7 @@ export default function AdminProjects({ onEdit }) {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto p-4 sm:p-6">
-      <div className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <div className="space-y-6 rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Projects</h1>
@@ -279,7 +279,7 @@ export default function AdminProjects({ onEdit }) {
                 }}
                 className={`group relative cursor-pointer rounded-3xl border bg-card p-5 shadow-sm transition-colors ${selectedProject?.id === project.id ? "bg-secondary/60" : "hover:bg-secondary/30"}`}
               >
-                <div className="absolute -top-4 right-4 z-10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <div className="absolute -top-4 right-4 z-10 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                   <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 shadow-sm">
                     <button
                       type="button"
@@ -362,7 +362,7 @@ function ProjectModal({ modalState, form, onChange, onClose, onSubmit, errorMess
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl rounded-3xl border border-border bg-card p-6 shadow-2xl">
+      <div className="w-full max-w-2xl rounded-3xl border border-border bg-card p-4 shadow-2xl sm:max-w-3xl sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Projects</p>

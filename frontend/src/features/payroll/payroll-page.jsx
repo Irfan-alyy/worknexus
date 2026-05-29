@@ -38,7 +38,7 @@ export function PayrollPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="h-full overflow-y-auto p-4 sm:p-6">
       <div className="mb-6">
         <div>
           <h1 className="text-2xl font-semibold">{titles[activeTab] || "Payroll"}</h1>
@@ -63,7 +63,7 @@ export function PayrollPage() {
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Payroll table</p>
@@ -78,7 +78,7 @@ export function PayrollPage() {
 
         <div className="space-y-6">
           <AllowanceModal onEdit={openDrawer} />
-          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Finance note</p>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Keep allowance approvals and payroll reviews in this panel so finance can finalize payout without leaving the page.

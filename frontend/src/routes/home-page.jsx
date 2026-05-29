@@ -208,7 +208,7 @@ export function HomePage() {
 				</section>
 
 				<section id="audiences" className="grid gap-6 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:py-14">
-					<div className="rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-sm backdrop-blur-sm">
+					<div className="rounded-[2rem] border border-white/10 bg-white/6 p-4 shadow-sm backdrop-blur-sm sm:p-6">
 						<SectionEyebrow>Why it fits</SectionEyebrow>
 						<h2 className="mt-3 text-2xl font-semibold text-white">One workspace, different views</h2>
 						<p className="mt-3 max-w-xl text-sm leading-7 text-white/70">

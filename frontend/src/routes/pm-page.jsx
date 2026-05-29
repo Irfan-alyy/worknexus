@@ -24,7 +24,7 @@ export function PmPage() {
 	}
 
 	return (
-		<div className="h-full overflow-y-auto p-6">
+		<div className="h-full overflow-y-auto p-4 sm:p-6">
 			<div className="mb-6">
 				<h1 className="text-2xl font-semibold">{pmPageTitles[activeTab] || "Project Manager"}</h1>
 				<p className="mt-1 text-sm text-muted-foreground">Signed in as {user?.name || "Guest"}.</p>

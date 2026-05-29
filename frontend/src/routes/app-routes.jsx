@@ -89,13 +89,13 @@ function RouteAside() {
 
 	return (
 		<aside className="flex h-full min-h-0 flex-col overflow-hidden bg-background/90">
-			<div className="border-b border-border/60 p-5">
+			<div className="border-b border-border/60 p-4 sm:p-5">
 				<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Context</p>
 				<h2 className="mt-2 text-lg font-semibold">{meta.title}</h2>
 				<p className="mt-2 text-sm leading-6 text-muted-foreground">{meta.description}</p>
 			</div>
 
-			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
 				<section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
 					<p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Key points</p>
 					<div className="mt-3 space-y-2 text-sm text-muted-foreground">
@@ -205,7 +205,7 @@ function ShellLayout() {
 						{asideOpen ? (
 							<div className="absolute inset-0 z-20 bg-background md:hidden">
 								<div className="flex h-full min-h-0 flex-col overflow-hidden">
-									<div className="border-b border-border/60 p-5">
+									<div className="border-b border-border/60 p-4 sm:p-5">
 										<div className="flex items-center justify-between gap-3">
 											<div>
 												<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Context</p>
@@ -216,7 +216,7 @@ function ShellLayout() {
 											</button>
 										</div>
 									</div>
-									<div className="min-h-0 flex-1 overflow-y-auto p-5">{asideContent ?? <RouteAside />}</div>
+									<div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">{asideContent ?? <RouteAside />}</div>
 								</div>
 							</div>
 						) : (

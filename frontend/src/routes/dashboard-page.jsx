@@ -18,12 +18,12 @@ export function DashboardPage() {
           title={roleConfig.dashboardTitle}
           description={`${roleConfig.dashboardDescription} Signed in as ${user.name || "Guest User"}.`}
         />
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <RoleGuideFlow tabs={roleConfig.guideTabs} roleLabel={roleConfig.label} />
         </section>
         <DashboardMetricGrid items={roleConfig.stats} />
 
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Workspace priority</p>

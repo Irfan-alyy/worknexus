@@ -1,6 +1,6 @@
 export function DashboardActivityFeed({ items }) {
   return (
-    <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+    <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
       <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Recent activity</p>
       <div className="mt-4 space-y-3">
         {items.map((item) => (

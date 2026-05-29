@@ -204,8 +204,8 @@ export default function AdminEmployees() {
   }
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto p-6 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="h-full min-h-0 overflow-y-auto p-4 space-y-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Employees</h2>
           <p className="mt-1 text-sm text-muted-foreground">Manage employee profiles and project manager accounts.</p>
@@ -258,7 +258,7 @@ export default function AdminEmployees() {
               <p className="mt-1 text-sm text-muted-foreground">{employee.user?.email}</p>
               <p className="mt-2 text-xs text-muted-foreground">Role: {roleLabel(employee.user?.role)}</p>
             </div>
-            <div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+            <div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-100 shadow-sm transition-all duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -508,7 +508,7 @@ function EmployeeModal({ modalState, form, onChange, onClose, onSubmit, errorMes
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl rounded-3xl border border-border bg-card p-6 shadow-2xl">
+      <div className="w-full max-w-2xl rounded-3xl border border-border bg-card p-4 shadow-2xl sm:max-w-3xl sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Employees</p>

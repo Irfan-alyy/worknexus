@@ -59,10 +59,10 @@ export default function ProjectTasksPanel() {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto p-4 sm:p-6">
-      <div className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Project Tasks</h1>
+      <div className="space-y-6 rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-semibold">Project Tasks</h1>
             <p className="mt-1 text-sm text-muted-foreground">Tasks and timelogs visible to PMs and assigned employees.</p>
           </div>
         </div>
@@ -83,20 +83,18 @@ export default function ProjectTasksPanel() {
           )}
 
           {paged.map((p) => (
-            <article key={p.id} className="rounded-3xl border bg-card p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">{p.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Client: {p.client} • Manager: {p.manager}</p>
+            <article key={p.id} className="rounded-2xl border border-border/50 bg-background p-3 sm:p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="break-words text-lg font-semibold">{p.title}</h3>
+                  <p className="mt-1 break-words text-sm text-muted-foreground">Client: {p.client} • Manager: {p.manager}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {role === "pm" && (
-                    <button type="button" onClick={() => openEditor(p)} className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium">
-                      <Plus className="h-4 w-4" />
-                      Add Task
-                    </button>
-                  )}
-                </div>
+                {role === "pm" && (
+                  <button type="button" onClick={() => openEditor(p)} className="inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium sm:self-start">
+                    <Plus className="h-4 w-4" />
+                    Add Task
+                  </button>
+                )}
               </div>
 
               <div className="mt-4 space-y-2">
@@ -129,9 +127,9 @@ export default function ProjectTasksPanel() {
 
       {editModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-2xl">
-            <div className="flex items-start justify-between">
-              <h3 className="text-lg font-semibold">{editModal.task ? `Edit task: ${editModal.task.title}` : `New task`}</h3>
+          <div className="w-full max-w-xl rounded-2xl bg-card p-4 shadow-2xl sm:max-w-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="min-w-0 break-words text-lg font-semibold">{editModal.task ? `Edit task: ${editModal.task.title}` : `New task`}</h3>
               <button onClick={closeEditModal} className="rounded-full border border-border bg-secondary px-2 py-1 text-sm">Close</button>
             </div>
             <div className="mt-4">

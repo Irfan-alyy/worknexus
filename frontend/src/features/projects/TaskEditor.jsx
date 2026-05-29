@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useGlobalStore } from "@/stores/use-global-store"
 import * as service from "./projects-service"
 
-export default function TaskEditor({ project, task: originalTask, onSaved }) {
+export default function TaskEditor({ project, task: originalTask, onSaved, onCancel }) {
   const { closeAside } = useGlobalStore()
   const [task, setTask] = useState(originalTask || { title: "", status: "Pending", priority: "Medium", estimate: "" })
   const [minutes, setMinutes] = useState(0)
@@ -72,7 +72,7 @@ export default function TaskEditor({ project, task: originalTask, onSaved }) {
       </div>
 
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={closeAside} className="px-3 py-2 rounded border">Cancel</button>
+        <button type="button" onClick={onCancel ?? closeAside} className="px-3 py-2 rounded border">Cancel</button>
         <button type="button" onClick={handleSave} className="px-3 py-2 rounded bg-primary text-white">Save</button>
       </div>
     </div>

@@ -29,7 +29,7 @@ export function EmployeeProfileSection({ user, role, onSaveUser }) {
 
 	return (
 		<div className="space-y-6">
-			<section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+			<section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
 				<div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 					<div className="flex items-center gap-4">
 						<div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
@@ -60,7 +60,7 @@ export function EmployeeProfileSection({ user, role, onSaveUser }) {
 				</div>
 			</section>
 
-			<section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+			<section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
 				<div className="flex items-center justify-between gap-3">
 					<div>
 						<p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Payments</p>
@@ -99,7 +99,7 @@ export function EmployeeProfileSection({ user, role, onSaveUser }) {
 
 			{isEditing ? (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-					<form onSubmit={handleSave} className="w-full max-w-xl rounded-3xl border border-border bg-card p-6 shadow-2xl">
+					<form onSubmit={handleSave} className="w-full max-w-xl rounded-3xl border border-border bg-card p-4 shadow-2xl sm:p-6">
 						<div className="flex items-start justify-between gap-3">
 							<div>
 								<p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Edit profile</p>

@@ -109,8 +109,8 @@ export default function AdminClients() {
   }
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 p-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Clients</h2>
           <p className="mt-1 text-sm text-muted-foreground">Manage client contacts and companies.</p>
@@ -165,7 +165,7 @@ export default function AdminClients() {
                 <p className="mt-2 text-xs text-muted-foreground">Company: {client.company}</p>
               ) : null}
             </div>
-            <div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+            <div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-100 shadow-sm transition-all duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -242,7 +242,7 @@ function ClientModal({ modalState, form, onChange, onClose, onSubmit, errorMessa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-3xl border border-border bg-card p-6 shadow-2xl">
+      <div className="w-full max-w-xl rounded-3xl border border-border bg-card p-4 shadow-2xl sm:max-w-2xl sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Clients</p>

@@ -120,8 +120,8 @@ export function RecruitmentsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+    <div className="h-full overflow-y-auto p-4 sm:p-6">
+      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Recruitments</p>
@@ -141,7 +141,7 @@ export function RecruitmentsPage() {
         </div>
       </div>
 
-      <section className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <section className="mt-6 rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Recruitments</p>
         <h3 className="mt-1 text-lg font-semibold">Current hiring list</h3>
 
@@ -175,7 +175,7 @@ export function RecruitmentsPage() {
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-xl rounded-3xl border border-border bg-card p-6 shadow-2xl">
+          <div className="w-full max-w-xl rounded-3xl border border-border bg-card p-4 shadow-2xl sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Recruitments</p>
