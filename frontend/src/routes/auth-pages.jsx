@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowRight, Lock, Mail, RefreshCw } from "lucide-react"
+import { ArrowRight, Eye, EyeOff, Lock, Mail, RefreshCw } from "lucide-react"
 
 import { AuthShell } from "@/components/shared/auth-shell"
 import { useGlobalStore } from "@/stores/use-global-store"
@@ -13,7 +13,7 @@ const authHighlights = [
   { title: "Secure", description: "Sign in with your organization credentials to access the workspace." },
 ]
 
-function LoginFields({ form, setForm }) {
+function LoginFields({ form, setForm, showPassword, setShowPassword }) {
   return (
     <div className="space-y-4">
       <label className="block space-y-2">
@@ -36,13 +36,21 @@ function LoginFields({ form, setForm }) {
         <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-3">
           <Lock className="h-4 w-4 text-muted-foreground" />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             required
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             placeholder="Enter your password"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
         </div>
       </label>
     </div>
@@ -54,6 +62,7 @@ function LoginPageTemplate({ title, description, ctaLabel, alternateLabel, alter
   const { authenticate } = useGlobalStore()
   const { mutateAsync: login } = useLoginMutation()
   const [errorMessage, setErrorMessage] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -93,7 +102,7 @@ function LoginPageTemplate({ title, description, ctaLabel, alternateLabel, alter
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
-          <LoginFields form={form} setForm={setForm} />
+          <LoginFields form={form} setForm={setForm} showPassword={showPassword} setShowPassword={setShowPassword} />
 
           {errorMessage ? (
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600">
@@ -103,17 +112,20 @@ function LoginPageTemplate({ title, description, ctaLabel, alternateLabel, alter
 
           <button
             type="submit"
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 cursor-pointer"
           >
             {ctaLabel}
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between gap-4 text-sm">
           <Link to={alternateTo} className="font-medium text-primary hover:underline">
             {alternateLabel}
           </Link>
+          <a href="/" className="font-medium text-primary hover:underline">
+            Back to homepage
+          </a>
         </div>
       </div>
     </AuthShell>
