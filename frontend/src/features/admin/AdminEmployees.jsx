@@ -61,6 +61,16 @@ export default function AdminEmployees() {
 
   const employees = useMemo(() => employeesResponse?.data || [], [employeesResponse])
 
+  const { data: departmentsResponse } = useQuery({
+    queryKey: queryKeys.hr.departments(),
+    queryFn: async () => {
+      const response = await apiClient.get("/departments")
+      return response.data
+    },
+  })
+
+  const departments = useMemo(() => departmentsResponse?.data || [], [departmentsResponse])
+
   const createEmployee = useMutation({
     mutationFn: (payload) => apiClient.post("/employees", payload).then((res) => res.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
@@ -68,7 +78,12 @@ export default function AdminEmployees() {
 
   const updateEmployee = useMutation({
     mutationFn: ({ id, payload }) => apiClient.patch(`/employees/${id}`, payload).then((res) => res.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: queryKeys.hr.employees() }) 
+      if (selectedEmployeeId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.hr.employee(selectedEmployeeId) })
+      }
+    },
   })
 
   useEffect(() => {
@@ -185,7 +200,6 @@ export default function AdminEmployees() {
         await createEmployee.mutateAsync(payload)
       } else if (modalState.employee?.id) {
         const updatePayload = { ...payload }
-        delete updatePayload.email
         delete updatePayload.password
 
         if (!Object.keys(updatePayload).length) {
@@ -303,6 +317,7 @@ export default function AdminEmployees() {
         onSubmit={handleSubmit}
         errorMessage={formError}
         isSaving={isSaving}
+        departments={departments}
       />
     </div>
   )
@@ -501,7 +516,7 @@ function EmployeeDetailPanel({ employeeId, fallbackEmployee }) {
   )
 }
 
-function EmployeeModal({ modalState, form, onChange, onClose, onSubmit, errorMessage, isSaving }) {
+function EmployeeModal({ modalState, form, onChange, onClose, onSubmit, errorMessage, isSaving, departments = [] }) {
   if (!modalState.open) return null
 
   const isEdit = modalState.mode === "edit"
@@ -557,11 +572,11 @@ function EmployeeModal({ modalState, form, onChange, onClose, onSubmit, errorMes
               value={form.email}
               onChange={(event) => onChange("email", event.target.value)}
               placeholder="employee@worknexus.com"
-              disabled={isEdit}
+              // disabled={isEdit}
             />
-            {isEdit ? (
+            {/* {isEdit ? (
               <p className="mt-1 text-xs text-muted-foreground">Email updates happen via user settings.</p>
-            ) : null}
+            ) : null} */}
           </div>
 
           {!isEdit ? (
@@ -593,15 +608,19 @@ function EmployeeModal({ modalState, form, onChange, onClose, onSubmit, errorMes
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Department ID</label>
-              <input
-                type="number"
-                min="1"
+              <label className="text-sm font-medium">Department</label>
+              <select
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 value={form.department_id}
                 onChange={(event) => onChange("department_id", event.target.value)}
-                placeholder="Optional"
-              />
+              >
+                <option value="">Select department (optional)</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

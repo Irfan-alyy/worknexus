@@ -85,6 +85,7 @@ async function listEmployees() {
           select: { id: true, email: true, role: true, createdAt: true },
         },
       },
+      orderBy: { createdAt: "desc" },
     })
     return employees
   } catch (err) {
@@ -164,7 +165,7 @@ async function createEmployee(input) {
     const { email, password } = input
     const employeeData = normalizeEmployeeData(input)
     const roleToCreate = input.role || "employee"
-
+    console.log("Creating employee with data:", { email, roleToCreate, input, employeeData })
     const created = await prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({ where: { email } })
 
@@ -224,15 +225,82 @@ async function createEmployee(input) {
 
 async function updateEmployee(id, data) {
   try {
-    const updated = await prisma.employee.update({
-      where: { id: Number(id) },
-      data: normalizeEmployeeData(data),
+    const employeeId = Number(id)
+    const normalizedData = normalizeEmployeeData(data)
+    const { email, role } = data
+
+    // Get the employee to find their userId
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      select: { userId: true },
     })
+
+    if (!employee) {
+      throw AppError.notFound("Employee not found")
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      // Update User model if email or role is provided
+      if (email || role) {
+        const userUpdateData = {}
+        if (email) userUpdateData.email = email
+        if (role) userUpdateData.role = role
+
+        // Check if email already exists (if updating email)
+        if (email) {
+          const existingUser = await tx.user.findUnique({ where: { email } })
+          if (existingUser && existingUser.id !== employee.userId) {
+            throw AppError.conflict("An account with this email already exists")
+          }
+        }
+
+        await tx.user.update({
+          where: { id: employee.userId },
+          data: userUpdateData,
+        })
+      }
+
+      // Update Employee model with remaining fields
+      const employeeUpdateData = {}
+      if (normalizedData.firstName !== undefined) employeeUpdateData.firstName = normalizedData.firstName
+      if (normalizedData.lastName !== undefined) employeeUpdateData.lastName = normalizedData.lastName
+      if (normalizedData.departmentId !== undefined) employeeUpdateData.departmentId = normalizedData.departmentId
+      if (normalizedData.paymentModel !== undefined) employeeUpdateData.paymentModel = normalizedData.paymentModel
+      if (normalizedData.baseSalary !== undefined) employeeUpdateData.baseSalary = normalizedData.baseSalary
+      if (normalizedData.hourlyRate !== undefined) employeeUpdateData.hourlyRate = normalizedData.hourlyRate
+      if (normalizedData.revenueSharePercent !== undefined) employeeUpdateData.revenueSharePercent = normalizedData.revenueSharePercent
+
+      const updatedEmployee = await tx.employee.update({
+        where: { id: employeeId },
+        data: employeeUpdateData,
+        include: {
+          user: {
+            select: { id: true, email: true, role: true, createdAt: true },
+          },
+        },
+      })
+
+      return updatedEmployee
+    })
+
     return updated
   } catch (err) {
     if (err && err.code === "P2025") {
       throw AppError.notFound("Employee not found")
     }
+
+    if (err && err.code === "P2002") {
+      throw AppError.conflict("An account with this email already exists")
+    }
+
+    if (err && err.code === "P2003") {
+      throw new AppError("Invalid department selected", 400, true)
+    }
+
+    if (err?.statusCode) {
+      throw err
+    }
+
     throw new AppError("Failed to update employee", 500, false)
   }
 }
