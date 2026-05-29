@@ -34,7 +34,6 @@ async function getEmployeeController(req, res, next) {
 async function createEmployeeController(req, res, next) {
   try {
     const payload = req.validatedBody || req.body
-    console.log("Received payload for creating employee:", payload) // Debug log
     const created = await createEmployee(payload)
     const { response, statusCode } = successResponse(created, "Employee account created", 201)
     return res.status(statusCode).json(response)

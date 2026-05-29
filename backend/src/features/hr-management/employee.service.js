@@ -165,7 +165,6 @@ async function createEmployee(input) {
     const { email, password } = input
     const employeeData = normalizeEmployeeData(input)
     const roleToCreate = input.role || "employee"
-    console.log("Creating employee with data:", { email, roleToCreate, input, employeeData })
     const created = await prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({ where: { email } })
 
