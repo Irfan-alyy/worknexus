@@ -5,6 +5,7 @@ const {
 	createEmployeeController,
 	updateEmployeeController,
 } = require("./employee.controller")
+const { getActivities, getActivityMetrics } = require("../activities/activities.controller")
 const auth = require("../../middleware/auth")
 const requireRole = require("../../middleware/rbac")
 const validateBody = require("../../middleware/validate-body")
@@ -23,5 +24,11 @@ router.post("/", auth, requireRole(["admin", "hr"]), validateBody(createEmployee
 
 // PATCH /api/v1/employees/:id - update employee (admin, hr, pm, employee himself)
 router.patch("/:id", auth, requireRole(["admin", "hr", "pm", "employee"]), validateBody(updateEmployeeSchema), updateEmployeeController)
+
+// GET /api/v1/employees/:id/activities - get employee activities
+router.get("/:id/activities", auth, getActivities)
+
+// GET /api/v1/employees/:id/activities/metrics - get employee activity metrics
+router.get("/:id/activities/metrics", auth, getActivityMetrics)
 
 module.exports = router

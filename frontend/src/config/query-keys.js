@@ -43,6 +43,12 @@ const adminKeys = {
   project: (projectId) => [...adminKeys.all, "project", projectId],
 }
 
+const employeeActivityKeys = {
+  all: ["employee-activities"],
+  activities: (employeeId) => [...employeeActivityKeys.all, "activities", employeeId],
+  metrics: (employeeId) => [...employeeActivityKeys.all, "metrics", employeeId],
+}
+
 const projectKeys = {
   all: ["projects"],
   list: (scope = "default") => [...projectKeys.all, "list", scope],
@@ -60,4 +66,5 @@ export const queryKeys = {
   settings: settingsKeys,
   admin: adminKeys,
   projects: projectKeys,
+  employeeActivities: employeeActivityKeys,
 }
