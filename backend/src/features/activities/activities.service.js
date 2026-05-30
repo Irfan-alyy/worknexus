@@ -367,3 +367,160 @@ module.exports = {
 	getEmployeeActivities,
 	getEmployeeActivityMetrics,
 }
+
+/**
+ * Get activities across projects managed by a project manager
+ */
+async function getManagerActivities(managerId, limit = 50) {
+	try {
+		if (!Number.isInteger(managerId) || managerId <= 0) {
+			return []
+		}
+
+		// Find projects managed by this manager (schema field: managerEmployeeId)
+		const projects = await prisma.project.findMany({
+			where: { managerEmployeeId: managerId },
+			include: {
+				manager: { include: { user: true } },
+				teamMembers: true,
+			},
+		})
+		const projectIds = projects.map((p) => p.id)
+
+		// Fetch tasks for those projects
+		const tasks = await prisma.task.findMany({
+			where: { projectId: { in: projectIds } },
+			include: {
+				project: { include: { manager: { include: { user: true } } } },
+			},
+			orderBy: { createdAt: "desc" },
+		})
+
+		// Fetch time logs for tasks in these projects
+		const timeLogs = await prisma.timeLog.findMany({
+			where: {
+				task: { projectId: { in: projectIds } },
+			},
+			include: {
+				task: { include: { project: true } },
+			},
+			orderBy: { loggedAt: "desc" },
+		})
+
+		// Fetch project team entries
+		const projectTeams = await prisma.projectTeam.findMany({
+			where: { projectId: { in: projectIds } },
+			include: {
+				project: { include: { manager: { include: { user: true } }, teamMembers: true } },
+			},
+			orderBy: { assignedAt: "desc" },
+		})
+
+		// For manager view, payrolls can be for team members on projects
+		const employeeIds = Array.from(new Set(projectTeams.map((pt) => pt.employeeId).filter(Boolean)))
+		const payrolls = employeeIds.length
+			? await prisma.payroll.findMany({ where: { employeeId: { in: employeeIds } }, orderBy: { createdAt: "desc" } })
+			: []
+
+		// Build activities using existing transforms
+		let activities = []
+
+		tasks.forEach((task) => {
+			activities = activities.concat(transformTaskActivities(task, null))
+		})
+
+		timeLogs.forEach((log) => {
+			activities = activities.concat(transformTimeLogActivities([log], null))
+		})
+
+		payrolls.forEach((payroll) => {
+			activities = activities.concat(transformPayrollActivities([payroll], null))
+		})
+
+		const projectsList = projectTeams.map((pt) => pt.project)
+		projectsList.forEach((project) => {
+			activities = activities.concat(transformProjectActivities([project], null))
+		})
+
+		// Deduplicate and sort (reuse same logic)
+		const uniqueActivities = []
+		const seen = new Set()
+
+		activities.forEach((activity) => {
+			const key = `${activity.type}_${activity.taskId || activity.projectId || activity.paymentStatus}_${Math.floor(new Date(activity.timestamp).getTime() / 1000)}`
+			if (!seen.has(key)) {
+				seen.add(key)
+				uniqueActivities.push(activity)
+			}
+		})
+
+		uniqueActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+		return uniqueActivities.slice(0, limit)
+	} catch (error) {
+		throw new Error(`Failed to fetch manager activities: ${error.message}`)
+	}
+}
+
+async function getManagerActivityMetrics(managerId) {
+	try {
+		if (!Number.isInteger(managerId) || managerId <= 0) {
+			return {
+				tasksDueThisWeek: 0,
+				totalHoursThisWeek: "0.00",
+				pendingPayrollAmount: "0.00",
+				pendingPayrollCount: 0,
+				projectsManaged: 0,
+			}
+		}
+
+		// Find projects managed by this manager (schema field: managerEmployeeId)
+		const projects = await prisma.project.findMany({ where: { managerEmployeeId: managerId } })
+		const projectIds = projects.map((p) => p.id)
+
+		const today = new Date()
+		const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+		// Tasks due this week across manager's projects
+		const tasksDue = await prisma.task.findMany({ where: { projectId: { in: projectIds }, dueDate: { gte: today, lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) }, status: { not: "completed" } } })
+
+		// Time logs this week for tasks under these projects
+		const timeLogs = await prisma.timeLog.findMany({ where: { task: { projectId: { in: projectIds } }, loggedAt: { gte: weekStart } } })
+
+		// Pending payroll for employees on managed projects
+		const projectTeams = await prisma.projectTeam.findMany({
+			where: { projectId: { in: projectIds } },
+			select: { employeeId: true },
+		})
+		const employeeIds = Array.from(new Set(projectTeams.map((pt) => pt.employeeId).filter(Boolean)))
+		const pendingPayrolls = employeeIds.length
+			? await prisma.payroll.findMany({
+				where: {
+					employeeId: { in: employeeIds },
+					paymentStatus: "pending",
+				},
+			})
+			: []
+
+		const totalHoursThisWeek = timeLogs.reduce((sum, log) => sum + Number(log.hours), 0)
+		const totalPendingPayroll = pendingPayrolls.reduce((sum, p) => sum + Number(p.amount), 0)
+
+		return {
+			tasksDueThisWeek: tasksDue.length,
+			totalHoursThisWeek: totalHoursThisWeek.toFixed(2),
+			pendingPayrollAmount: totalPendingPayroll.toFixed(2),
+			pendingPayrollCount: pendingPayrolls.length,
+			projectsManaged: projectIds.length,
+		}
+	} catch (error) {
+		throw new Error(`Failed to fetch manager metrics: ${error.message}`)
+	}
+}
+
+// Export manager functions
+module.exports = {
+	getEmployeeActivities,
+	getEmployeeActivityMetrics,
+	getManagerActivities,
+	getManagerActivityMetrics,
+}
