@@ -1,52 +1,85 @@
-export function PmActivitiesSection({ items, selectedActivity, setSelectedActivity, onEdit }) {
+import { usePmActivities, usePmActivityMetrics } from "../hooks/use-pm-activities"
+import { ActivityCard } from "@/features/employee/components/activity-card"
+import { ActivityMetricsCards } from "@/features/employee/components/activity-metrics"
+
+function groupActivitiesByType(activities) {
+	const grouped = {}
+	activities.forEach((activity) => {
+		if (!grouped[activity.type]) grouped[activity.type] = []
+		grouped[activity.type].push(activity)
+	})
+	return grouped
+}
+
+function getActivityTypeLabel(type) {
+	const labels = {
+		task_assigned: "Task Assignments",
+		task_status_changed: "Task Updates",
+		task_due_soon: "Due Soon",
+		task_completed: "Completed Tasks",
+		time_log_added: "Time Logs",
+		payroll_generated: "Payroll",
+		payroll_status_changed: "Payroll Updates",
+		project_added: "Project Memberships",
+	}
+	return labels[type] || type.replace(/_/g, " ")
+}
+
+export function PmActivitiesSection({ onOpenDetail }) {
+	const { data: activities = [], isLoading: activitiesLoading, error: activitiesError } = usePmActivities()
+	const { data: metrics, isLoading: metricsLoading } = usePmActivityMetrics()
+	if (activitiesLoading) {
+		return (
+			<div className="rounded-3xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-sm">Loading activities...</div>
+		)
+	}
+
+	if (activitiesError) {
+		return (
+			<div className="rounded-3xl border border-red-500/40 bg-red-500/5 p-5 text-sm text-red-600 shadow-sm">Failed to load PM activities</div>
+		)
+	}
+
+	if (!activities || activities.length === 0) {
+		return (
+			<div className="rounded-3xl border border-border bg-card p-5 shadow-sm text-center">No project activities yet</div>
+		)
+	}
+
+	const grouped = groupActivitiesByType(activities)
+	const types = Object.keys(grouped).sort()
+
 	return (
-		<div className="space-y-4">
-			<div>
-				<h2 className="text-lg font-semibold">Activities</h2>
-				<p className="mt-1 text-sm text-muted-foreground">A simple feed of recent project updates and delivery changes.</p>
+		<div className="space-y-6">
+			<ActivityMetricsCards metrics={metrics} isLoading={metricsLoading} />
+
+			<div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+				<p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">PM Activity stream</p>
+				<h2 className="mt-2 text-lg font-semibold">Recent updates across your projects</h2>
+				<p className="mt-1 text-sm text-muted-foreground">Track tasks, time logs, and team changes for projects you manage.</p>
 			</div>
 
-			<div className="grid gap-3">
-				{items.map((activity) => (
-					<button
-						key={activity.id}
-						type="button"
-						onClick={() => {
-							setSelectedActivity(activity)
-							onEdit(`Activity: ${activity.title}`, <ActivityDetail activity={activity} />)
-						}}
-						className={`rounded-2xl border p-4 text-left transition-colors ${selectedActivity.id === activity.id ? "border-border bg-secondary/60" : "border-border bg-background hover:bg-secondary/30"}`}
-					>
-						<div className="flex items-start justify-between gap-3">
-							<div>
-								<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{activity.title}</p>
-								<h3 className="mt-1 text-base font-medium">{activity.note}</h3>
-							</div>
-							<span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-foreground">{activity.time}</span>
+			{types.map((type) => {
+				const items = grouped[type].slice(0, 6)
+				const total = grouped[type].length
+				return (
+					<div key={type}>
+						<div className="mb-3 flex items-center justify-between">
+							<h3 className="text-sm font-semibold text-foreground">
+								{getActivityTypeLabel(type)}
+								{total > 6 && <span className="ml-2 text-xs text-muted-foreground">({total} total)</span>}
+							</h3>
 						</div>
-					</button>
-				))}
-			</div>
+						<div className="space-y-3">
+							{items.map((activity, idx) => (
+								<ActivityCard key={`${type}-${idx}`} activity={activity} onOpenDetail={onOpenDetail ?? (() => {})} />
+							))}
+						</div>
+					</div>
+				)
+			})}
 		</div>
 	)
 }
 
-function ActivityDetail({ activity }) {
-	return (
-		<div className="space-y-3">
-			<p className="text-sm">Activity detail for <strong>{activity.title}</strong></p>
-			<div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-				<p className="text-sm font-medium">Note</p>
-				<p className="mt-2 text-sm text-muted-foreground">{activity.note}</p>
-			</div>
-			<div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-				<p className="text-sm font-medium">Details</p>
-				<div className="mt-3 space-y-2">
-					{activity.details.map((detail) => (
-						<div key={detail} className="rounded-xl border border-border bg-background px-3 py-2 text-sm">{detail}</div>
-					))}
-				</div>
-			</div>
-		</div>
-	)
-}
+export default PmActivitiesSection

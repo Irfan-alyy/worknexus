@@ -49,6 +49,12 @@ const employeeActivityKeys = {
   metrics: (employeeId) => [...employeeActivityKeys.all, "metrics", employeeId],
 }
 
+const pmActivityKeys = {
+  all: ["pm-activities"],
+  activities: () => [...pmActivityKeys.all, "activities"],
+  metrics: () => [...pmActivityKeys.all, "metrics"],
+}
+
 const projectKeys = {
   all: ["projects"],
   list: (scope = "default") => [...projectKeys.all, "list", scope],
@@ -67,4 +73,5 @@ export const queryKeys = {
   admin: adminKeys,
   projects: projectKeys,
   employeeActivities: employeeActivityKeys,
+  pmActivities: pmActivityKeys,
 }
