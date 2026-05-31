@@ -10,10 +10,12 @@ import axios from "@/lib/axios"
  * @returns {Promise<Array>} Array of activity objects
  */
 export const fetchHRActivities = async (options = {}) => {
-	const { limit = 50, ...filters } = options
+	const { limit, ...filters } = options
+	const hasFilters = Boolean(filters.type || filters.dateRange || filters.status)
+	const effectiveLimit = Number.isFinite(limit) ? limit : hasFilters ? 1000 : 50
 
 	const params = new URLSearchParams()
-	if (limit) params.append("limit", limit)
+	if (effectiveLimit) params.append("limit", effectiveLimit)
 	if (filters.type) params.append("type", filters.type)
 	if (filters.dateRange) params.append("dateRange", filters.dateRange)
 	if (filters.status) params.append("status", filters.status)

@@ -163,6 +163,11 @@ export const dashboardRouteMeta = {
 		title: "Onboarding status",
 		description: "Guide new hires through the workspace setup and policy acknowledgements.",
 	},
+	"/hr/activities": {
+		title: "HR activities",
+		description: "Review recent hiring, payroll, department, and project updates in one place.",
+		bullets: ["Employee updates", "Payroll activity", "Department changes"],
+	},
 	"/recruitments": {
 		title: "Recruitment board",
 		description: "Create job openings and monitor applicant activity for active hiring roles.",

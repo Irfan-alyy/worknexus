@@ -63,10 +63,11 @@ export function Sidebar({ onNavigate }) {
 	}
 
 	if (role === "hr") {
-		navItems.push({ to: "/recruitments", label: "Recruitments", icon: UserPlus })
+		// navItems.push({ to: "/recruitments", label: "Recruitments", icon: UserPlus })
 		navItems.push({ to: "/projects", label: "Projects", icon: Briefcase })
 		navItems.push({ to: "/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/employees", label: "Employees", icon: Users })
+		navItems.push({ to: "/hr/activities", label: "Activities", icon: Activity })
 		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
 	}
 
