@@ -91,11 +91,11 @@ export function ActivityFilters({ availableTypes = [], filters = {}, onFiltersCh
 										key={type}
 										type="button"
 										onClick={() => handleTypeChange(type)}
-										className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-											filters.type === type
+										    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors break-words whitespace-normal max-w-full ${
+											    filters.type === type
 												? "bg-primary text-primary-foreground"
 												: "border border-border bg-background hover:bg-secondary"
-										}`}
+											}`}
 									>
 										{ACTIVITY_TYPES[type] || type}
 									</button>
@@ -115,7 +115,7 @@ export function ActivityFilters({ availableTypes = [], filters = {}, onFiltersCh
 									key={key}
 									type="button"
 									onClick={() => handleDateRangeChange(key)}
-									className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+									className={`rounded-full px-3 py-1 text-xs font-medium transition-colors break-words whitespace-normal max-w-full ${
 										filters.dateRange === key
 											? "bg-primary text-primary-foreground"
 											: "border border-border bg-background hover:bg-secondary"
@@ -138,7 +138,7 @@ export function ActivityFilters({ availableTypes = [], filters = {}, onFiltersCh
 									key={key}
 									type="button"
 									onClick={() => handleStatusChange(key)}
-									className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+									className={`rounded-full px-3 py-1 text-xs font-medium transition-colors break-words whitespace-normal max-w-full ${
 										filters.status === key
 											? "bg-primary text-primary-foreground"
 											: "border border-border bg-background hover:bg-secondary"

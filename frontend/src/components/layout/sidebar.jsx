@@ -64,6 +64,8 @@ export function Sidebar({ onNavigate }) {
 
 	if (role === "hr") {
 		// navItems.push({ to: "/recruitments", label: "Recruitments", icon: UserPlus })
+		// HR should have quick access to departments under /hr
+		navItems.push({ to: "/hr/departments", label: "Departments", icon: Layers })
 		navItems.push({ to: "/projects", label: "Projects", icon: Briefcase })
 		navItems.push({ to: "/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/employees", label: "Employees", icon: Users })
