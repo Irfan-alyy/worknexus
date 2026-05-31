@@ -517,10 +517,443 @@ async function getManagerActivityMetrics(managerId) {
 	}
 }
 
+/**
+ * Transforms employee-related events for HR/Admin
+ * Captures hiring, onboarding, role/status changes
+ */
+function transformEmployeeActivities(employees) {
+	const activities = []
+	const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+	employees.forEach((emp) => {
+		const createdDate = new Date(emp.createdAt)
+
+		// Employee hired/created event
+		if (createdDate > thirtyDaysAgo) {
+			activities.push({
+				type: "employee_created",
+				title: `New employee: ${emp.firstName} ${emp.lastName}`,
+				description: `Department: ${emp.department?.name || "Unassigned"}`,
+				employeeId: emp.id,
+				timestamp: emp.createdAt,
+				source: "employee",
+				metadata: {
+					employeeName: `${emp.firstName} ${emp.lastName}`,
+					department: emp.department?.name,
+					email: emp.user?.email,
+					paymentModel: emp.paymentModel,
+				},
+				isNew: createdDate > ONE_HOUR_AGO,
+			})
+		}
+
+		// Employee updated event (department or payment model change)
+		const updatedDate = new Date(emp.updatedAt)
+		if (updatedDate > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && updatedDate !== createdDate) {
+			activities.push({
+				type: "employee_updated",
+				title: `Employee profile updated: ${emp.firstName} ${emp.lastName}`,
+				description: `Last updated: ${new Date(emp.updatedAt).toLocaleDateString()}`,
+				employeeId: emp.id,
+				timestamp: emp.updatedAt,
+				source: "employee",
+				metadata: {
+					employeeName: `${emp.firstName} ${emp.lastName}`,
+					department: emp.department?.name,
+				},
+				isNew: false,
+			})
+		}
+	})
+
+	return activities
+}
+
+/**
+ * Transforms client-related events for Admin
+ */
+function transformClientActivities(clients) {
+	const activities = []
+	const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+	clients.forEach((client) => {
+		const createdDate = new Date(client.createdAt)
+
+		// Client created event
+		if (createdDate > thirtyDaysAgo) {
+			activities.push({
+				type: "client_created",
+				title: `New client: ${client.name}`,
+				description: `Company: ${client.company || "N/A"}, Email: ${client.email}`,
+				clientId: client.id,
+				timestamp: client.createdAt,
+				source: "client",
+				metadata: {
+					clientName: client.name,
+					company: client.company,
+					email: client.email,
+				},
+				isNew: createdDate > ONE_HOUR_AGO,
+			})
+		}
+	})
+
+	return activities
+}
+
+/**
+ * Transforms department-related events for HR/Admin
+ */
+function transformDepartmentActivities(departments) {
+	const activities = []
+	const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+	departments.forEach((dept) => {
+		const createdDate = new Date(dept.createdAt)
+
+		// Department created event
+		if (createdDate > thirtyDaysAgo) {
+			const employeeCount = dept.employees?.length || 0
+			activities.push({
+				type: "department_created",
+				title: `New department: ${dept.name}`,
+				description: `Team members: ${employeeCount}`,
+				departmentId: dept.id,
+				timestamp: dept.createdAt,
+				source: "department",
+				metadata: {
+					departmentName: dept.name,
+					teamSize: employeeCount,
+				},
+				isNew: createdDate > ONE_HOUR_AGO,
+			})
+		}
+	})
+
+	return activities
+}
+
+/**
+ * Transforms user/manager-related events for Admin
+ */
+function transformUserActivities(users) {
+	const activities = []
+	const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+	users.forEach((user) => {
+		const createdDate = new Date(user.createdAt)
+
+		// User created event (focus on managers and admins)
+		if (createdDate > thirtyDaysAgo && (user.role === "admin" || user.role === "pm" || user.role === "hr")) {
+			activities.push({
+				type: "user_created",
+				title: `New ${user.role} user created`,
+				description: `Email: ${user.email}`,
+				userId: user.id,
+				timestamp: user.createdAt,
+				source: "user",
+				metadata: {
+					email: user.email,
+					role: user.role,
+				},
+				isNew: createdDate > ONE_HOUR_AGO,
+			})
+		}
+	})
+
+	return activities
+}
+
+/**
+ * Get all activities for HR dashboard
+ * Aggregates employee, payroll, department, project, task, and timelog events
+ */
+async function getHRActivities(limit = 50) {
+	try {
+		// Fetch all relevant data in parallel
+		const [employees, payrolls, departments, projects, tasks, timeLogs] = await Promise.all([
+			prisma.employee.findMany({
+				include: {
+					user: true,
+					department: { include: { employees: true } },
+				},
+				orderBy: { createdAt: "desc" },
+				take: 100,
+			}),
+			prisma.payroll.findMany({
+				include: { employee: { include: { user: true, department: true } } },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.department.findMany({
+				include: { employees: true },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.project.findMany({
+				include: { client: true, manager: { include: { user: true } }, teamMembers: true },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.task.findMany({
+				include: { project: true, employee: true },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.timeLog.findMany({
+				include: { task: { include: { project: true } }, employee: { include: { department: true } } },
+				orderBy: { loggedAt: "desc" },
+				take: 30,
+			}),
+		])
+
+		// Transform each data source into activities
+		let activities = []
+
+		// Employee activities
+		activities = activities.concat(transformEmployeeActivities(employees))
+
+		// Payroll activities
+		payrolls.forEach((payroll) => {
+			activities = activities.concat(transformPayrollActivities([payroll], payroll.employeeId))
+		})
+
+		// Department activities
+		activities = activities.concat(transformDepartmentActivities(departments))
+
+		// Project activities (focus on creation and team assignments)
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+		projects.forEach((project) => {
+			const createdDate = new Date(project.createdAt)
+			if (createdDate > thirtyDaysAgo) {
+				activities.push({
+					type: "project_created",
+					title: `New project: ${project.name}`,
+					description: `Client: ${project.client?.name}, Status: ${project.status}`,
+					projectId: project.id,
+					timestamp: project.createdAt,
+					source: "project",
+					metadata: {
+						projectName: project.name,
+						clientName: project.client?.name,
+						status: project.status,
+						manager: project.manager?.user?.email,
+					},
+					isNew: createdDate > ONE_HOUR_AGO,
+				})
+			}
+		})
+
+		// Task activities
+		tasks.forEach((task) => {
+			const createdDate = new Date(task.createdAt)
+			if (createdDate > thirtyDaysAgo && task.priority === "critical") {
+				activities = activities.concat(transformTaskActivities(task, task.employeeId))
+			}
+		})
+
+		// TimeLog summaries (daily/weekly)
+		const thisWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+		const weeklyLogs = timeLogs.filter((log) => new Date(log.loggedAt) > thisWeek)
+		if (weeklyLogs.length > 0) {
+			const totalHours = weeklyLogs.reduce((sum, log) => sum + Number(log.hours), 0)
+			const uniqueEmployees = new Set(weeklyLogs.map((log) => log.employeeId))
+			activities.push({
+				type: "time_logs_summary",
+				title: `Weekly time logs summary`,
+				description: `${totalHours.toFixed(1)} hours logged by ${uniqueEmployees.size} employees this week`,
+				timestamp: new Date(),
+				source: "time_log",
+				metadata: {
+					totalHours: totalHours.toFixed(1),
+					employeeCount: uniqueEmployees.size,
+					weekStart: thisWeek.toLocaleDateString(),
+				},
+				isNew: false,
+			})
+		}
+
+		// Remove duplicates based on type + id combination
+		const uniqueActivities = []
+		const seen = new Set()
+
+		activities.forEach((activity) => {
+			const key = `${activity.type}_${activity.employeeId || activity.projectId || activity.departmentId || activity.clientId || "summary"}_${Math.floor(new Date(activity.timestamp).getTime() / 1000)}`
+			if (!seen.has(key)) {
+				seen.add(key)
+				uniqueActivities.push(activity)
+			}
+		})
+
+		// Sort by timestamp (newest first)
+		uniqueActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+		// Return limited results
+		return uniqueActivities.slice(0, limit)
+	} catch (error) {
+		throw new Error(`Failed to fetch HR activities: ${error.message}`)
+	}
+}
+
+/**
+ * Get all activities for Admin dashboard
+ * Aggregates employee, client, project, task, payroll, department, and user events
+ */
+async function getAdminActivities(limit = 50) {
+	try {
+		// Fetch all relevant data in parallel
+		const [employees, clients, projects, tasks, payrolls, departments, users] = await Promise.all([
+			prisma.employee.findMany({
+				include: { user: true, department: true },
+				orderBy: { createdAt: "desc" },
+				take: 100,
+			}),
+			prisma.client.findMany({
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.project.findMany({
+				include: { client: true, manager: { include: { user: true } }, teamMembers: true },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.task.findMany({
+				include: { project: true, employee: true },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.payroll.findMany({
+				include: { employee: { include: { user: true } } },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.department.findMany({
+				include: { employees: true },
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+			prisma.user.findMany({
+				orderBy: { createdAt: "desc" },
+				take: 50,
+			}),
+		])
+
+		// Transform each data source into activities
+		let activities = []
+
+		// Employee activities
+		activities = activities.concat(transformEmployeeActivities(employees))
+
+		// Client activities
+		activities = activities.concat(transformClientActivities(clients))
+
+		// Project activities
+		projects.forEach((project) => {
+			const createdDate = new Date(project.createdAt)
+			const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+			if (createdDate > thirtyDaysAgo) {
+				activities.push({
+					type: "project_created",
+					title: `New project: ${project.name}`,
+					description: `Client: ${project.client?.name}, Status: ${project.status}`,
+					projectId: project.id,
+					timestamp: project.createdAt,
+					source: "project",
+					metadata: {
+						projectName: project.name,
+						clientName: project.client?.name,
+						status: project.status,
+						manager: project.manager?.user?.email,
+						teamSize: project.teamMembers?.length || 0,
+					},
+					isNew: createdDate > ONE_HOUR_AGO,
+				})
+			}
+
+			// Project status changes (updated recently)
+			const updatedDate = new Date(project.updatedAt)
+			const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+			if (updatedDate > oneWeekAgo && updatedDate !== createdDate) {
+				activities.push({
+					type: "project_updated",
+					title: `Project status updated: ${project.name}`,
+					description: `Status: ${project.status}`,
+					projectId: project.id,
+					timestamp: project.updatedAt,
+					source: "project",
+					metadata: {
+						projectName: project.name,
+						status: project.status,
+					},
+					isNew: false,
+				})
+			}
+		})
+
+		// Task activities (critical tasks only)
+		tasks.forEach((task) => {
+			const createdDate = new Date(task.createdAt)
+			const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+			if (createdDate > thirtyDaysAgo && task.priority === "critical") {
+				activities = activities.concat(transformTaskActivities(task, task.employeeId))
+			}
+		})
+
+		// Payroll activities
+		payrolls.forEach((payroll) => {
+			activities = activities.concat(transformPayrollActivities([payroll], payroll.employeeId))
+		})
+
+		// Department activities
+		activities = activities.concat(transformDepartmentActivities(departments))
+
+		// User/Manager activities
+		activities = activities.concat(transformUserActivities(users))
+
+		// Admin summary: Total entities count
+		activities.push({
+			type: "admin_summary",
+			title: `Company overview`,
+			description: `${employees.length} employees, ${clients.length} clients, ${projects.length} projects`,
+			timestamp: new Date(),
+			source: "system",
+			metadata: {
+				employeeCount: employees.length,
+				clientCount: clients.length,
+				projectCount: projects.length,
+				departmentCount: departments.length,
+			},
+			isNew: false,
+		})
+
+		// Remove duplicates based on type + id combination
+		const uniqueActivities = []
+		const seen = new Set()
+
+		activities.forEach((activity) => {
+			const key = `${activity.type}_${activity.employeeId || activity.projectId || activity.clientId || activity.departmentId || activity.userId || "summary"}_${Math.floor(new Date(activity.timestamp).getTime() / 1000)}`
+			if (!seen.has(key)) {
+				seen.add(key)
+				uniqueActivities.push(activity)
+			}
+		})
+
+		// Sort by timestamp (newest first)
+		uniqueActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+		// Return limited results
+		return uniqueActivities.slice(0, limit)
+	} catch (error) {
+		throw new Error(`Failed to fetch admin activities: ${error.message}`)
+	}
+}
+
 // Export manager functions
 module.exports = {
 	getEmployeeActivities,
 	getEmployeeActivityMetrics,
 	getManagerActivities,
 	getManagerActivityMetrics,
+	getHRActivities,
+	getAdminActivities,
 }
