@@ -24,6 +24,16 @@ export const fetchHRActivities = async (options = {}) => {
 	return response.data?.data || []
 }
 
+/**
+ * Fetch HR activity metrics
+ * @returns {Promise<Object>} Metrics object with summary statistics
+ */
+export const fetchHRActivityMetrics = async () => {
+	const response = await axios.get(`/hr/activities/metrics`)
+	return response.data?.data || {}
+}
+
 export default {
 	fetchHRActivities,
+	fetchHRActivityMetrics,
 }

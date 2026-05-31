@@ -58,11 +58,13 @@ const pmActivityKeys = {
 const hrActivitiesKeys = {
   all: ["hr-activities"],
   list: (filters = {}) => [...hrActivitiesKeys.all, "list", filters],
+  metrics: () => [...hrActivitiesKeys.all, "metrics"],
 }
 
 const adminActivitiesKeys = {
   all: ["admin-activities"],
   list: (filters = {}) => [...adminActivitiesKeys.all, "list", filters],
+  metrics: () => [...adminActivitiesKeys.all, "metrics"],
 }
 
 const projectKeys = {

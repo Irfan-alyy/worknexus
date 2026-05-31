@@ -1,4 +1,4 @@
-const { getEmployeeActivities, getEmployeeActivityMetrics, getHRActivities, getAdminActivities } = require("./activities.service")
+const { getEmployeeActivities, getEmployeeActivityMetrics, getHRActivities, getAdminActivities, getHRActivityMetrics, getAdminActivityMetrics } = require("./activities.service")
 const { successResponse } = require("../../utils/response")
 const AppError = require("../../utils/app-error")
 const prisma = require("../../config/db.config")
@@ -156,9 +156,56 @@ async function getAdminActivitiesController(req, res, next) {
 	}
 }
 
+/**
+ * GET /api/v1/hr/activities/metrics
+ * Get activity metrics for HR dashboard
+ */
+async function getHRActivityMetricsController(req, res, next) {
+	try {
+		// Check authorization: only HR and admin can access
+		const isHR = req.user.role === "hr"
+		const isAdmin = req.user.role === "admin"
+
+		if (!isHR && !isAdmin) {
+			return next(AppError.forbidden("Only HR and admin can view HR metrics"))
+		}
+
+		const metrics = await getHRActivityMetrics()
+
+		const { response, statusCode } = successResponse(metrics, "HR activity metrics retrieved successfully")
+		return res.status(statusCode).json(response)
+	} catch (error) {
+		next(error)
+	}
+}
+
+/**
+ * GET /api/v1/admin/activities/metrics
+ * Get activity metrics for Admin dashboard
+ */
+async function getAdminActivityMetricsController(req, res, next) {
+	try {
+		// Check authorization: only admin can access
+		const isAdmin = req.user.role === "admin"
+
+		if (!isAdmin) {
+			return next(AppError.forbidden("Only admin can view admin metrics"))
+		}
+
+		const metrics = await getAdminActivityMetrics()
+
+		const { response, statusCode } = successResponse(metrics, "Admin activity metrics retrieved successfully")
+		return res.status(statusCode).json(response)
+	} catch (error) {
+		next(error)
+	}
+}
+
 module.exports = {
 	getActivities,
 	getActivityMetrics,
 	getHRActivitiesController,
 	getAdminActivitiesController,
+	getHRActivityMetricsController,
+	getAdminActivityMetricsController,
 }

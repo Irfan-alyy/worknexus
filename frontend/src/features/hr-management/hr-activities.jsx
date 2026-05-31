@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useGlobalStore } from "@/stores/use-global-store"
-import { useHRActivities } from "./hooks/useHRActivities"
+import { useHRActivities, useHRActivityMetrics } from "./hooks/useHRActivities"
+import { HRActivityMetricsCards } from "./components/hr-activity-metrics"
 import { ActivityFilters } from "@/components/shared/ActivityFilters"
 import { filterActivities } from "@/components/shared/activity-filter-utils"
 import { ActivitySection } from "@/components/shared/ActivitySection"
@@ -49,6 +51,7 @@ export function HRActivities() {
 
 	// Fetch activities with current filters
 	const { data: activities = [], isLoading, error } = useHRActivities(filters)
+	const { data: metrics, isLoading: metricsLoading } = useHRActivityMetrics()
 	const visibleActivities = filterActivities(activities, filters)
 
 	// Group and sort activities
@@ -57,6 +60,26 @@ export function HRActivities() {
 	function openActivityDetail(activity) {
 		setSelectedActivity(activity)
 		openAside(`Activity detail: ${activity.type}`, <ActivityDetailPanel activity={activity} />)
+	}
+	const navigate = useNavigate()
+
+	function handleMetricClick(metricType) {
+		switch (metricType) {
+			case "employees":
+				navigate("/employees")
+				break
+			case "departments":
+				navigate("/hr/departments")
+				break
+			case "projects":
+				navigate("/projects")
+				break
+			case "payroll":
+				navigate("/payroll")
+				break
+			default:
+				break
+		}
 	}
 
 	return (
@@ -68,6 +91,9 @@ export function HRActivities() {
 					Track all HR events including employees, payroll, departments, projects, and team activities.
 				</p>
 			</div>
+
+			{/* Metrics Section */}
+			<HRActivityMetricsCards metrics={metrics} isLoading={metricsLoading} onMetricClick={handleMetricClick} />
 
 			{/* Filters */}
 			<ActivityFilters

@@ -180,6 +180,153 @@ Returns the current authenticated user profile.
 
 ---
 
+# Activities Module API Documentation
+
+The Activities module provides role-specific activity feeds and metrics endpoints. These endpoints aggregate platform activities (employee updates, payroll actions, department changes, project updates, task assignments, etc.) and provide summary metrics for dashboard displays.
+
+## Activity Endpoints
+
+### Employee Activities
+
+#### `GET /api/v1/employees/:id/activities`
+Requires auth.
+Fetch all activities related to a specific employee (tasks assigned, hours logged, payroll generated, etc.).
+
+Query parameters:
+- `limit` (optional, default 50): maximum number of activities to return
+- `type` (optional): filter by activity type
+- `dateRange` (optional): filter by date range (today, week, month)
+- `status` (optional): filter by status (new, all, archived)
+
+Returns array of activity objects with fields:
+```json
+{
+  "id": "uuid",
+  "type": "task_assigned|task_completed|time_log_added|payroll_generated|...",
+  "title": "Task assigned to you",
+  "description": "Description of the activity",
+  "timestamp": "2026-05-23T10:00:00.000Z",
+  "metadata": {
+    "projectName": "Project X",
+    "taskId": 1,
+    "hours": 8,
+    "amount": 500
+  }
+}
+```
+
+#### `GET /api/v1/employees/:id/activities/metrics`
+Requires auth.
+Fetch aggregated metrics for an employee's dashboard.
+
+Returns metrics object:
+```json
+{
+  "tasksDue": 4,
+  "hoursLogged": 36,
+  "hoursTarget": 40,
+  "assignedProjects": 2,
+  "completedTasks": 12,
+  "tasksInProgress": 3,
+  "recentActivitiesCount": 8
+}
+```
+
+### HR Activities
+
+#### `GET /api/v1/hr/activities`
+Requires auth and role `hr`.
+Fetch all HR-related activities (employee updates, payroll, department changes, project updates) across the organization.
+
+Query parameters:
+- `limit` (optional, default 50): maximum number of activities
+- `type` (optional): filter by type (employee, payroll, department, project, task, timelog)
+- `dateRange` (optional): date range filter
+- `status` (optional): status filter
+
+Returns array of activity objects.
+
+#### `GET /api/v1/hr/activities/metrics`
+Requires auth and role `hr`.
+Fetch HR dashboard metrics.
+
+Returns metrics object:
+```json
+{
+  "totalEmployees": 128,
+  "newEmployeesThisMonth": 14,
+  "totalDepartments": 8,
+  "totalProjects": 15,
+  "weeklyTasksDue": 42,
+  "pendingPayroll": 3,
+  "recentActivitiesCount": 25
+}
+```
+
+### Admin Activities
+
+#### `GET /api/v1/admin/activities`
+Requires auth and role `admin`.
+Fetch all platform activities across all roles and modules.
+
+Query parameters:
+- `limit` (optional, default 50): maximum number of activities
+- `type` (optional): filter by type (employee, client, project, task, payroll, department, user)
+- `dateRange` (optional): date range filter
+- `status` (optional): status filter
+
+Returns array of activity objects.
+
+#### `GET /api/v1/admin/activities/metrics`
+Requires auth and role `admin`.
+Fetch admin dashboard metrics for system overview.
+
+Returns metrics object:
+```json
+{
+  "totalManagers": 4,
+  "totalEmployees": 128,
+  "totalClients": 18,
+  "totalProjects": 25,
+  "totalDepartments": 8,
+  "systemAlerts": 2,
+  "recentActivitiesCount": 40
+}
+```
+
+### PM Activities
+
+#### `GET /api/v1/pm/activities`
+Requires auth and role `pm`.
+Fetch all project management activities (project updates, task assignments, client feedback, milestones).
+
+Query parameters:
+- `limit` (optional, default 50): maximum number of activities
+- `type` (optional): filter by type
+- `dateRange` (optional): date range filter
+- `status` (optional): status filter
+
+Returns array of activity objects.
+
+#### `GET /api/v1/pm/activities/metrics`
+Requires auth and role `pm`.
+Fetch PM dashboard metrics.
+
+Returns metrics object:
+```json
+{
+  "totalProjects": 7,
+  "projectsAtRisk": 2,
+  "totalTasks": 42,
+  "tasksCompleted": 18,
+  "tasksPending": 12,
+  "clientFollowups": 11,
+  "activeMilestones": 5,
+  "recentActivitiesCount": 30
+}
+```
+
+
 ### Departments
 
 Base path: `/api/v1/departments`
@@ -1233,17 +1380,6 @@ Each TimeLog references a Task. When viewing a task, you see all associated time
 
 
 ## Feature-to-file map
-
-- Authentication: `src/features/auth/`
-- Chat: `src/features/chat/`
-- Departments: `src/features/departments/`
-- Employees: `src/features/hr-management/`
-- Clients: `src/features/clients/`
-- Users: `src/features/users/`
-- Payroll: `src/features/payroll/`
-- Projects: `src/features/projects/`
-- Tasks: `src/features/tasks/`
-- Time Logs: `src/features/time-logs/`
 
 ## Frontend integration notes
 

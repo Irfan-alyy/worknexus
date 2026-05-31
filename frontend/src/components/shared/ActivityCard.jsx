@@ -65,23 +65,23 @@ export function ActivityCard({ activity, onClick, isSelected = false }) {
 
 				{/* Content */}
 				<div className="flex-1 min-w-0">
-					<div className="flex items-start justify-between gap-2">
+					<div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
 						<div className="flex-1">
-							<p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+							<p className="break-words text-xs uppercase tracking-[0.22em] text-muted-foreground">
 								{activity.type?.replace(/_/g, " ")}
 							</p>
-							<h3 className="mt-1 truncate text-sm font-semibold line-clamp-2">
+							<h3 className="mt-1 break-words text-sm font-semibold line-clamp-2">
 								{activity.title}
 							</h3>
 							{activity.description && (
-								<p className="mt-1 truncate text-xs text-muted-foreground line-clamp-2">
+								<p className="mt-1 break-words text-xs text-muted-foreground line-clamp-2">
 									{activity.description}
 								</p>
 							)}
 						</div>
 
 						{/* Time and Badge */}
-						<div className="flex flex-col items-end gap-1">
+						<div className="flex flex-row items-start gap-1 sm:flex-col sm:items-end">
 							<span className="whitespace-nowrap rounded-full bg-secondary px-2 py-1 text-xs font-medium text-foreground">
 								{formatRelativeTime(activity.timestamp)}
 							</span>
@@ -101,7 +101,7 @@ export function ActivityCard({ activity, onClick, isSelected = false }) {
 									return (
 										<span
 											key={key}
-											className="inline-block rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground"
+											className="inline-block max-w-full break-words rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground"
 										>
 											{String(value).substring(0, 30)}
 											{String(value).length > 30 ? "..." : ""}

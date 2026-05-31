@@ -61,11 +61,12 @@ export const roleDefinitions = {
 		quickActions: ["Onboarding", "Employees", "Payroll review"],
 		guideTabs: [
 			{ label: "Dashboard", description: "See the main HR summary, alerts, and current priorities." },
-			{ label: "Recruitments", description: "Track open roles, applicants, and hiring progress." },
 			{ label: "Projects", description: "View active project work that affects staffing and planning." },
 			{ label: "Clients", description: "Monitor client records that support delivery and onboarding." },
 			{ label: "Employees", description: "Manage employee records, onboarding, and profile updates." },
 			{ label: "Payroll", description: "Review payroll readiness, approvals, and payout status." },
+			{label:"Tasks", description:"See the full task queue and monitor work in progress."},
+			{ label: "Activities", description: "Review recent HR-related activity and important workflow changes." },
 			{ label: "Channels", description: "Follow HR-related discussions in shared project channels." },
 			{ label: "Direct messages", description: "Send private messages for sensitive people-ops conversations." },
 		],
