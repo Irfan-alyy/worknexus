@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
-import { useLocation } from "react-router-dom"
-import { useGlobalStore } from "@/stores/use-global-store"
+import { useLocation, useNavigate } from "react-router-dom"
 import { CheckCircle2 } from "lucide-react"
 import { OnboardingWizard } from "@/features/hr-management/components/onboarding-wizard"
 import HRActivities from "./hr-activities"
@@ -13,9 +12,9 @@ const checklist = [
 ]
 
 export function HrPage() {
-  const { openAside } = useGlobalStore()
   const [activeTab, setActiveTab] = useState("onboarding")
   const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const path = location.pathname.replace(/\/+$/, "")
@@ -27,12 +26,28 @@ export function HrPage() {
   }, [location.pathname])
 
   const tabs = {
-    onboarding: "New Hire Setup",
     activities: "Activities",
   }
 
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6">
+      <div className="mb-4 flex flex-wrap gap-2 rounded-3xl border border-border bg-card p-2 shadow-sm sm:mb-6">
+        {Object.entries(tabs).map(([key, label]) => {
+          const isActive = activeTab === key
+
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => navigate(key === "onboarding" ? "/hr" : "/hr/activities")}
+              className={`rounded-2xl px-4 py-2 text-sm font-medium transition-colors ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Conditional Rendering Based on Tab */}
       {activeTab === "onboarding" ? (
         <>
