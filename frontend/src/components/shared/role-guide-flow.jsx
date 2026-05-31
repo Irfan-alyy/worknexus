@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
 	Activity,
 	BarChart3,
@@ -37,23 +37,37 @@ const TAB_ICONS = {
 }
 
 export function RoleGuideFlow({ tabs = [], roleLabel }) {
-	const [activeIndex, setActiveIndex] = useState(0)
+	const [activeIndex, setActiveIndex] = useState(-1)
+	const lastInput = useRef("mouse")
 
 	useEffect(() => {
-		setActiveIndex(tabs.length ? 0 : -1)
+		setActiveIndex(-1)
 	}, [tabs])
 
-	const activeTab = useMemo(() => {
-		if (activeIndex < 0 || activeIndex >= tabs.length) {
-			return null
+	useEffect(() => {
+		function handleKey(e) {
+			if (e.key === "Tab") lastInput.current = "keyboard"
 		}
 
+		function handlePointer() {
+			lastInput.current = "mouse"
+		}
+
+		document.addEventListener("keydown", handleKey)
+		document.addEventListener("pointerdown", handlePointer)
+
+		return () => {
+			document.removeEventListener("keydown", handleKey)
+			document.removeEventListener("pointerdown", handlePointer)
+		}
+	}, [])
+
+	const activeTab = useMemo(() => {
+		if (activeIndex < 0 || activeIndex >= tabs.length) return null
 		return tabs[activeIndex]
 	}, [activeIndex, tabs])
 
-	if (!tabs.length) {
-		return null
-	}
+	if (!tabs.length) return null
 
 	return (
 		<div className="space-y-5">
@@ -83,7 +97,9 @@ export function RoleGuideFlow({ tabs = [], roleLabel }) {
 									title={tab.label}
 									onMouseEnter={() => setActiveIndex(index)}
 									onMouseLeave={() => setActiveIndex(-1)}
-									onFocus={() => setActiveIndex(index)}
+									onFocus={(e) => {
+										if (lastInput.current === "keyboard") setActiveIndex(index)
+									}}
 									className={`relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border bg-background text-foreground shadow-sm transition-all duration-200 ease-out sm:h-11 sm:w-11 ${isActive ? "border-primary/70 bg-primary text-primary-foreground shadow-primary/20 scale-110 ring-4 ring-primary/10" : "border-border/80 hover:border-primary/50 hover:bg-secondary/80 hover:shadow-md hover:scale-105"}`}
 								>
 									<span className={`absolute inset-0 rounded-full transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"} bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.28),transparent_62%)]`} />

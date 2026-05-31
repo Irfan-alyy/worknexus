@@ -51,9 +51,9 @@ export default function TaskCard({ project, task, onEdit, onOpen, canEdit = fals
   }
 
   return (
-    <div className="group relative flex items-start justify-between gap-4 rounded-2xl border border-border bg-background px-4 py-3 text-sm shadow-sm transition-colors hover:bg-secondary/40">
-      <button type="button" onClick={handleOpen} className="flex min-w-0 flex-1 flex-col items-start text-left">
-        <p className="truncate font-medium text-foreground">{task.title}</p>
+    <div className="group relative rounded-2xl border border-border bg-background px-4 py-3 text-sm shadow-sm transition-colors hover:bg-secondary/40">
+      <button type="button" onClick={handleOpen} className="flex min-w-0 w-full flex-col items-start pr-12 text-left">
+        <p className="break-words font-medium text-foreground">{task.title}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           {assignee} • Due {formatDate(task.dueDate)}
         </p>
@@ -61,22 +61,29 @@ export default function TaskCard({ project, task, onEdit, onOpen, canEdit = fals
         {task.description ? <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{task.description}</p> : null}
       </button>
 
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${taskStatusBadgeClass(task.status)}`}>
-          {formatTaskStatus(task.status)}
-        </span>
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${priorityChipStyles[String(task.priority || "medium").toLowerCase()] || "bg-secondary text-foreground"}`}>
-          {String(task.priority || "medium").charAt(0).toUpperCase() + String(task.priority || "medium").slice(1)}
-        </span>
-      </div>
-
       {canEdit && (
-        <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
-          <button type="button" onClick={handleEdit} className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium shadow-sm" title="Edit task">
-            <Edit className="h-4 w-4" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleEdit}
+          className="absolute right-3 -top-4 inline-flex cursor-pointer shrink-0 items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium shadow-sm opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+          title="Edit task"
+          aria-label={`Edit ${task.title}`}
+        >
+          <Edit className="h-4 w-4" />
+          <span className="md:hidden">Edit</span>
+        </button>
       )}
+
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${taskStatusBadgeClass(task.status)}`}>
+            {formatTaskStatus(task.status)}
+          </span>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${priorityChipStyles[String(task.priority || "medium").toLowerCase()] || "bg-secondary text-foreground"}`}>
+            {String(task.priority || "medium").charAt(0).toUpperCase() + String(task.priority || "medium").slice(1)}
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

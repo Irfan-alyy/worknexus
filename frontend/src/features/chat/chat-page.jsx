@@ -244,7 +244,7 @@ function ForwardModal({ message, onClose, onForward }) {
             ×
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto p-5">
+        <div className="max-h-[70vh] overflow-y-auto p-4 sm:p-5">
           <ForwardPanel message={message} />
           <div className="mt-5 flex items-center justify-end gap-3 border-t border-border pt-4">
             <button
@@ -524,7 +524,7 @@ export function ChatPage() {
   return (
     <div className="h-full min-h-0 overflow-hidden pt-0">
       <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
-        <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
           <div>
             <h3 className="mt-1 text-lg font-semibold">{conversationLabel}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{conversationHint}</p>
@@ -534,7 +534,7 @@ export function ChatPage() {
             Search thread
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
           <div className="space-y-4">
             {messages.map((message) => (
               <MessageBubble
@@ -561,7 +561,7 @@ export function ChatPage() {
           </div>
         </div>
 
-        <div className="border-t border-border/60 p-5">
+        <div className="border-t border-border/60 p-4 sm:p-5">
           <ChatInput
             value={composerText}
             onChange={setComposerText}

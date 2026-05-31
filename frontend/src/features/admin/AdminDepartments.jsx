@@ -161,7 +161,7 @@ export default function AdminDepartments() {
 							<h3 className="font-medium">{department.name}</h3>
 							<p className="mt-1 text-sm text-muted-foreground">Created: {new Date(department.createdAt).toLocaleDateString()}</p>
 						</div>
-						<div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+						<div className="absolute -right-1 -top-1 z-10 rounded-full border border-border bg-background p-1 opacity-100 shadow-sm transition-all duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
 							<div className="flex items-center gap-1">
 								<button
 									type="button"
