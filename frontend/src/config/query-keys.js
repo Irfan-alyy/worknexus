@@ -55,6 +55,16 @@ const pmActivityKeys = {
   metrics: () => [...pmActivityKeys.all, "metrics"],
 }
 
+const hrActivitiesKeys = {
+  all: ["hr-activities"],
+  list: (filters = {}) => [...hrActivitiesKeys.all, "list", filters],
+}
+
+const adminActivitiesKeys = {
+  all: ["admin-activities"],
+  list: (filters = {}) => [...adminActivitiesKeys.all, "list", filters],
+}
+
 const projectKeys = {
   all: ["projects"],
   list: (scope = "default") => [...projectKeys.all, "list", scope],
@@ -74,4 +84,9 @@ export const queryKeys = {
   projects: projectKeys,
   employeeActivities: employeeActivityKeys,
   pmActivities: pmActivityKeys,
+  hrActivities: hrActivitiesKeys,
+  adminActivities: adminActivitiesKeys,
 }
+
+// Export the keys for direct usage in hooks
+export { hrActivitiesKeys, adminActivitiesKeys }
