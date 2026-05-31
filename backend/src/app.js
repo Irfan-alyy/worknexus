@@ -16,6 +16,8 @@ const userRoutes = require("./features/users/users.routes")
 const projectRoutes = require("./features/projects/projects.routes")
 const tasksRoutes = require("./features/tasks/tasks.routes")
 const timeLogsRoutes = require("./features/time-logs/time-logs.routes")
+const pmRoutes = require("./features/pm/pm.routes")
+const activitiesRoutes = require("./features/activities/activities.routes")
 const { successResponse } = require("./utils/response")
 const app = express()
 
@@ -71,9 +73,15 @@ app.use("/api/v1/users", userRoutes)
 // Projects routes
 app.use("/api/v1/projects", projectRoutes)
 
+// PM routes (project manager dashboard)
+app.use("/api/v1/pm", pmRoutes)
+
 // Tasks and TimeLogs routes
 app.use("/api/v1/tasks", tasksRoutes)
 app.use("/api/v1/time-logs", timeLogsRoutes)
+
+// Activities routes (HR and Admin dashboards)
+app.use("/api/v1", activitiesRoutes)
 
 /**
  * ERROR HANDLING

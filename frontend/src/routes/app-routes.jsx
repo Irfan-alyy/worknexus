@@ -274,12 +274,12 @@ export function AppRoutes() {
 				<Route element={<ShellLayout />}>
 					<Route path="dashboard" element={<DashboardPage />} />
 					<Route path="employee" element={<Navigate to="/employee/projects" replace />} />
-					<Route path="employee/*" element={<RoleBarrier allowedRoles={["employee"]}><EmployeePage /></RoleBarrier>} />
+					<Route path="employee/*" element={<RoleBarrier allowedRoles={["admin", "hr", "pm", "employee"]}><EmployeePage /></RoleBarrier>} />
 					<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
 					<Route path="chat/:scope/:chatId" element={<ChatPage />} />
 					<Route path="tasks" element={<RoleBarrier allowedRoles={["admin", "pm", "employee"]}><ProjectTasksPanel /></RoleBarrier>} />
 					<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
-					<Route path="hr" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
+					<Route path="hr/*" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 					<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
 					<Route path="projects" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Projects /></RoleBarrier>} />
 					<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />

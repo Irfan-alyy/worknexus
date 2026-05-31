@@ -16,6 +16,11 @@ const payrollKeys = {
   detail: (payrollId) => [...payrollKeys.all, "detail", payrollId],
 }
 
+const userKeys = {
+  all: ["users"],
+  detail: (userId) => [...userKeys.all, "detail", userId],
+}
+
 const hrKeys = {
   all: ["hr"],
   employees: (filters = {}) => [...hrKeys.all, "employees", filters],
@@ -38,6 +43,28 @@ const adminKeys = {
   project: (projectId) => [...adminKeys.all, "project", projectId],
 }
 
+const employeeActivityKeys = {
+  all: ["employee-activities"],
+  activities: (employeeId) => [...employeeActivityKeys.all, "activities", employeeId],
+  metrics: (employeeId) => [...employeeActivityKeys.all, "metrics", employeeId],
+}
+
+const pmActivityKeys = {
+  all: ["pm-activities"],
+  activities: () => [...pmActivityKeys.all, "activities"],
+  metrics: () => [...pmActivityKeys.all, "metrics"],
+}
+
+const hrActivitiesKeys = {
+  all: ["hr-activities"],
+  list: (filters = {}) => [...hrActivitiesKeys.all, "list", filters],
+}
+
+const adminActivitiesKeys = {
+  all: ["admin-activities"],
+  list: (filters = {}) => [...adminActivitiesKeys.all, "list", filters],
+}
+
 const projectKeys = {
   all: ["projects"],
   list: (scope = "default") => [...projectKeys.all, "list", scope],
@@ -50,8 +77,16 @@ export const queryKeys = {
   auth: authKeys,
   chat: chatKeys,
   payroll: payrollKeys,
+  users: userKeys,
   hr: hrKeys,
   settings: settingsKeys,
   admin: adminKeys,
   projects: projectKeys,
+  employeeActivities: employeeActivityKeys,
+  pmActivities: pmActivityKeys,
+  hrActivities: hrActivitiesKeys,
+  adminActivities: adminActivitiesKeys,
 }
+
+// Export the keys for direct usage in hooks
+export { hrActivitiesKeys, adminActivitiesKeys }

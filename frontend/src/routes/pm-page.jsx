@@ -13,7 +13,6 @@ export function PmPage() {
 	const { user, openAside } = useGlobalStore()
 	const [activeTab, setActiveTab] = useState("projects")
 	const [projects, setProjects] = useState(pmProjectSeeds)
-	const [selectedActivity, setSelectedActivity] = useState(pmActivitySeeds[0])
 
 	useEffect(() => {
 		setActiveTab(tabFromPath(location.pathname))
@@ -32,7 +31,7 @@ export function PmPage() {
 
 			<div className="space-y-6">
 				{activeTab === "projects" && <PmProjectsSection projects={projects} setProjects={setProjects} onEdit={openDrawer} />}
-				{activeTab === "activities" && <PmActivitiesSection items={pmActivitySeeds} selectedActivity={selectedActivity} setSelectedActivity={setSelectedActivity} onEdit={openDrawer} />}
+				{activeTab === "activities" && <PmActivitiesSection onOpenDetail={openDrawer} />}
 				{activeTab === "analytics" && <PmAnalyticsSection />}
 				{activeTab === "milestones" && <PmMilestonesSection items={pmMilestoneSeeds} onEdit={openDrawer} />}
 			</div>

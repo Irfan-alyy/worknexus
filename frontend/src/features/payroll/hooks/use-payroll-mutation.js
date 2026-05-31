@@ -10,7 +10,7 @@ export const useCalculatePayrollMutation = (options = {}) => {
   return useMutation({
     mutationFn: payrollApi.calculatePayroll,
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.payroll.list() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.payroll.all })
       onSuccess?.(...args)
     },
     ...rest,
