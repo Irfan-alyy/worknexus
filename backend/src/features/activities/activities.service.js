@@ -384,7 +384,7 @@ async function getEmployeeActivityMetrics(employeeId) {
 		const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
 		const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
 
-		const [tasks, timeLogs, payrolls, allTimeLogs] = await Promise.all([
+		const [tasks, timeLogs, payrolls, allTimeLogs, projectTeams] = await Promise.all([
 			// Tasks due this week
 			prisma.task.findMany({
 				where: {
@@ -419,8 +419,11 @@ async function getEmployeeActivityMetrics(employeeId) {
 				orderBy: { loggedAt: "desc" },
 				take: 50,
 			}),
+			prisma.projectTeam.findMany({
+				where: { employeeId },
+				include: { project: true },
+			}),
 		])
-
 		// Calculate total hours this week
 		const totalHoursThisWeek = timeLogs.reduce((sum, log) => sum + Number(log.hours), 0)
 
@@ -434,6 +437,12 @@ async function getEmployeeActivityMetrics(employeeId) {
 		// Calculate total pending payroll amount
 		const totalPendingPayroll = payrolls.reduce((sum, p) => sum + Number(p.amount), 0)
 
+		// total timelogs logged
+		const totalTimeLogs = allTimeLogs.length
+
+		// assigned projects
+		const assignedProjects = new Set(projectTeams.map((pt) => pt.projectId)).size
+
 		return {
 			tasksDueThisWeek: tasks.length,
 			overdueTasks: overdueTasks.length,
@@ -441,6 +450,8 @@ async function getEmployeeActivityMetrics(employeeId) {
 			averageDailyHours,
 			pendingPayrollAmount: totalPendingPayroll.toFixed(2),
 			pendingPayrollCount: payrolls.length,
+			totalTimeLogs,
+			assignedProjects
 		}
 	} catch (error) {
 		throw new Error(`Failed to fetch activity metrics: ${error.message}`)
@@ -1130,6 +1141,7 @@ async function getAdminActivityMetrics() {
 		const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
 
 		const [
+			totalManagers, 
 			totalEmployees,
 			newEmployeesThisMonth,
 			clientCount,
@@ -1138,6 +1150,11 @@ async function getAdminActivityMetrics() {
 			timeLogs,
 			pendingPayrolls,
 		] = await Promise.all([
+			prisma.user.count({
+				where: {
+					role: { in: ["pm", "hr"] }
+				}
+			}),
 			// Total employees
 			prisma.employee.count(),
 
@@ -1184,6 +1201,7 @@ async function getAdminActivityMetrics() {
 		const totalPendingPayroll = pendingPayrolls.reduce((sum, p) => sum + Number(p.amount), 0)
 
 		return {
+			totalManagers,
 			totalEmployees,
 			newEmployeesThisMonth,
 			clientCount,
