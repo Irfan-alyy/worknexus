@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns"
+import { formatRelativeTime } from "@/lib/date-utils"
 
 const ACTIVITY_ICONS = {
 	employee_created: "👤",
@@ -44,14 +44,6 @@ const ACTIVITY_COLORS = {
  * @param {boolean} props.isSelected - Whether this card is currently selected
  */
 export function ActivityCard({ activity, onClick, isSelected = false }) {
-	const getFormattedTime = (timestamp) => {
-		try {
-			return formatDistanceToNow(new Date(timestamp), { addSuffix: true })
-		} catch {
-			return "recently"
-		}
-	}
-
 	const icon = ACTIVITY_ICONS[activity.type] || "•"
 	const colorClass = ACTIVITY_COLORS[activity.type] || "bg-gray-500/10 text-gray-700"
 
@@ -91,7 +83,7 @@ export function ActivityCard({ activity, onClick, isSelected = false }) {
 						{/* Time and Badge */}
 						<div className="flex flex-col items-end gap-1">
 							<span className="whitespace-nowrap rounded-full bg-secondary px-2 py-1 text-xs font-medium text-foreground">
-								{getFormattedTime(activity.timestamp)}
+								{formatRelativeTime(activity.timestamp)}
 							</span>
 							{activity.isNew && (
 								<span className="h-2 w-2 rounded-full bg-primary" title="New activity" />

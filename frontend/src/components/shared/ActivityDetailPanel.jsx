@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns"
+import { formatRelativeTime } from "@/lib/date-utils"
 
 const ACTIVITY_ICONS = {
 	employee_created: "👤",
@@ -24,14 +24,6 @@ const ACTIVITY_ICONS = {
  * @param {Object} props.activity - Activity object with all details
  */
 export function ActivityDetailPanel({ activity }) {
-	const getFormattedTime = (timestamp) => {
-		try {
-			return formatDistanceToNow(new Date(timestamp), { addSuffix: true })
-		} catch {
-			return "recently"
-		}
-	}
-
 	const icon = ACTIVITY_ICONS[activity.type] || "•"
 
 	if (!activity) {
@@ -56,7 +48,7 @@ export function ActivityDetailPanel({ activity }) {
 					</div>
 				</div>
 				<p className="text-sm text-muted-foreground">
-					{getFormattedTime(activity.timestamp)}
+					{formatRelativeTime(activity.timestamp)}
 				</p>
 			</div>
 

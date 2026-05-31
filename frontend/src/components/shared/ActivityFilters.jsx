@@ -21,7 +21,7 @@ const DATE_RANGES = {
 
 const STATUSES = {
 	all: "All",
-	new: "New/Recent",
+	new: "Today/Recent",
 	archived: "Archived",
 }
 
