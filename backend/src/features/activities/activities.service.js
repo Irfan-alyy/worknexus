@@ -1040,6 +1040,164 @@ async function getAdminActivities(limit = 50, filters = {}) {
 	}
 }
 
+/**
+ * Get activity metrics for HR dashboard
+ * Aggregates summary statistics: employees, payroll, departments, projects, tasks, time logs
+ */
+async function getHRActivityMetrics() {
+	try {
+		const today = new Date()
+		const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+		const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+
+		const [
+			totalEmployees,
+			newEmployeesThisMonth,
+			departmentCount,
+			projectCount,
+			tasksDueThisWeek,
+			timeLogs,
+			pendingPayrolls,
+		] = await Promise.all([
+			// Total employees
+			prisma.employee.count(),
+
+			// New employees this month
+			prisma.employee.count({
+				where: {
+					createdAt: { gte: monthStart },
+				},
+			}),
+
+			// Total departments
+			prisma.department.count(),
+
+			// Total projects
+			prisma.project.count(),
+
+			// Tasks due this week (all projects)
+			prisma.task.findMany({
+				where: {
+					dueDate: {
+						gte: today,
+						lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000),
+					},
+					status: { not: "completed" },
+				},
+			}),
+
+			// Time logs this week
+			prisma.timeLog.findMany({
+				where: {
+					loggedAt: { gte: weekStart },
+				},
+			}),
+
+			// Pending payroll
+			prisma.payroll.findMany({
+				where: {
+					paymentStatus: "pending",
+				},
+			}),
+		])
+
+		const totalHoursThisWeek = timeLogs.reduce((sum, log) => sum + Number(log.hours), 0)
+		const totalPendingPayroll = pendingPayrolls.reduce((sum, p) => sum + Number(p.amount), 0)
+
+		return {
+			totalEmployees,
+			newEmployeesThisMonth,
+			departmentCount,
+			projectCount,
+			tasksDueThisWeek: tasksDueThisWeek.length,
+			totalHoursThisWeek: totalHoursThisWeek.toFixed(2),
+			pendingPayrollAmount: totalPendingPayroll.toFixed(2),
+			pendingPayrollCount: pendingPayrolls.length,
+		}
+	} catch (error) {
+		throw new Error(`Failed to fetch HR activity metrics: ${error.message}`)
+	}
+}
+
+/**
+ * Get activity metrics for Admin dashboard
+ * Aggregates summary statistics: employees, clients, projects, payroll, tasks
+ */
+async function getAdminActivityMetrics() {
+	try {
+		const today = new Date()
+		const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+		const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+
+		const [
+			totalEmployees,
+			newEmployeesThisMonth,
+			clientCount,
+			projectCount,
+			tasksDueThisWeek,
+			timeLogs,
+			pendingPayrolls,
+		] = await Promise.all([
+			// Total employees
+			prisma.employee.count(),
+
+			// New employees this month
+			prisma.employee.count({
+				where: {
+					createdAt: { gte: monthStart },
+				},
+			}),
+
+			// Total clients
+			prisma.client.count(),
+
+			// Total projects
+			prisma.project.count(),
+
+			// Tasks due this week (all projects)
+			prisma.task.findMany({
+				where: {
+					dueDate: {
+						gte: today,
+						lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000),
+					},
+					status: { not: "completed" },
+				},
+			}),
+
+			// Time logs this week
+			prisma.timeLog.findMany({
+				where: {
+					loggedAt: { gte: weekStart },
+				},
+			}),
+
+			// Pending payroll
+			prisma.payroll.findMany({
+				where: {
+					paymentStatus: "pending",
+				},
+			}),
+		])
+
+		const totalHoursThisWeek = timeLogs.reduce((sum, log) => sum + Number(log.hours), 0)
+		const totalPendingPayroll = pendingPayrolls.reduce((sum, p) => sum + Number(p.amount), 0)
+
+		return {
+			totalEmployees,
+			newEmployeesThisMonth,
+			clientCount,
+			projectCount,
+			tasksDueThisWeek: tasksDueThisWeek.length,
+			totalHoursThisWeek: totalHoursThisWeek.toFixed(2),
+			pendingPayrollAmount: totalPendingPayroll.toFixed(2),
+			pendingPayrollCount: pendingPayrolls.length,
+		}
+	} catch (error) {
+		throw new Error(`Failed to fetch admin activity metrics: ${error.message}`)
+	}
+}
+
 // Export manager functions
 module.exports = {
 	getEmployeeActivities,
@@ -1048,4 +1206,6 @@ module.exports = {
 	getManagerActivityMetrics,
 	getHRActivities,
 	getAdminActivities,
+	getHRActivityMetrics,
+	getAdminActivityMetrics,
 }
