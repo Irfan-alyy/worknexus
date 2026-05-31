@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { fetchAdminActivities } from "../services/admin-activities-api"
+import { fetchAdminActivities, fetchAdminActivityMetrics } from "../services/admin-activities-api"
 import { adminActivitiesKeys } from "@/config/query-keys"
 
 /**
@@ -14,6 +14,21 @@ export const useAdminActivities = (filters = {}) => {
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		gcTime: 1000 * 60 * 30, // 30 minutes
 		retry: 2,
+	})
+}
+
+/**
+ * Hook to fetch Admin activity metrics
+ * @returns {Object} React Query result with data, isLoading, error
+ */
+export const useAdminActivityMetrics = (options = {}) => {
+	return useQuery({
+		queryKey: adminActivitiesKeys.metrics(),
+		queryFn: () => fetchAdminActivityMetrics(),
+		staleTime: 1000 * 60 * 5, // 5 minutes
+		gcTime: 1000 * 60 * 30, // 30 minutes
+		retry: 2,
+		...options,
 	})
 }
 

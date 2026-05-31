@@ -24,6 +24,16 @@ export const fetchAdminActivities = async (options = {}) => {
 	return response.data?.data || []
 }
 
+/**
+ * Fetch Admin activity metrics
+ * @returns {Promise<Object>} Metrics object with summary statistics
+ */
+export const fetchAdminActivityMetrics = async () => {
+	const response = await axios.get(`/admin/activities/metrics`)
+	return response.data?.data || {}
+}
+
 export default {
 	fetchAdminActivities,
+	fetchAdminActivityMetrics,
 }
