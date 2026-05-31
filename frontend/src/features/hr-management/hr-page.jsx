@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
+import { useGlobalStore } from "@/stores/use-global-store"
 import { CheckCircle2 } from "lucide-react"
-
 import { OnboardingWizard } from "@/features/hr-management/components/onboarding-wizard"
+import HRActivities from "./hr-activities"
 
 const checklist = [
   "Contract uploaded",
@@ -10,34 +13,61 @@ const checklist = [
 ]
 
 export function HrPage() {
+  const { openAside } = useGlobalStore()
+  const [activeTab, setActiveTab] = useState("onboarding")
+  const location = useLocation()
+
+  useEffect(() => {
+    const path = location.pathname.replace(/\/+$/, "")
+    if (path.endsWith("/activities")) {
+      setActiveTab("activities")
+    } else {
+      setActiveTab("onboarding")
+    }
+  }, [location.pathname])
+
+  const tabs = {
+    onboarding: "New Hire Setup",
+    activities: "Activities",
+  }
+
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6">
-      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">HR onboarding</p>
-        <h2 className="mt-1 text-2xl font-semibold">New hire setup</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Use the onboarding wizard to coordinate setup tasks, approvals, and first-day readiness.
-        </p>
-      </div>
-
-      <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <OnboardingWizard />
-
-        <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            <h3 className="text-lg font-semibold">Readiness checklist</h3>
+      {/* Conditional Rendering Based on Tab */}
+      {activeTab === "onboarding" ? (
+        <>
+          <div className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
+            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">HR onboarding</p>
+            <h2 className="mt-1 text-2xl font-semibold">New hire setup</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Use the onboarding wizard to coordinate setup tasks, approvals, and first-day readiness.
+            </p>
           </div>
-          <div className="mt-5 space-y-3">
-            {checklist.map((item) => (
-              <div key={item} className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 text-sm">
-                <span>{item}</span>
-                <span className="text-xs font-medium text-muted-foreground">Done</span>
+
+          <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <OnboardingWizard />
+
+            <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                <h3 className="text-lg font-semibold">Readiness checklist</h3>
               </div>
-            ))}
+              <div className="mt-5 space-y-3">
+                {checklist.map((item) => (
+                  <div key={item} className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 text-sm">
+                    <span>{item}</span>
+                    <span className="text-xs font-medium text-muted-foreground">Done</span>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
-        </section>
-      </div>
+        </>
+      ) : activeTab === "activities" ? (
+        <div className="space-y-6">
+          <HRActivities />
+        </div>
+      ) : null}
     </div>
   )
 }
