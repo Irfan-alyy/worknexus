@@ -98,9 +98,20 @@ async function getHRActivitiesController(req, res, next) {
 		}
 
 		// Optional limit parameter
-		const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50
+		const requestedLimit = req.query.limit ? parseInt(req.query.limit, 10) : null
+		const filters = {
+			type: req.query.type,
+			dateRange: req.query.dateRange,
+			status: req.query.status,
+		}
+		const hasFilters = Boolean(filters.type || filters.dateRange || filters.status)
+		const limit = Number.isFinite(requestedLimit)
+			? Math.max(requestedLimit, hasFilters ? 1000 : 50)
+			: hasFilters
+				? 1000
+				: 50
 
-		const activities = await getHRActivities(limit)
+		const activities = await getHRActivities(limit, filters)
 
 		const { response, statusCode } = successResponse(activities, "HR activities retrieved successfully")
 		return res.status(statusCode).json(response)
@@ -123,9 +134,20 @@ async function getAdminActivitiesController(req, res, next) {
 		}
 
 		// Optional limit parameter
-		const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50
+		const requestedLimit = req.query.limit ? parseInt(req.query.limit, 10) : null
+		const filters = {
+			type: req.query.type,
+			dateRange: req.query.dateRange,
+			status: req.query.status,
+		}
+		const hasFilters = Boolean(filters.type || filters.dateRange || filters.status)
+		const limit = Number.isFinite(requestedLimit)
+			? Math.max(requestedLimit, hasFilters ? 1000 : 50)
+			: hasFilters
+				? 1000
+				: 50
 
-		const activities = await getAdminActivities(limit)
+		const activities = await getAdminActivities(limit, filters)
 
 		const { response, statusCode } = successResponse(activities, "Admin activities retrieved successfully")
 		return res.status(statusCode).json(response)

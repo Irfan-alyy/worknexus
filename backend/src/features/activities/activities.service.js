@@ -1,6 +1,90 @@
 const prisma = require("../../config/db.config")
 
 const ONE_HOUR_AGO = new Date(Date.now() - 60 * 60 * 1000)
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
+function startOfToday() {
+	const now = new Date()
+	const start = new Date(now)
+	start.setHours(0, 0, 0, 0)
+	return start
+}
+
+const ACTIVITY_TYPE_PREFIXES = {
+	employee: ["employee_"],
+	payroll: ["payroll_"],
+	department: ["department_"],
+	project: ["project_"],
+	task: ["task_"],
+	timelog: ["time_log", "time_logs_"],
+	client: ["client_"],
+	user: ["user_"],
+}
+
+function getDateRangeStart(dateRange) {
+	const now = new Date()
+
+	switch (dateRange) {
+		case "today": {
+			const start = new Date(now)
+			start.setHours(0, 0, 0, 0)
+			return start
+		}
+		case "week":
+			return new Date(now.getTime() - 7 * ONE_DAY_MS)
+		case "month":
+			console.log("Calculating month start for date range filter", new Date(now.getFullYear(), now.getMonth(), 1))
+			return new Date(now.getFullYear(), now.getMonth(), 1)
+		default:
+			return null
+	}
+}
+
+function matchesTypeFilter(activity, type) {
+	if (!type) return true
+
+	const prefixes = ACTIVITY_TYPE_PREFIXES[type]
+	if (!prefixes) {
+		return activity.type === type
+	}
+
+	return prefixes.some((prefix) => activity.type === type || activity.type.startsWith(prefix) || activity.source === type)
+}
+
+function matchesDateRangeFilter(activity, dateRange) {
+	if (!dateRange || dateRange === "all") return true
+
+	const start = getDateRangeStart(dateRange)
+	if (!start) return true
+
+	return new Date(activity.timestamp) >= start
+}
+
+function matchesStatusFilter(activity, status) {
+	if (!status || status === "all") return true
+
+	if (status === "new") {
+		return Boolean(activity.isNew) || new Date(activity.timestamp) >= startOfToday()
+	}
+
+	if (status === "archived") {
+		return !Boolean(activity.isNew) && new Date(activity.timestamp) < startOfToday()
+	}
+
+	return true
+}
+
+function applyActivityFilters(activities, filters = {}) {
+	const { type, dateRange, status } = filters
+
+	return activities.filter((activity) => {
+		return (
+			matchesTypeFilter(activity, type) &&
+			matchesDateRangeFilter(activity, dateRange) &&
+			matchesStatusFilter(activity, status)
+		)
+	})
+}
 
 /**
  * Transforms task into activity objects
@@ -668,8 +752,10 @@ function transformUserActivities(users) {
  * Get all activities for HR dashboard
  * Aggregates employee, payroll, department, project, task, and timelog events
  */
-async function getHRActivities(limit = 50) {
+async function getHRActivities(limit = 50, filters = {}) {
 	try {
+		const sourceTake = filters?.dateRange && filters.dateRange !== "all" ? 1000 : 100
+
 		// Fetch all relevant data in parallel
 		const [employees, payrolls, departments, projects, tasks, timeLogs] = await Promise.all([
 			prisma.employee.findMany({
@@ -678,32 +764,32 @@ async function getHRActivities(limit = 50) {
 					department: { include: { employees: true } },
 				},
 				orderBy: { createdAt: "desc" },
-				take: 100,
+				take: sourceTake,
 			}),
 			prisma.payroll.findMany({
 				include: { employee: { include: { user: true, department: true } } },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.department.findMany({
 				include: { employees: true },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.project.findMany({
 				include: { client: true, manager: { include: { user: true } }, teamMembers: true },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.task.findMany({
 				include: { project: true, employee: true },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.timeLog.findMany({
 				include: { task: { include: { project: true } }, employee: { include: { department: true } } },
 				orderBy: { loggedAt: "desc" },
-				take: 30,
+				take: sourceTake,
 			}),
 		])
 
@@ -788,8 +874,10 @@ async function getHRActivities(limit = 50) {
 		// Sort by timestamp (newest first)
 		uniqueActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 
+		const filteredActivities = applyActivityFilters(uniqueActivities, filters)
+
 		// Return limited results
-		return uniqueActivities.slice(0, limit)
+		return filteredActivities.slice(0, limit)
 	} catch (error) {
 		throw new Error(`Failed to fetch HR activities: ${error.message}`)
 	}
@@ -799,42 +887,44 @@ async function getHRActivities(limit = 50) {
  * Get all activities for Admin dashboard
  * Aggregates employee, client, project, task, payroll, department, and user events
  */
-async function getAdminActivities(limit = 50) {
+async function getAdminActivities(limit = 50, filters = {}) {
 	try {
+		const sourceTake = filters?.dateRange && filters.dateRange !== "all" ? 1000 : 100
+
 		// Fetch all relevant data in parallel
 		const [employees, clients, projects, tasks, payrolls, departments, users] = await Promise.all([
 			prisma.employee.findMany({
 				include: { user: true, department: true },
 				orderBy: { createdAt: "desc" },
-				take: 100,
+				take: sourceTake,
 			}),
 			prisma.client.findMany({
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.project.findMany({
 				include: { client: true, manager: { include: { user: true } }, teamMembers: true },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.task.findMany({
 				include: { project: true, employee: true },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.payroll.findMany({
 				include: { employee: { include: { user: true } } },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.department.findMany({
 				include: { employees: true },
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 			prisma.user.findMany({
 				orderBy: { createdAt: "desc" },
-				take: 50,
+				take: sourceTake,
 			}),
 		])
 
@@ -941,8 +1031,10 @@ async function getAdminActivities(limit = 50) {
 		// Sort by timestamp (newest first)
 		uniqueActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 
+		const filteredActivities = applyActivityFilters(uniqueActivities, filters)
+
 		// Return limited results
-		return uniqueActivities.slice(0, limit)
+		return filteredActivities.slice(0, limit)
 	} catch (error) {
 		throw new Error(`Failed to fetch admin activities: ${error.message}`)
 	}
