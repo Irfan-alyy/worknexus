@@ -50,6 +50,7 @@ export function Sidebar({ onNavigate }) {
 		// global tasks overview for admins
 		navItems.push({ to: "/tasks", label: "Tasks", icon: Briefcase })
 		navItems.push({ to: "/admin/activities", label: "Activities", icon: Activity })
+		navItems.push({ to: "/payroll", label: "Payroll", icon: ReceiptText })
 	}
 
 	if (role === "pm") {
@@ -70,6 +71,8 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/clients", label: "Clients", icon: Briefcase })
 		navItems.push({ to: "/employees", label: "Employees", icon: Users })
 		navItems.push({ to: "/hr/activities", label: "Activities", icon: Activity })
+		navItems.push({ to: "/tasks", label: "Tasks", icon: Briefcase })
+		navItems.push({ to: "/payroll", label: "Payroll", icon: ReceiptText })
 		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
 	}
 
@@ -79,11 +82,6 @@ export function Sidebar({ onNavigate }) {
 		navItems.push({ to: "/tasks", label: "Tasks", icon: Folder })
 		navItems.push({ to: "/employee/activities", label: "Activities", icon: Activity, badge: employeeActivityBadgeCount })
 		navItems.push({ to: "/employee/profile", label: "Profile", icon: User })
-	}
-
-	// push payroll near the end for allowed roles (not PM/Employee)
-	if (!(role === "pm" || role === "employee")) {
-		navItems.push({ to: "/payroll", label: "Payroll", icon: ReceiptText })
 	}
 
 	return (

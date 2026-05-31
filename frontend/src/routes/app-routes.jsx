@@ -277,7 +277,7 @@ export function AppRoutes() {
 					<Route path="employee/*" element={<RoleBarrier allowedRoles={["admin", "hr", "pm", "employee"]}><EmployeePage /></RoleBarrier>} />
 					<Route path="chat" element={<Navigate to="/chat/channels/general" replace />} />
 					<Route path="chat/:scope/:chatId" element={<ChatPage />} />
-					<Route path="tasks" element={<RoleBarrier allowedRoles={["admin", "pm", "employee"]}><ProjectTasksPanel /></RoleBarrier>} />
+					<Route path="tasks" element={<RoleBarrier allowedRoles={["admin","hr", "pm", "employee"]}><ProjectTasksPanel /></RoleBarrier>} />
 					<Route path="payroll" element={<RoleBarrier allowedRoles={["admin", "hr"]}><PayrollPage /></RoleBarrier>} />
 					<Route path="hr/*" element={<RoleBarrier allowedRoles={["admin", "hr"]}><HrPage /></RoleBarrier>} />
 					<Route path="recruitments" element={<RoleBarrier allowedRoles={["admin", "hr"]}><RecruitmentsPage /></RoleBarrier>} />
