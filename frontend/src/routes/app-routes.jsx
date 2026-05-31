@@ -284,7 +284,7 @@ export function AppRoutes() {
 					<Route path="projects" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Projects /></RoleBarrier>} />
 					<Route path="clients" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Clients /></RoleBarrier>} />
 					<Route path="employees" element={<RoleBarrier allowedRoles={["admin", "hr"]}><Employees /></RoleBarrier>} />
-					<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin"]}><AdminPage /></RoleBarrier>} />
+					<Route path="admin/*" element={<RoleBarrier allowedRoles={["admin","hr"]}><AdminPage /></RoleBarrier>} />
 					<Route path="pm/*" element={<RoleBarrier allowedRoles={["pm", "admin"]}><PmPage /></RoleBarrier>} />
 
 				</Route>

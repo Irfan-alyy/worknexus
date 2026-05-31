@@ -65,7 +65,7 @@ export function AdminPage() {
         {activeTab === "clients" && <AdminClients onEdit={openDrawer} />}
         {activeTab === "employees" && <AdminEmployees onEdit={openDrawer} />}
         {activeTab === "managers" && role === "admin" && <AdminManagers onEdit={openDrawer} />}
-        {activeTab === "departments" && role === "admin" && <AdminDepartments onEdit={openDrawer} />}
+        {activeTab === "departments" && (role === "admin" || role === "hr") && <AdminDepartments onEdit={openDrawer} />}
         {activeTab === "activities" && role === "admin" && <AdminActivities />}
         {activeTab === "channels" && role === "admin" && (
           <AdminConversationPanel

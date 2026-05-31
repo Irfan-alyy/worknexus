@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { CheckCircle2 } from "lucide-react"
 import { OnboardingWizard } from "@/features/hr-management/components/onboarding-wizard"
 import HRActivities from "./hr-activities"
+import AdminDepartments from "@/features/admin/AdminDepartments"
 
 const checklist = [
   "Contract uploaded",
@@ -20,6 +21,8 @@ export function HrPage() {
     const path = location.pathname.replace(/\/+$/, "")
     if (path.endsWith("/activities")) {
       setActiveTab("activities")
+    } else if (path.endsWith("/departments")) {
+      setActiveTab("departments")
     } else {
       setActiveTab("onboarding")
     }
@@ -31,22 +34,22 @@ export function HrPage() {
 
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6">
-      <div className="mb-4 flex flex-wrap gap-2 rounded-3xl border border-border bg-card p-2 shadow-sm sm:mb-6">
-        {Object.entries(tabs).map(([key, label]) => {
+      {/* <div className="mb-4 flex flex-wrap gap-2 rounded-3xl border border-border bg-card p-2 shadow-sm sm:mb-6"> */}
+        {/* {Object.entries(tabs).map(([key, label]) => {
           const isActive = activeTab === key
 
           return (
             <button
               key={key}
               type="button"
-              onClick={() => navigate(key === "onboarding" ? "/hr" : "/hr/activities")}
+              onClick={() => navigate(key === "onboarding" ? "/hr" : key === "departments" ? "/hr/departments" : "/hr/activities")}
               className={`rounded-2xl px-4 py-2 text-sm font-medium transition-colors ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
             >
               {label}
             </button>
           )
-        })}
-      </div>
+        })} */}
+      {/* </div> */}
 
       {/* Conditional Rendering Based on Tab */}
       {activeTab === "onboarding" ? (
@@ -81,6 +84,10 @@ export function HrPage() {
       ) : activeTab === "activities" ? (
         <div className="space-y-6">
           <HRActivities />
+        </div>
+      ) : activeTab === "departments" ? (
+        <div className="space-y-6">
+          <AdminDepartments />
         </div>
       ) : null}
     </div>

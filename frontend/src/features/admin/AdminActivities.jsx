@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useGlobalStore } from "@/stores/use-global-store"
-import { useAdminActivities } from "./hooks/useAdminActivities"
+import { useAdminActivities, useAdminActivityMetrics } from "./hooks/useAdminActivities"
+import { AdminActivityMetricsCards } from "./components/admin-activity-metrics"
 import { ActivityFilters } from "@/components/shared/ActivityFilters"
 import { filterActivities } from "@/components/shared/activity-filter-utils"
 import { ActivitySection } from "@/components/shared/ActivitySection"
@@ -49,6 +51,7 @@ export default function AdminActivities() {
 
   // Fetch activities with current filters
   const { data: activities = [], isLoading, error } = useAdminActivities(filters)
+  const { data: metrics, isLoading: metricsLoading } = useAdminActivityMetrics()
   const visibleActivities = filterActivities(activities, filters)
 
   // Group and sort activities
@@ -57,6 +60,26 @@ export default function AdminActivities() {
   function openActivityDetail(activity) {
     setSelectedActivity(activity)
     openAside(`Activity detail: ${activity.type}`, <ActivityDetailPanel activity={activity} />)
+  }
+  const navigate = useNavigate()
+
+  function handleMetricClick(metricType) {
+    switch (metricType) {
+      case "employees":
+        navigate("/admin/employees")
+        break
+      case "clients":
+        navigate("/admin/clients")
+        break
+      case "projects":
+        navigate("/admin/projects")
+        break
+      case "payroll":
+        navigate("/payroll")
+        break
+      default:
+        break
+    }
   }
 
   return (
@@ -68,6 +91,9 @@ export default function AdminActivities() {
           All important admin events, from employee creation to client and project updates.
         </p>
       </div>
+
+      {/* Metrics Section */}
+      <AdminActivityMetricsCards metrics={metrics} isLoading={metricsLoading} onMetricClick={handleMetricClick} />
 
       {/* Filters */}
       <ActivityFilters
