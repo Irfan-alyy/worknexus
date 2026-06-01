@@ -10,7 +10,13 @@ const {
 
 async function listUsersController(req, res, next) {
   try {
-    const users = await listUsers()
+    const { roles } = req.query
+    // Parse roles from query parameter (can be: ?roles=admin,hr or ?roles=admin&roles=hr)
+    let roleFilter = null
+    if (roles) {
+      roleFilter = typeof roles === "string" ? roles.split(",").map(r => r.trim()) : Array.isArray(roles) ? roles : [roles]
+    }
+    const users = await listUsers(roleFilter)
     const { response, statusCode } = successResponse(users)
     return res.status(statusCode).json(response)
   } catch (err) {

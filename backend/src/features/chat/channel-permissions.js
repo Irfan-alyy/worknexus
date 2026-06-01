@@ -49,7 +49,17 @@ async function canAccessChannel(channel, user, context = null) {
     return hasPrivateMembership(channel, user.id)
   }
 
-  if (!channel.projectId) return true
+  // For non-private channels, check membership or project access for all roles
+  // Global (non-project) channels: require membership for all roles
+  if (!channel.projectId) {
+    return hasChannelMembership(channel, user.id)
+  }
+
+  // Project-scoped channels: check project access
+  if (user.role === "admin" || user.role === "hr") {
+    // Admin/HR can access any project-scoped channel
+    return await isTeamMember(channel.projectId, user.id)
+  }
 
   if (context) {
     if (context.managedProjectIds.has(channel.projectId)) return true
