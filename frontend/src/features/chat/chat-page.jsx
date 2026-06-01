@@ -4,7 +4,8 @@ import { Navigate, useParams } from "react-router-dom"
 
 import { ChatInput } from "@/features/chat/components/chat-input"
 import { MessageBubble } from "@/features/chat/components/message-bubble"
-import { findChannelById, findDirectMessageById } from "@/features/chat/chat-data"
+import { useQuery } from "@tanstack/react-query"
+import { chatApi } from "@/features/chat/services/chat-api"
 import { useGlobalStore } from "@/stores/use-global-store"
 
 const initialMessages = [
@@ -280,6 +281,15 @@ export function ChatPage() {
   const [editingDraft, setEditingDraft] = useState("")
   const [forwardMessage, setForwardMessage] = useState(null)
 
+  // Fetch available channels to redirect to first one if needed
+  const { data: channelsResp } = useQuery({
+    queryKey: ["chat", "channels", "list"],
+    queryFn: () => chatApi.listChannels(),
+  })
+
+  const channels = channelsResp?.data || []
+  const firstChannelId = channels.length > 0 ? channels[0].id : null
+
   const activeThreadMessage = useMemo(
     () => messages.find((message) => message.id === activeThreadMessageId) ?? null,
     [messages, activeThreadMessageId],
@@ -294,10 +304,18 @@ export function ChatPage() {
     )
   }, [editingMessageId, messages])
 
+  // Load channel/dm details from API
+  const { data: channelResp, isLoading: isChannelLoading, isError: isChannelError } = useQuery({
+    queryKey: chatId ? ["chat", "channel", chatId] : ["chat", "channel"],
+    queryFn: () => chatApi.getChannel(chatId),
+    enabled: !!chatId,
+  })
+
   const selectedChat = useMemo(() => {
     if (!scope || !chatId) return null
-    return scope === "channels" ? findChannelById(chatId) : findDirectMessageById(chatId)
-  }, [scope, chatId])
+    // API may return { data: {...} } or the object directly
+    return channelResp?.data || channelResp || null
+  }, [scope, chatId, channelResp])
 
   useEffect(() => {
     if (!activeThreadMessage) {
@@ -342,14 +360,32 @@ export function ChatPage() {
   }, [scope, chatId])
 
   if (!scope || !chatId) {
-    return <Navigate to="/chat/channels/general" replace />
+    if (firstChannelId) {
+      return <Navigate to={`/chat/channels/${firstChannelId}`} replace />
+    }
+    return <div className="p-6">No channels available</div>
   }
 
   const isChannel = scope === "channels"
   const isDm = scope === "dms"
 
   if (!isChannel && !isDm) {
-    return <Navigate to="/chat/channels/general" replace />
+    if (firstChannelId) {
+      return <Navigate to={`/chat/channels/${firstChannelId}`} replace />
+    }
+    return <div className="p-6">No channels available</div>
+  }
+
+  if (isChannelLoading) {
+    return <div className="p-6">Loading chat...</div>
+  }
+
+  if (!selectedChat || isChannelError) {
+    // If the selected chat couldn't be loaded, try to navigate to first available channel
+    if (firstChannelId && chatId !== firstChannelId) {
+      return <Navigate to={`/chat/channels/${firstChannelId}`} replace />
+    }
+    return <div className="p-6">Channel not found or you don't have access to it</div>
   }
 
   const conversationLabel = isChannel ? `#${selectedChat.name}` : selectedChat.name

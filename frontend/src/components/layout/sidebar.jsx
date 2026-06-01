@@ -6,8 +6,9 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { roleDefinitions } from "@/config/constants"
 import { queryKeys } from "@/config/query-keys"
 import { employeeActivityBadgeCount } from "@/features/employee/employee-data"
-import { directMessages } from "@/features/chat/chat-data"
+import DirectMessagesDropdown from "@/features/chat/components/DirectMessagesDropdown"
 import * as projectService from "@/features/projects/projects-service"
+import { useChatChannelsQuery } from "@/features/chat/hooks/use-chat-query"
 import { useGlobalStore } from "@/stores/use-global-store"
 import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
 
@@ -24,6 +25,19 @@ export function Sidebar({ onNavigate }) {
 		queryFn: async () => projectService.getProjects(),
 	})
 	const sidebarProjects = useMemo(() => projectsResponse?.data || [], [projectsResponse])
+
+	// Fetch channels visible to the current user and group by project
+	const { data: channelsResponse } = useChatChannelsQuery()
+	const channels = useMemo(() => channelsResponse?.data || [], [channelsResponse])
+	const channelsByProject = useMemo(() => {
+		const map = new Map()
+		channels.forEach((ch) => {
+			const key = ch.projectId || null
+			if (!map.has(key)) map.set(key, [])
+			map.get(key).push(ch)
+		})
+		return map
+	}, [channels])
 
 	const isChatRoute = location.pathname.startsWith("/chat")
 	const activeChannelId = useMemo(() => {
@@ -153,8 +167,8 @@ export function Sidebar({ onNavigate }) {
 							<div className="space-y-1 pb-1">
 								{sidebarProjects.map((proj) => {
 									const projOpen = !!openProjects[proj.id]
-									const channelId = (proj.channel || proj.title)?.replace(/^#/, "").replace(/\s+/g, "-").toLowerCase()
-									const isActive = activeChannelId === channelId
+									const projectChannels = channelsByProject.get(proj.id) || []
+									const projectLabel = proj.name || proj.title || proj.channel || proj.id
 									return (
 										<div key={proj.id}>
 											<button
@@ -164,22 +178,32 @@ export function Sidebar({ onNavigate }) {
 											>
 												<span className="flex items-center gap-2">
 													<Briefcase className="h-3.5 w-3.5" />
-													{proj.title}
+													{projectLabel}
 												</span>
 												<ChevronDown className={`h-4 w-4 transition-transform ${projOpen ? 'rotate-180' : ''}`} />
 											</button>
 											{projOpen && (
 												<div className="mt-1 space-y-1 pl-4">
-													<NavLink
-														to={`/chat/channels/${channelId}`}
-														onClick={onNavigate}
-														className={`flex items-center justify-between rounded-xl border px-2.5 py-2 text-sm transition-colors ${isActive ? "border-border bg-accent text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"}`}
-													>
-														<span className="flex items-center gap-2">
-															<Hash className="h-3.5 w-3.5" />
-															{proj.channel || proj.title}
-														</span>
-													</NavLink>
+													{projectChannels.length > 0 ? (
+														projectChannels.map((ch) => {
+															const isActive = activeChannelId === ch.id
+															return (
+																<NavLink
+																	key={ch.id}
+																	to={`/chat/channels/${ch.id}`}
+																	onClick={onNavigate}
+																	className={`flex items-center justify-between rounded-xl border px-2.5 py-2 text-sm transition-colors ${isActive ? "border-border bg-accent text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"}`}
+																>
+																	<span className="flex items-center gap-2">
+																		<Hash className="h-3.5 w-3.5" />
+																		{ch.name || ch.channel || ch.id}
+																	</span>
+																</NavLink>
+															)
+														})
+													) : (
+														<div className="text-sm text-muted-foreground px-2.5 py-2">No channels</div>
+													)}
 												</div>
 											)}
 										</div>
@@ -200,18 +224,25 @@ export function Sidebar({ onNavigate }) {
 							<ChevronDown className={`h-4 w-4 transition-transform ${isDmsOpen ? "rotate-180" : ""}`} />
 						</button>
 						{isDmsOpen && (
-							<div className="space-y-1 pb-1">
-								{directMessages.map((dm) => {
-									const isActive = activeDmId === dm.id
+							<DirectMessagesDropdown isOpen={isDmsOpen} activeDmId={activeDmId} onNavigate={onNavigate} />
+						)}
+
+						{/* Global channels (non-project, public channels) */}
+						{channelsByProject.get(null) && channelsByProject.get(null).length > 0 && (
+							<div className="mt-2 border-t border-border/60 pt-2">
+								{channelsByProject.get(null).filter((c) => !c.isPrivate).map((ch) => {
+									const isActive = activeChannelId === ch.id
 									return (
 										<NavLink
-											key={dm.id}
-											to={`/chat/dms/${dm.id}`}
+											key={ch.id}
+											to={`/chat/channels/${ch.id}`}
 											onClick={onNavigate}
 											className={`flex items-center justify-between rounded-xl border px-2.5 py-2 text-sm transition-colors ${isActive ? "border-border bg-accent text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:bg-secondary/70"}`}
 										>
-											<span className="truncate">{dm.name}</span>
-											<span className={`h-2 w-2 rounded-full ${dm.status === "online" ? "bg-emerald-500" : dm.status === "bot" ? "bg-amber-500" : "bg-zinc-400"}`} />
+											<span className="flex items-center gap-2">
+												<Hash className="h-3.5 w-3.5" />
+												{ch.name}
+											</span>
 										</NavLink>
 									)
 								})}
