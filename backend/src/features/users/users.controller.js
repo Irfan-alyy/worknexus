@@ -16,6 +16,7 @@ async function listUsersController(req, res, next) {
     if (roles) {
       roleFilter = typeof roles === "string" ? roles.split(",").map(r => r.trim()) : Array.isArray(roles) ? roles : [roles]
     }
+    console.log(roleFilter)
     const users = await listUsers(roleFilter)
     const { response, statusCode } = successResponse(users)
     return res.status(statusCode).json(response)
