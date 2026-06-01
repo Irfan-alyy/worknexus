@@ -16,3 +16,17 @@ export const useCreateChatChannelMutation = (options = {}) => {
     ...rest,
   })
 }
+
+export const useFindOrCreateDMMutation = (options = {}) => {
+  const queryClient = useQueryClient()
+  const { onSuccess, ...rest } = options
+
+  return useMutation({
+    mutationFn: ({ receiverId }) => chatApi.findOrCreateDM(receiverId),
+    onSuccess: (...args) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() })
+      onSuccess?.(...args)
+    },
+    ...rest,
+  })
+}

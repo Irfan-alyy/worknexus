@@ -7,6 +7,7 @@ const chatKeys = {
   all: ["chat"],
   channels: (filters = {}) => [...chatKeys.all, "channels", filters],
   channel: (channelId) => [...chatKeys.all, "channel", channelId],
+  channelMembers: (channelId) => [...chatKeys.all, "channelMembers", channelId],
   messages: (channelId, filters = {}) => [...chatKeys.all, "messages", channelId, filters],
 }
 

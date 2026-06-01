@@ -9,3 +9,11 @@ export const useChatChannelsQuery = (params = {}, options = {}) =>
 		queryFn: () => chatApi.listChannels(params),
 		...options,
 	})
+
+export const useChannelMembersQuery = (channelId, options = {}) =>
+	useQuery({
+		queryKey: queryKeys.chat.channelMembers(channelId),
+		queryFn: () => chatApi.listChannelMembers(channelId),
+		enabled: !!channelId,
+		...options,
+	})
