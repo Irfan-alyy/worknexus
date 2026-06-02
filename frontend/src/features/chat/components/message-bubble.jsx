@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Check, Forward, MessageSquareReply, MoreHorizontal, Pencil, Smile, Trash2, X } from "lucide-react"
+import { Check, Cross, Forward, MessageSquareReply, MoreHorizontal, Pencil, Smile, Trash2, X } from "lucide-react"
 import { useGlobalStore } from "@/stores/use-global-store"
 import { directMessages } from "@/features/chat/chat-data"
 
-const quickReactions = ["👍", "❤️", "😂"]
+const quickReactions = ["👍", "❤️", "✅" ]
 const emojiPicker = ["😀", "😅", "😍", "🤔", "👏", "🔥", "🎉", "🙏", "👍", "❤️", "😂", "👀"]
 
 export function MessageBubble({
@@ -87,7 +87,7 @@ export function MessageBubble({
 
 	return (
 		<article className={`group relative ${containerClasses}`}>
-			<div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border border-border/70 bg-background/95 px-1 py-1 opacity-100 shadow-sm transition duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+			<div className="absolute right-0 -top-5 z-10 flex items-center gap-1 rounded-full border border-border/70 bg-background/95 px-0.5 py-0.5 opacity-100 shadow-sm transition duration-150 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
 				{quickReactions.map((emoji) => (
 					<button
 						key={emoji}
@@ -115,24 +115,24 @@ export function MessageBubble({
 				>
 					<MessageSquareReply className="h-4 w-4" />
 				</button>
-				<button
+				{/* <button
 					type="button"
 					onClick={() => onForward?.()}
 					className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 					aria-label="Forward"
 				>
 					<Forward className="h-4 w-4" />
-				</button>
+				</button> */}
 				{isMine ? (
 					<>
-						<button
+						{/* <button
 							type="button"
 							onClick={() => onEdit?.()}
 							className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 							aria-label="Edit message"
 						>
 							<Pencil className="h-4 w-4" />
-						</button>
+						</button> */}
 						<button
 							type="button"
 							onClick={() => onDelete?.()}
@@ -158,7 +158,7 @@ export function MessageBubble({
 							className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
 							aria-label="Close emoji picker"
 						>
-							<MoreHorizontal className="h-4 w-4" />
+							<X className="h-4 w-4" />
 						</button>
 					</div>
 					<div className="mt-3 grid grid-cols-4 gap-2">
@@ -174,13 +174,13 @@ export function MessageBubble({
 							</button>
 						))}
 					</div>
-					<button
+					{/* <button
 						type="button"
 						onClick={() => setIsEmojiPanelOpen(false)}
 						className="mt-3 w-full rounded-2xl border border-border bg-secondary px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
 					>
 						Custom emoji panel
-					</button>
+					</button> */}
 				</div>
 			) : null}
 			<div className={rowClasses}>

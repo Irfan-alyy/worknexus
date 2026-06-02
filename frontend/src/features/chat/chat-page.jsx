@@ -14,6 +14,7 @@ import {
 	useTypingIndicator,
 	useTypingListener,
 	useReactionListener,
+	useMessageDeletedListener,
 } from "@/features/chat/hooks/use-socket"
 import {
 	useCreateMessageMutation,
@@ -423,14 +424,46 @@ export function ChatPage() {
     }
   }, [messagesResp, currentUserId])
   // console.log("Loaded messages:", messagesResp)
-  // Setup message listener for real-time updates
+  // Setup message listener for real-time updates (create)
   useMessageListener(chatId, (newMessage) => {
     const transformed = transformMessage(newMessage, currentUserId)
-    setMessages((prev) => {
-      // Check if message already exists to avoid duplicates
-      return appendUniqueMessage(prev, transformed)
-    })
+    setMessages((prev) => appendUniqueMessage(prev, transformed))
   })
+
+  // Setup updated-message listener (realtime update)
+  useMessageDeletedListener((data) => {
+    // Backward/forward compatible parsing:
+    // - delete event payload: { messageId, channelId, ... }
+    // - update event payload may also contain { type, updatedMessage, ... }
+    // We only mutate when we can confidently detect an update.
+    const type = data?.type ?? data?.eventType
+
+    // If your backend emits a dedicated update event, prefer implementing a dedicated hook.
+    // Here we handle only delete events; updates are handled via createMessage listener unless backend sends updates as full message objects.
+    // console.log("[Socket] Message event received:", data) 
+    const deletedMessageId = data?.messageId ?? data?.id ?? data?.message_id
+    const deletedChannelId = data?.channelId ?? data?.channel_id
+
+    if (type && String(type).toLowerCase() !== "delete") {
+      // Ignore non-delete events for this listener.
+      return
+    }
+
+    // Only apply if the deletion belongs to this chat
+    if (deletedChannelId && String(deletedChannelId) !== String(chatId)) return
+    if (!deletedMessageId) return
+
+    setMessages((prev) => prev.filter((m) => m.id !== deletedMessageId))
+
+    // If thread is open for the deleted message, close it
+    if (activeThreadMessageId === deletedMessageId) {
+      wasThreadAsideOpenRef.current = false
+      setActiveThreadMessageId(null)
+      closeAside()
+    }
+  })
+
+
 
   // Setup typing indicator listener
   useTypingListener(({ userId, isTyping }) => {
@@ -459,11 +492,26 @@ export function ChatPage() {
       setMessages((prev) =>
         prev.map((msg) => {
           if (msg.id === data.messageId) {
-            const exists = (msg.reactions || []).find((r) => r.emoji === data.emoji && r.userId === data.userId)
-            if (exists) return msg
+            const reactions = msg.reactions || []
+            const existingReaction = reactions.find((r) => r.emoji === data.emoji && r.userId === data.userId)
+
+            // Backend enforces one reaction per (messageId, userId, emoji).
+            // If we get the same socket event twice, don't duplicate UI entries.
+            if (existingReaction) {
+              return {
+                ...msg,
+                reactions: reactions.map((r) =>
+                  r.emoji === data.emoji && r.userId === data.userId
+                    ? { ...r, count: (r.count ?? 1) }
+                    : r,
+                ),
+              }
+            }
+
+            // Add a brand new (emoji,user) reaction entry
             return {
               ...msg,
-              reactions: [...(msg.reactions || []), { emoji: data.emoji, userId: data.userId, count: 1 }],
+              reactions: [...reactions, { emoji: data.emoji, userId: data.userId, count: 1 }],
             }
           }
           return msg
@@ -688,39 +736,58 @@ export function ChatPage() {
   const handleReact = useCallback(
     async (messageId, emoji) => {
       try {
+        // Enforce: one employee can react with only one emoji per message.
+        // If the same emoji is clicked again => remove.
+        // If a different emoji is clicked => remove old and add new.
+
+        const currentUserReactions = messages
+          .find((m) => m.id === messageId)
+          ?.reactions?.filter((r) => r.userId === currentUserId) ?? []
+
+        const hasSameEmoji = currentUserReactions.some((r) => r.emoji === emoji)
+
         // Optimistic update
         setMessages((prev) =>
           prev.map((msg) => {
-            if (msg.id === messageId) {
-              const exists = (msg.reactions || []).find((r) => r.emoji === emoji && r.userId === currentUserId)
-              if (exists) {
-                // Remove reaction
-                return {
-                  ...msg,
-                  reactions: msg.reactions.filter((r) => !(r.emoji === emoji && r.userId === currentUserId)),
-                }
-              } else {
-                // Add reaction
-                return {
-                  ...msg,
-                  reactions: [...(msg.reactions || []), { emoji, userId: currentUserId, count: 1 }],
-                }
+            if (msg.id !== messageId) return msg
+
+            // Remove any existing reaction by current user
+            const cleared = (msg.reactions || []).filter((r) => r.userId !== currentUserId)
+
+            if (hasSameEmoji) {
+              // Clicking same emoji again removes it
+              return {
+                ...msg,
+                reactions: cleared,
               }
             }
-            return msg
+
+            // Add new emoji
+            return {
+              ...msg,
+              reactions: [...cleared, { emoji, userId: currentUserId, count: 1 }],
+            }
           }),
         )
 
         // Sync with API
-        const hasReaction = messages
-          .find((m) => m.id === messageId)
-          ?.reactions.some((r) => r.emoji === emoji && r.userId === currentUserId)
-
-        if (hasReaction) {
+        if (hasSameEmoji) {
           await removeReactionMutation.mutateAsync({ messageId, emoji })
-        } else {
-          await addReactionMutation.mutateAsync({ message_id: messageId, emoji })
+          // If backend returns no socket remove payload for other emojis, local state already updated.
+          return
         }
+
+        // Remove old emoji reactions (if any), then add the new one.
+        // We must remove the old emoji(s) first because backend only allows one reaction per (messageId,userId,emoji)
+        // but requirement is one emoji per user per message.
+        const oldEmojis = currentUserReactions.map((r) => r.emoji)
+        await Promise.all(
+          oldEmojis.map((oldEmoji) =>
+            removeReactionMutation.mutateAsync({ messageId, emoji: oldEmoji }).catch(() => null),
+          ),
+        )
+
+        await addReactionMutation.mutateAsync({ message_id: messageId, emoji })
       } catch (error) {
         console.error("Failed to update reaction:", error)
       }
