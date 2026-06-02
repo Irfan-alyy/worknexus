@@ -50,8 +50,8 @@ export function transformMetricsToGrid(metrics = {}, role = "employee") {
 	}
 
 	const roleMappings = metricMap[role] || metricMap.employee
-    console.log(roleMappings)
-    console.log("metrics utils:", metrics)
+    // console.log(roleMappings)
+    // console.log("metrics utils:", metrics)
 	return roleMappings
 		.map((mapping) => {
 			const rawValue = metrics[mapping.key]

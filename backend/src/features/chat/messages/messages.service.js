@@ -32,6 +32,23 @@ async function listChannelMessages(channelId, user, options = {}) {
           id: true,
           email: true,
           role: true,
+          employee:{
+            select: {
+              firstName: true,
+              lastName: true,
+            }
+          }
+        },
+      },
+      reactions: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
         },
       },
     },

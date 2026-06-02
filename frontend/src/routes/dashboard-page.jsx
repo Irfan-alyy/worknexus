@@ -55,7 +55,7 @@ export function DashboardPage() {
 	}
 
 	// Transform data
-  console.log("Metrics:", metricsQuery.data, role)
+//   console.log("Metrics:", metricsQuery.data, role)
 	const metrics = transformMetricsToGrid(metricsQuery.data, role)
 	const activities = transformActivitiesToFeed(activitiesQuery.data)
 	// Get fallback data
