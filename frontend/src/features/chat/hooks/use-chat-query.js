@@ -17,3 +17,23 @@ export const useChannelMembersQuery = (channelId, options = {}) =>
 		enabled: !!channelId,
 		...options,
 	})
+
+// ============================================================================
+// MESSAGE QUERIES
+// ============================================================================
+
+export const useMessagesQuery = (channelId, params = {}, options = {}) =>
+	useQuery({
+		queryKey: queryKeys.chat.messages(channelId, params),
+		queryFn: () => chatApi.listMessages(channelId, params),
+		enabled: !!channelId,
+		...options,
+	})
+
+export const useChannelDetailsQuery = (channelId, options = {}) =>
+	useQuery({
+		queryKey: queryKeys.chat.channelDetails(channelId),
+		queryFn: () => chatApi.getChannel(channelId),
+		enabled: !!channelId,
+		...options,
+	})
