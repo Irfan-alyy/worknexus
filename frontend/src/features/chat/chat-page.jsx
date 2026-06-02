@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
-import { Search, X } from "lucide-react"
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"
+import { Search } from "lucide-react"
 import { Navigate, useParams } from "react-router-dom"
 
 import { ChatInput } from "@/features/chat/components/chat-input"
@@ -7,69 +7,97 @@ import { MessageBubble } from "@/features/chat/components/message-bubble"
 import { useQuery } from "@tanstack/react-query"
 import { chatApi } from "@/features/chat/services/chat-api"
 import { useGlobalStore } from "@/stores/use-global-store"
+import {
+	useChatSocket,
+	useMessageListener,
+	useChatRoomSubscription,
+	useTypingIndicator,
+	useTypingListener,
+	useReactionListener,
+} from "@/features/chat/hooks/use-socket"
+import {
+	useCreateMessageMutation,
+	useDeleteMessageMutation,
+	useAddReactionMutation,
+	useRemoveReactionMutation,
+} from "@/features/chat/hooks/use-chat-mutation"
+import { useMessagesQuery } from "@/features/chat/hooks/use-chat-query"
 
-const initialMessages = [
-  {
-    id: "chat-msg-1",
-    author: "Aisha Khan",
-    time: "10:42 AM",
-    tone: "neutral",
-    text: "The workspace shell now keeps routing, layout, and context separated, which makes it much easier to maintain.",
-    reactions: [{ emoji: "👍", count: 2 }],
-    replies: [
-      {
-        id: "chat-msg-1-reply-1",
-        author: "Muhammad Waqar",
-        time: "10:43 AM",
-        tone: "muted",
-        text: "That keeps the shared shell simple and makes chat-specific state easier to isolate.",
-        reactions: [],
-      },
-    ],
-  },
-  {
-    id: "chat-msg-2",
-    author: "Muhammad Waqar",
-    time: "10:45 AM",
-    tone: "highlight",
-    text: "Routes are isolated, the shell is reusable, and each feature page can now own its own layout without extra folders.",
-    reactions: [{ emoji: "🔥", count: 1 }, { emoji: "👏", count: 1 }],
-    replies: [],
-  },
-  {
-    id: "chat-msg-3",
-    author: "Slackbot",
-    time: "10:48 AM",
-    tone: "muted",
-    text: "Reminder: keep the route table clean and only add components in the existing structure.",
-    reactions: [],
-    replies: [],
-  },
-]
+// ============================================================================
+// UTILITIES
+// ============================================================================
 
-const currentTimeLabel = "Now"
+/**
+ * Format date to readable time
+ */
+function formatTime(date) {
+	if (!date) return "now"
+	const d = new Date(date)
+	const now = new Date()
+	const diff = now - d
 
-function createInitialMessages(currentUser) {
-  const author = currentUser || "You"
+	// Less than a minute
+	if (diff < 60000) return "now"
 
-  return [
-    ...initialMessages,
-    {
-      id: "chat-msg-self-test",
-      author,
-      time: currentTimeLabel,
-      tone: "neutral",
-      text: "This is my test message so I can verify chat actions in every chat.",
-      reactions: [{ emoji: "👀", count: 1 }],
-      replies: [],
-    },
-  ]
+	// Less than an hour
+	if (diff < 3600000) {
+		const mins = Math.floor(diff / 60000)
+		return `${mins}m ago`
+	}
+
+	// Same day
+	if (d.toDateString() === now.toDateString()) {
+		return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+	}
+
+	// Yesterday
+	const yesterday = new Date(now)
+	yesterday.setDate(yesterday.getDate() - 1)
+	if (d.toDateString() === yesterday.toDateString()) {
+		return "Yesterday"
+	}
+
+	// This year
+	if (d.getFullYear() === now.getFullYear()) {
+		return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+	}
+
+	// Other
+	return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })
+}
+
+/**
+ * Transform API message to component format
+ */
+function transformMessage(apiMessage, currentUserId) {
+	return {
+		id: apiMessage.id,
+		channelId: apiMessage.channelId,
+		parentId: apiMessage.parentId ?? apiMessage.parent_id ?? null,
+		author: (apiMessage.user?.employee?.firstName && apiMessage.user?.employee?.lastName) ? `${apiMessage.user.employee.firstName} ${apiMessage.user.employee.lastName}` : apiMessage.user.email || "Unknown",
+		authorId: apiMessage.userId,
+		time: formatTime(apiMessage.createdAt),
+		createdAt: apiMessage.createdAt,
+		tone: apiMessage.userId === currentUserId ? "neutral" : "neutral",
+		text: apiMessage.content,
+		reactions: (apiMessage.reactions || []).map((r) => ({
+			emoji: r.emoji,
+			count: 1,
+			userId: r.userId,
+		})),
+		replies: [],
+	}
+}
+
+function appendUniqueMessage(messages, message) {
+	const exists = messages.some((item) => item.id === message.id)
+	return exists ? messages : [...messages, message]
 }
 
 function ThreadPanel({
   message,
   replies,
-  currentUser,
+  currentUserId,
   onOpenThread,
   onCloseThread,
   onReplySubmit,
@@ -94,6 +122,13 @@ function ThreadPanel({
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Thread</p>
             <p className="mt-1 text-sm text-muted-foreground">Reply with the shared composer below.</p>
           </div>
+          <button
+            type="button"
+            onClick={onCloseThread}
+            className="rounded-full border border-border bg-secondary px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
+          >
+            Close
+          </button>
         </div>
         <div className="mt-3">
           <MessageBubble
@@ -101,7 +136,7 @@ function ThreadPanel({
             time={message.time}
             tone={message.tone}
             text={message.text}
-            isMine={message.author === currentUser}
+            isMine={message.authorId === currentUserId}
             reactions={message.reactions ?? []}
             replyCount={replies.length}
             isEditing={editingMessageId === message.id}
@@ -128,10 +163,10 @@ function ThreadPanel({
             <MessageBubble
               key={reply.id}
               author={reply.author}
-              time={reply.time}
-              tone={reply.tone}
-              text={reply.text}
-              isMine={reply.author === currentUser}
+            time={reply.time}
+            tone={reply.tone}
+            text={reply.text}
+              isMine={reply.authorId === currentUserId}
               reactions={reply.reactions ?? []}
               replyCount={0}
               isEditing={editingMessageId === reply.id}
@@ -164,9 +199,9 @@ function ThreadPanel({
           <ChatInput
             value={draft}
             onChange={setDraft}
-            onSend={(text) => {
-              onReplySubmit(text)
-              setDraft("")
+            onSend={async (text) => {
+              const sent = await onReplySubmit(text)
+              if (sent !== false) setDraft("")
             }}
             onAttach={onAttach}
             placeholder="Reply in thread"
@@ -272,14 +307,41 @@ function ForwardModal({ message, onClose, onForward }) {
 export function ChatPage() {
   const { scope, chatId } = useParams()
 
-  const { user, openAside, closeAside, asideOpen } = useGlobalStore()
+  // ========================================================================
+  // GLOBAL STATE
+  // ========================================================================
+  const { user, asideOpen, openAside, closeAside } = useGlobalStore()
+  const currentUserId = user?.id
   const currentUser = user?.name || ""
-  const [messages, setMessages] = useState(() => createInitialMessages(currentUser))
+
+  // ========================================================================
+  // LOCAL STATE
+  // ========================================================================
+  const [messages, setMessages] = useState([])
   const [composerText, setComposerText] = useState("")
   const [activeThreadMessageId, setActiveThreadMessageId] = useState(null)
   const [editingMessageId, setEditingMessageId] = useState(null)
   const [editingDraft, setEditingDraft] = useState("")
   const [forwardMessage, setForwardMessage] = useState(null)
+  const [typingUsers, setTypingUsers] = useState({})
+  const messagesEndRef = useRef(null)
+  const closeAsideRef = useRef(closeAside)
+  const wasThreadAsideOpenRef = useRef(false)
+
+  // ========================================================================
+  // SOCKET MANAGEMENT
+  // ========================================================================
+  const { isConnected } = useChatSocket()
+
+  // Subscribe to chat room
+  useChatRoomSubscription(chatId)
+
+  // Setup typing indicator hook
+  const setTyping = useTypingIndicator(chatId)
+
+  // ========================================================================
+  // QUERIES & MUTATIONS
+  // ========================================================================
 
   // Fetch available channels to redirect to first one if needed
   const { data: channelsResp } = useQuery({
@@ -290,19 +352,8 @@ export function ChatPage() {
   const channels = channelsResp?.data || []
   const firstChannelId = channels.length > 0 ? channels[0].id : null
 
-  const activeThreadMessage = useMemo(
-    () => messages.find((message) => message.id === activeThreadMessageId) ?? null,
-    [messages, activeThreadMessageId],
-  )
-
-  const editingMessage = useMemo(() => {
-    if (!editingMessageId) return null
-    return (
-      messages.find((message) => message.id === editingMessageId) ??
-      messages.flatMap((message) => message.replies ?? []).find((reply) => reply.id === editingMessageId) ??
-      null
-    )
-  }, [editingMessageId, messages])
+  // Load messages from API
+  const { data: messagesResp, isLoading: isMessagesLoading } = useMessagesQuery(chatId, {}, { enabled: !!chatId })
 
   // Load channel/dm details from API
   const { data: channelResp, isLoading: isChannelLoading, isError: isChannelError } = useQuery({
@@ -311,33 +362,439 @@ export function ChatPage() {
     enabled: !!chatId,
   })
 
+  // Message mutations
+  const createMessageMutation = useCreateMessageMutation(chatId)
+  const deleteMessageMutation = useDeleteMessageMutation(chatId)
+  const addReactionMutation = useAddReactionMutation(chatId)
+  const removeReactionMutation = useRemoveReactionMutation(chatId)
+
   const selectedChat = useMemo(() => {
     if (!scope || !chatId) return null
-    // API may return { data: {...} } or the object directly
     return channelResp?.data || channelResp || null
   }, [scope, chatId, channelResp])
 
+  // ========================================================================
+  // EFFECTS
+  // ========================================================================
+
+  // Load initial messages from API
   useEffect(() => {
-    if (!activeThreadMessage) {
-      closeAside()
+    if (messagesResp?.data?.messages) {
+      const timer = window.setTimeout(() => {
+        setMessages(messagesResp.data.messages.map((msg) => transformMessage(msg, currentUserId)))
+      }, 0)
+      return () => window.clearTimeout(timer)
+    }
+  }, [messagesResp, currentUserId])
+  // console.log("Loaded messages:", messagesResp)
+  // Setup message listener for real-time updates
+  useMessageListener(chatId, (newMessage) => {
+    const transformed = transformMessage(newMessage, currentUserId)
+    setMessages((prev) => {
+      // Check if message already exists to avoid duplicates
+      return appendUniqueMessage(prev, transformed)
+    })
+  })
+
+  // Setup typing indicator listener
+  useTypingListener(({ userId, isTyping }) => {
+    setTypingUsers((prev) => {
+      const next = { ...prev }
+      if (isTyping) {
+        next[userId] = true
+        // Auto-clear after 3 seconds
+        setTimeout(() => {
+          setTypingUsers((p) => {
+            const updated = { ...p }
+            delete updated[userId]
+            return updated
+          })
+        }, 3000)
+      } else {
+        delete next[userId]
+      }
+      return next
+    })
+  })
+
+  // Setup reaction listener
+  useReactionListener(({ type, data }) => {
+    if (type === "add") {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id === data.messageId) {
+            const exists = (msg.reactions || []).find((r) => r.emoji === data.emoji && r.userId === data.userId)
+            if (exists) return msg
+            return {
+              ...msg,
+              reactions: [...(msg.reactions || []), { emoji: data.emoji, userId: data.userId, count: 1 }],
+            }
+          }
+          return msg
+        }),
+      )
+    } else if (type === "remove") {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id === data.messageId) {
+            return {
+              ...msg,
+              reactions: (msg.reactions || []).filter((r) => !(r.emoji === data.emoji && r.userId === data.userId)),
+            }
+          }
+          return msg
+        }),
+      )
+    }
+  })
+
+  // Auto-scroll to bottom when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
+  useEffect(() => {
+    closeAsideRef.current = closeAside
+  }, [closeAside])
+
+  // Reset thread when navigating to different chat
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setActiveThreadMessageId(null)
+      setEditingMessageId(null)
+      setComposerText("")
+      setTypingUsers({})
+      wasThreadAsideOpenRef.current = false
+      closeAsideRef.current()
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [scope, chatId])
+
+  useEffect(() => {
+    if (!activeThreadMessageId) {
+      wasThreadAsideOpenRef.current = false
       return
     }
 
+    if (asideOpen) {
+      wasThreadAsideOpenRef.current = true
+      return
+    }
+
+    if (!wasThreadAsideOpenRef.current) return
+
+    const timer = window.setTimeout(() => {
+      wasThreadAsideOpenRef.current = false
+      setActiveThreadMessageId(null)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [activeThreadMessageId, asideOpen])
+
+  // ========================================================================
+  // COMPUTED VALUES & MEMOS
+  // ========================================================================
+
+  const activeThreadMessage = useMemo(
+    () => messages.find((message) => message.id === activeThreadMessageId) ?? null,
+    [messages, activeThreadMessageId],
+  )
+
+  const rootMessages = useMemo(
+    () => messages.filter((message) => !message.parentId),
+    [messages],
+  )
+
+  const repliesByParentId = useMemo(() => {
+    return messages.reduce((groups, message) => {
+      if (!message.parentId) return groups
+
+      const replies = groups.get(message.parentId) ?? []
+      replies.push(message)
+      groups.set(message.parentId, replies)
+      return groups
+    }, new Map())
+  }, [messages])
+
+  const activeThreadReplies = useMemo(
+    () => repliesByParentId.get(activeThreadMessageId) ?? [],
+    [activeThreadMessageId, repliesByParentId],
+  )
+
+  const editingMessage = useMemo(() => {
+    if (!editingMessageId) return null
+    return messages.find((message) => message.id === editingMessageId) ?? null
+  }, [editingMessageId, messages])
+
+  // ========================================================================
+  // EVENT HANDLERS
+  // ========================================================================
+
+  const handleSendMessage = useCallback(
+    async (text) => {
+      const trimmed = text.trim()
+      if (!trimmed || !chatId) return
+      const optimisticId = `temp-${Date.now()}`
+
+      try {
+        // Create optimistic message
+        const optimisticMessage = {
+          id: optimisticId,
+          channelId: chatId,
+          parentId: null,
+          author: currentUser,
+          authorId: currentUserId,
+          time: "now",
+          createdAt: new Date().toISOString(),
+          tone: "neutral",
+          text: trimmed,
+          reactions: [],
+          replies: [],
+          pending: true,
+        }
+
+        setMessages((prev) => [...prev, optimisticMessage])
+        setComposerText("")
+
+        // Send to API
+        const response = await createMessageMutation.mutateAsync({
+          channel_id: chatId,
+          content: trimmed,
+        })
+        console.log("Message sent, API response:", response)
+
+        // Replace optimistic message with real one
+        const realMessage = transformMessage(response.data, currentUserId)
+        setMessages((prev) =>
+          appendUniqueMessage(prev.filter((m) => m.id !== optimisticId), realMessage),
+        )
+      } catch (error) {
+        console.error("Failed to send message:", error)
+        // Remove optimistic message on error
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
+        setComposerText(trimmed)
+      }
+    },
+    [chatId, currentUser, currentUserId, createMessageMutation],
+  )
+
+  const handleReplySubmit = useCallback(
+    async (parentId, text) => {
+      const trimmed = text.trim()
+      if (!trimmed || !chatId || !parentId) return false
+
+      const optimisticId = `temp-reply-${Date.now()}`
+
+      try {
+        const optimisticReply = {
+          id: optimisticId,
+          channelId: chatId,
+          parentId,
+          author: currentUser,
+          authorId: currentUserId,
+          time: "now",
+          createdAt: new Date().toISOString(),
+          tone: "neutral",
+          text: trimmed,
+          reactions: [],
+          replies: [],
+          pending: true,
+        }
+
+        setMessages((prev) => [...prev, optimisticReply])
+
+        const response = await createMessageMutation.mutateAsync({
+          channel_id: chatId,
+          content: trimmed,
+          parent_id: parentId,
+        })
+
+        const realReply = transformMessage(response.data, currentUserId)
+        setMessages((prev) =>
+          appendUniqueMessage(prev.filter((m) => m.id !== optimisticId), realReply),
+        )
+        return true
+      } catch (error) {
+        console.error("Failed to send reply:", error)
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
+        return false
+      }
+    },
+    [chatId, currentUser, currentUserId, createMessageMutation],
+  )
+
+  const handleDelete = useCallback(
+    async (messageId) => {
+      const shouldDelete = window.confirm("Delete this message?")
+      if (!shouldDelete) return
+
+      if (activeThreadMessageId === messageId) {
+        wasThreadAsideOpenRef.current = false
+        setActiveThreadMessageId(null)
+        closeAside()
+      }
+
+      try {
+        // Optimistic delete
+        setMessages((prev) => prev.filter((m) => m.id !== messageId && m.parentId !== messageId))
+
+        // Delete from API
+        await deleteMessageMutation.mutateAsync(messageId)
+      } catch (error) {
+        console.error("Failed to delete message:", error)
+        // Restore on error (would need to re-fetch)
+      }
+    },
+    [activeThreadMessageId, closeAside, deleteMessageMutation],
+  )
+
+  const handleReact = useCallback(
+    async (messageId, emoji) => {
+      try {
+        // Optimistic update
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.id === messageId) {
+              const exists = (msg.reactions || []).find((r) => r.emoji === emoji && r.userId === currentUserId)
+              if (exists) {
+                // Remove reaction
+                return {
+                  ...msg,
+                  reactions: msg.reactions.filter((r) => !(r.emoji === emoji && r.userId === currentUserId)),
+                }
+              } else {
+                // Add reaction
+                return {
+                  ...msg,
+                  reactions: [...(msg.reactions || []), { emoji, userId: currentUserId, count: 1 }],
+                }
+              }
+            }
+            return msg
+          }),
+        )
+
+        // Sync with API
+        const hasReaction = messages
+          .find((m) => m.id === messageId)
+          ?.reactions.some((r) => r.emoji === emoji && r.userId === currentUserId)
+
+        if (hasReaction) {
+          await removeReactionMutation.mutateAsync({ messageId, emoji })
+        } else {
+          await addReactionMutation.mutateAsync({ message_id: messageId, emoji })
+        }
+      } catch (error) {
+        console.error("Failed to update reaction:", error)
+      }
+    },
+    [currentUserId, messages, addReactionMutation, removeReactionMutation],
+  )
+
+  const handleAttachFiles = useCallback(
+    (files) => {
+      wasThreadAsideOpenRef.current = false
+      setActiveThreadMessageId(null)
+      openAside(
+        "Attachment preview",
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">Files ready to upload</p>
+            <p className="mt-1 text-sm text-muted-foreground">File attachments are queued for upload.</p>
+          </div>
+          <div className="space-y-2">
+            {files.map((file) => (
+              <div key={`${file.name}-${file.size}`} className="rounded-2xl border border-border bg-card px-4 py-3 text-sm">
+                <p className="font-medium">{file.name}</p>
+                <p className="text-xs text-muted-foreground">{Math.max(1, Math.round(file.size / 1024))} KB</p>
+              </div>
+            ))}
+          </div>
+        </div>,
+      )
+    },
+    [openAside],
+  )
+
+  const handleStartEdit = useCallback(
+    (messageId) => {
+      const target = messages.find((m) => m.id === messageId)
+      if (!target) return
+
+      setEditingMessageId(messageId)
+      setEditingDraft(target.text)
+    },
+    [messages],
+  )
+
+  const handleSaveEdit = useCallback(async () => {
+    const trimmed = editingDraft.trim()
+    if (!editingMessage || !trimmed) return
+
+    try {
+      // Optimistic update
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === editingMessageId ? { ...msg, text: trimmed } : msg)),
+      )
+
+      // Update API
+      // Note: API endpoint for updating messages - adjust if needed
+      // await updateMessageMutation.mutateAsync({ messageId: editingMessageId, payload: { content: trimmed } })
+
+      setEditingMessageId(null)
+      setEditingDraft("")
+    } catch (error) {
+      console.error("Failed to update message:", error)
+    }
+  }, [editingDraft, editingMessage, editingMessageId])
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessageId(null)
+    setEditingDraft("")
+  }, [])
+
+  const handleForward = useCallback((message) => {
+    setForwardMessage(message)
+  }, [])
+
+  const handleOpenThread = useCallback((messageId) => {
+    setActiveThreadMessageId(messageId)
+  }, [])
+
+  const handleCloseThread = useCallback(() => {
+    wasThreadAsideOpenRef.current = false
+    setActiveThreadMessageId(null)
+    closeAside()
+  }, [closeAside])
+
+  const handleComposerChange = useCallback(
+    (text) => {
+      setComposerText(text)
+      // Send typing indicator when user is typing
+      if (text.trim()) {
+        setTyping(true)
+      }
+    },
+    [setTyping],
+  )
+
+  useEffect(() => {
+    if (!activeThreadMessage) return
+
     openAside(
-      `Thread: ${activeThreadMessage.author}`,
+      "Thread",
       <ThreadPanel
         message={activeThreadMessage}
-        replies={activeThreadMessage.replies ?? []}
-        currentUser={currentUser}
-        onOpenThread={(messageId) => setActiveThreadMessageId(messageId)}
-        onCloseThread={() => {
-			setActiveThreadMessageId(null)
-		}}
-        onReplySubmit={(text) => handleReply(activeThreadMessage.id, text)}
+        replies={activeThreadReplies}
+        currentUserId={currentUserId}
+        onOpenThread={handleOpenThread}
+        onCloseThread={handleCloseThread}
+        onReplySubmit={(text) => handleReplySubmit(activeThreadMessage.id, text)}
         onReact={handleReact}
         onEdit={handleStartEdit}
         onDelete={handleDelete}
-        onForward={() => handleForward(activeThreadMessage)}
+        onForward={handleForward}
         onAttach={handleAttachFiles}
         editingMessageId={editingMessageId}
         editingDraft={editingDraft}
@@ -346,18 +803,28 @@ export function ChatPage() {
         onEditCancel={handleCancelEdit}
       />,
     )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeThreadMessage, currentUser])
+  }, [
+    activeThreadMessage,
+    activeThreadReplies,
+    currentUserId,
+    editingDraft,
+    editingMessageId,
+    handleAttachFiles,
+    handleCancelEdit,
+    handleCloseThread,
+    handleDelete,
+    handleForward,
+    handleOpenThread,
+    handleReact,
+    handleReplySubmit,
+    handleSaveEdit,
+    handleStartEdit,
+    openAside,
+  ])
 
-  useEffect(() => {
-    if (!editingMessage) return
-    setEditingDraft(editingMessage.text)
-  }, [editingMessage])
-
-  // Reset thread when navigating to different chat
-  useEffect(() => {
-    setActiveThreadMessageId(null)
-  }, [scope, chatId])
+  // ========================================================================
+  // NAVIGATION & GUARDS
+  // ========================================================================
 
   if (!scope || !chatId) {
     if (firstChannelId) {
@@ -368,7 +835,7 @@ export function ChatPage() {
 
   const isChannel = scope === "channels"
   const isDm = scope === "dms"
-  const recieverName = isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.employee?.firstName
+
   if (!isChannel && !isDm) {
     if (firstChannelId) {
       return <Navigate to={`/chat/channels/${firstChannelId}`} replace />
@@ -381,226 +848,99 @@ export function ChatPage() {
   }
 
   if (!selectedChat || isChannelError) {
-    // If the selected chat couldn't be loaded, try to navigate to first available channel
     if (firstChannelId && chatId !== firstChannelId) {
       return <Navigate to={`/chat/channels/${firstChannelId}`} replace />
     }
     return <div className="p-6">Channel not found or you don't have access to it</div>
   }
 
-  const conversationLabel = isChannel ? `#${selectedChat.name}` : recieverName? recieverName: selectedChat.name
-  const conversationHint = isChannel ? selectedChat.topic : `Direct message with ${recieverName? recieverName: selectedChat.name}`
-  function handleAttachFiles(files) {
-    openAside(
-      "Attachment preview",
-      <div className="space-y-4">
-        <div>
-          <p className="text-sm font-medium text-foreground">Files ready to upload</p>
-          <p className="mt-1 text-sm text-muted-foreground">Slack-style file attach is wired into the composer.</p>
-        </div>
-        <div className="space-y-2">
-          {files.map((file) => (
-            <div key={`${file.name}-${file.size}`} className="rounded-2xl border border-border bg-card px-4 py-3 text-sm">
-              <p className="font-medium">{file.name}</p>
-              <p className="text-xs text-muted-foreground">{Math.max(1, Math.round(file.size / 1024))} KB</p>
-            </div>
-          ))}
-        </div>
-      </div>,
-    )
-  }
+  const receiverName = isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.name
+  const conversationLabel = isChannel ? `#${selectedChat.name}` : receiverName || selectedChat.name
+  const conversationHint = isChannel ? selectedChat.description || "Channel" : `Direct message with ${receiverName || selectedChat.name}`
 
-  function handleSendMessage(text) {
-    const nextMessage = {
-      id: `chat-msg-${Date.now()}`,
-      author: currentUser || "You",
-      time: currentTimeLabel,
-      tone: "neutral",
-      text,
-      reactions: [],
-      replies: [],
-    }
+  const typingUsersList = Object.keys(typingUsers)
+    .filter((uid) => uid !== String(currentUserId))
+    .slice(0, 2)
 
-    setMessages((existingMessages) => [...existingMessages, nextMessage])
-    setComposerText("")
-  }
-
-  function handleReply(messageId, text) {
-    setMessages((existingMessages) =>
-      existingMessages.map((message) => {
-        if (message.id !== messageId) return message
-
-        const reply = {
-          id: `reply-${messageId}-${Date.now()}`,
-          author: currentUser || "You",
-          time: currentTimeLabel,
-          tone: "neutral",
-          text,
-          reactions: [],
-        }
-
-        return {
-          ...message,
-          replies: [...(message.replies ?? []), reply],
-        }
-      }),
-    )
-  }
-
-  function openReplyThread(messageId) {
-    // Toggle: if clicking the same thread, close it; otherwise open the new one
-    setActiveThreadMessageId((currentId) => (currentId === messageId ? null : messageId))
-  }
-
-  function handleStartEdit(messageId) {
-    const targetMessage = messages.find((message) => message.id === messageId)
-    const targetReply = messages.flatMap((message) => message.replies ?? []).find((reply) => reply.id === messageId)
-    const target = targetMessage ?? targetReply
-    if (!target) return
-
-    setEditingMessageId(messageId)
-    setEditingDraft(target.text)
-  }
-
-  function handleSaveEdit() {
-    const trimmed = editingDraft.trim()
-    if (!editingMessage || !trimmed) return
-
-    setMessages((existingMessages) =>
-      existingMessages.map((message) => {
-        if (message.id === editingMessageId) {
-          return { ...message, text: trimmed }
-        }
-
-        return {
-          ...message,
-          replies: (message.replies ?? []).map((reply) =>
-            reply.id === editingMessageId ? { ...reply, text: trimmed } : reply,
-          ),
-        }
-      }),
-    )
-
-    setEditingMessageId(null)
-    setEditingDraft("")
-  }
-
-  function handleCancelEdit() {
-    setEditingMessageId(null)
-    setEditingDraft("")
-  }
-
-  function handleReact(messageId, emoji) {
-    setMessages((existingMessages) =>
-      existingMessages.map((message) => {
-        if (message.id === messageId) {
-          const reactions = [...(message.reactions ?? [])]
-          const reactionIndex = reactions.findIndex((reaction) => reaction.emoji === emoji)
-
-          if (reactionIndex >= 0) {
-            const nextCount = (reactions[reactionIndex].count ?? 1) - 1
-            if (nextCount <= 0) {
-              reactions.splice(reactionIndex, 1)
-            } else {
-              reactions[reactionIndex] = { ...reactions[reactionIndex], count: nextCount }
-            }
-          } else {
-            reactions.push({ emoji, count: 1 })
-          }
-
-          return { ...message, reactions }
-        }
-
-        const replies = (message.replies ?? []).map((reply) => {
-          if (reply.id !== messageId) return reply
-
-          const reactionList = [...(reply.reactions ?? [])]
-          const reactionIndex = reactionList.findIndex((reaction) => reaction.emoji === emoji)
-
-          if (reactionIndex >= 0) {
-            const nextCount = (reactionList[reactionIndex].count ?? 1) - 1
-            if (nextCount <= 0) {
-              reactionList.splice(reactionIndex, 1)
-            } else {
-              reactionList[reactionIndex] = { ...reactionList[reactionIndex], count: nextCount }
-            }
-          } else {
-            reactionList.push({ emoji, count: 1 })
-          }
-
-          return { ...reply, reactions: reactionList }
-        })
-
-        return { ...message, replies }
-      }),
-    )
-  }
-
-  function handleDelete(messageId) {
-    const shouldDelete = window.confirm("Delete this message?")
-    if (!shouldDelete) return
-
-    // If deleting the currently open thread, close it first
-    if (activeThreadMessageId === messageId) {
-      setActiveThreadMessageId(null)
-    }
-
-    setMessages((existingMessages) =>
-      existingMessages.filter((message) => message.id !== messageId).map((message) => ({
-        ...message,
-        replies: (message.replies ?? []).filter((reply) => reply.id !== messageId),
-      })),
-    )
-  }
-
-  function handleForward(message) {
-    setForwardMessage(message)
-  }
+  // ========================================================================
+  // RENDER
+  // ========================================================================
 
   return (
     <div className="h-full min-h-0 overflow-hidden pt-0">
       <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
           <div>
             <h3 className="mt-1 text-lg font-semibold">{conversationLabel}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{conversationHint}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isConnected ? "Connected" : "Connecting..."} • {conversationHint}
+            </p>
           </div>
-          <button type="button" className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground"
+          >
             <Search className="h-4 w-4" />
-            Search thread
+            Search
           </button>
         </div>
+
+        {/* Messages Container */}
         <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                author={message.author}
-                time={message.time}
-                tone={message.tone}
-                text={message.text}
-                isMine={message.author === currentUser}
-                reactions={message.reactions ?? []}
-                replyCount={message.replies?.length ?? 0}
-                isEditing={editingMessageId === message.id}
-                editedText={editingDraft}
-                onEdit={() => handleStartEdit(message.id)}
-                onEditChange={setEditingDraft}
-                onEditSave={handleSaveEdit}
-                onEditCancel={handleCancelEdit}
-                onReply={() => openReplyThread(message.id)}
-                onForward={() => handleForward(message)}
-                onDelete={() => handleDelete(message.id)}
-                onReact={(emoji) => handleReact(message.id, emoji)}
-              />
-            ))}
-          </div>
+          {isMessagesLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-muted-foreground">Loading messages...</p>
+            </div>
+          ) : rootMessages.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">No messages yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">Start the conversation below</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {rootMessages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  author={message.author}
+                  time={message.time}
+                  tone={message.tone}
+                  text={message.text}
+                  isMine={message.authorId === currentUserId}
+                  reactions={message.reactions ?? []}
+                  replyCount={repliesByParentId.get(message.id)?.length ?? 0}
+                  isEditing={editingMessageId === message.id}
+                  editedText={editingDraft}
+                  onEdit={() => handleStartEdit(message.id)}
+                  onEditChange={setEditingDraft}
+                  onEditSave={handleSaveEdit}
+                  onEditCancel={handleCancelEdit}
+                  onReply={() => handleOpenThread(message.id)}
+                  onForward={() => handleForward(message)}
+                  onDelete={() => handleDelete(message.id)}
+                  onReact={(emoji) => handleReact(message.id, emoji)}
+                  isPending={message.pending}
+                />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+
+          {/* Typing Indicator */}
+          {typingUsersList.length > 0 && (
+            <div className="mt-4 text-xs text-muted-foreground">
+              {typingUsersList.join(", ")} {typingUsersList.length === 1 ? "is" : "are"} typing...
+            </div>
+          )}
         </div>
 
+        {/* Composer */}
         <div className="border-t border-border/60 p-4 sm:p-5">
           <ChatInput
             value={composerText}
-            onChange={setComposerText}
+            onChange={handleComposerChange}
             onSend={handleSendMessage}
             onAttach={handleAttachFiles}
             placeholder={`Write a message to ${conversationLabel}`}
@@ -611,13 +951,14 @@ export function ChatPage() {
         </div>
       </div>
 
-		{forwardMessage ? (
-			<ForwardModal
-				message={forwardMessage}
-				onClose={() => setForwardMessage(null)}
-				onForward={() => setForwardMessage(null)}
-			/>
-		) : null}
+      {/* Forward Modal */}
+      {forwardMessage ? (
+        <ForwardModal
+          message={forwardMessage}
+          onClose={() => setForwardMessage(null)}
+          onForward={() => setForwardMessage(null)}
+        />
+      ) : null}
     </div>
   )
 }

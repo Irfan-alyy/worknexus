@@ -143,7 +143,7 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
                 const userObj = dm.user || dm
                 const displayName = `${dm.firstName || dm.employee?.firstName || userObj.firstName || ""} ${dm.lastName || dm.employee?.lastName || userObj.lastName || ""}`.trim() || userObj.email || `User ${userObj.id}`
                 const isActive = activeDmId === String(userObj.id)
-
+                console.log("DM candidate:", userObj, "isActive:", isActive)
                 return (
                     <button
                         key={userObj.id}
@@ -173,7 +173,7 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
                     onClick={viewAllEmployees}
                     className="block text-xs text-muted-foreground hover:underline mt-2"
                 >
-                   {viewingAllEmployees?"View all employees": "View HR/PM only"}
+                   {viewingAllEmployees?"View HR/PM only": "View all employees"}
                 </button>
             )}
         </div>
