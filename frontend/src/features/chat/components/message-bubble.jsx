@@ -107,16 +107,14 @@ export function MessageBubble({
 				>
 					<Smile className="h-4 w-4" />
 				</button>
-				{!isMine ? (
-					<button
-						type="button"
-						onClick={() => onReply?.()}
-						className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-						aria-label="Reply"
-					>
-							<MessageSquareReply className="h-4 w-4" />
-					</button>
-				) : null}
+				<button
+					type="button"
+					onClick={() => onReply?.()}
+					className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+					aria-label="Reply"
+				>
+					<MessageSquareReply className="h-4 w-4" />
+				</button>
 				<button
 					type="button"
 					onClick={() => onForward?.()}
