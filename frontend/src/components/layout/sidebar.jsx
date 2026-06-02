@@ -20,12 +20,12 @@ export function Sidebar({ onNavigate }) {
 	const [isChannelsOpen, setIsChannelsOpen] = useState(true)
 	const [openProjects, setOpenProjects] = useState({})
 	const [isDmsOpen, setIsDmsOpen] = useState(true)
+	const [isGeneralOpen, setIsGeneralOpen] = useState(true)
 	const { data: projectsResponse } = useQuery({
 		queryKey: queryKeys.projects.list("sidebar"),
 		queryFn: async () => projectService.getProjects(),
 	})
 	const sidebarProjects = useMemo(() => projectsResponse?.data || [], [projectsResponse])
-
 	// Fetch channels visible to the current user and group by project
 	const { data: channelsResponse } = useChatChannelsQuery()
 	const channels = useMemo(() => channelsResponse?.data || [], [channelsResponse])
@@ -169,6 +169,7 @@ export function Sidebar({ onNavigate }) {
 									const projOpen = !!openProjects[proj.id]
 									const projectChannels = channelsByProject.get(proj.id) || []
 									const projectLabel = proj.name || proj.title || proj.channel || proj.id
+									if (projectChannels.length === 0) return null // Hide projects with no channels
 									return (
 										<div key={proj.id}>
 											<button
@@ -214,22 +215,18 @@ export function Sidebar({ onNavigate }) {
 					</div>
 
 					<div className="mt-1 space-y-1 border-t border-border/60 pt-2">
+						{/* Global channels (non-project, public channels) */}
 						<button
 							type="button"
-							onClick={() => setIsDmsOpen((value) => !value)}
+							onClick={() => setIsGeneralOpen((value) => !value)}
 							aria-expanded={isDmsOpen}
 							className="flex w-full items-center justify-between rounded-xl px-2 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:bg-secondary/70"
 						>
-							<span>Direct messages</span>
-							<ChevronDown className={`h-4 w-4 transition-transform ${isDmsOpen ? "rotate-180" : ""}`} />
+							<span>General Channels</span>
+							<ChevronDown className={`h-4 w-4 transition-transform ${isGeneralOpen ? "rotate-180" : ""}`} />
 						</button>
-						{isDmsOpen && (
-							<DirectMessagesDropdown isOpen={isDmsOpen} activeDmId={activeDmId} onNavigate={onNavigate} />
-						)}
-
-						{/* Global channels (non-project, public channels) */}
-						{channelsByProject.get(null) && channelsByProject.get(null).length > 0 && (
-							<div className="mt-2 border-t border-border/60 pt-2">
+						{isGeneralOpen && channelsByProject.get(null) && channelsByProject.get(null).length > 0 && (
+							<div className=" border-t border-border/60 pt-2">
 								{channelsByProject.get(null).filter((c) => !c.isPrivate).map((ch) => {
 									const isActive = activeChannelId === ch.id
 									return (
@@ -248,6 +245,20 @@ export function Sidebar({ onNavigate }) {
 								})}
 							</div>
 						)}
+						<button
+							type="button"
+							onClick={() => setIsDmsOpen((value) => !value)}
+							aria-expanded={isDmsOpen}
+							className="flex w-full items-center justify-between rounded-xl px-2 py-2 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:bg-secondary/70"
+						>
+							<span>Direct messages</span>
+							<ChevronDown className={`h-4 w-4 transition-transform ${isDmsOpen ? "rotate-180" : ""}`} />
+						</button>
+						{isDmsOpen && (
+							<DirectMessagesDropdown isOpen={isDmsOpen} activeDmId={activeDmId} onNavigate={onNavigate} />
+						)}
+
+
 					</div>
 				</section>
 			</nav>

@@ -368,7 +368,7 @@ export function ChatPage() {
 
   const isChannel = scope === "channels"
   const isDm = scope === "dms"
-
+  const recieverName = isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.employee?.firstName
   if (!isChannel && !isDm) {
     if (firstChannelId) {
       return <Navigate to={`/chat/channels/${firstChannelId}`} replace />
@@ -388,8 +388,8 @@ export function ChatPage() {
     return <div className="p-6">Channel not found or you don't have access to it</div>
   }
 
-  const conversationLabel = isChannel ? `#${selectedChat.name}` : selectedChat.name
-  const conversationHint = isChannel ? selectedChat.topic : `Direct message with ${selectedChat.name}`
+  const conversationLabel = isChannel ? `#${selectedChat.name}` : recieverName? recieverName: selectedChat.name
+  const conversationHint = isChannel ? selectedChat.topic : `Direct message with ${recieverName? recieverName: selectedChat.name}`
   function handleAttachFiles(files) {
     openAside(
       "Attachment preview",
