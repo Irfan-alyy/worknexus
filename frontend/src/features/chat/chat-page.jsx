@@ -329,6 +329,25 @@ export function ChatPage() {
   const wasThreadAsideOpenRef = useRef(false)
 
   // ========================================================================
+  // HELPERS
+  // ========================================================================
+  const getMemberDisplayName = useCallback((member) => {
+    const employee = member?.user?.employee
+    const firstName = employee?.firstName
+    const lastName = employee?.lastName
+
+    if (firstName && lastName) return `${firstName} ${lastName}`
+    if (firstName) return firstName
+    if (lastName) return lastName
+
+    const email = member?.user?.email
+    if (email) return email
+
+    const nameFallback = member?.user?.name
+    return nameFallback || "Unknown"
+  }, [])
+
+  // ========================================================================
   // SOCKET MANAGEMENT
   // ========================================================================
   const { isConnected } = useChatSocket()
@@ -372,6 +391,23 @@ export function ChatPage() {
     if (!scope || !chatId) return null
     return channelResp?.data || channelResp || null
   }, [scope, chatId, channelResp])
+
+  // ========================================================================
+  // COMPUTED VALUES & MEMOS (typing display must be unconditional)
+  // ========================================================================
+
+  const memberLookup = useMemo(() => {
+    const members = selectedChat?.members ?? []
+    return new Map(members.map((m) => [String(m.userId), m]))
+  }, [selectedChat])
+
+  const typingUsersList = Object.keys(typingUsers)
+    .filter((uid) => uid !== String(currentUserId))
+    .slice(0, 2)
+    .map((uid) => {
+      const member = memberLookup.get(uid)
+      return member ? getMemberDisplayName(member) : uid
+    })
 
   // ========================================================================
   // EFFECTS
@@ -857,10 +893,6 @@ export function ChatPage() {
   const receiverName = isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.name
   const conversationLabel = isChannel ? `#${selectedChat.name}` : receiverName || selectedChat.name
   const conversationHint = isChannel ? selectedChat.description || "Channel" : `Direct message with ${receiverName || selectedChat.name}`
-
-  const typingUsersList = Object.keys(typingUsers)
-    .filter((uid) => uid !== String(currentUserId))
-    .slice(0, 2)
 
   // ========================================================================
   // RENDER
