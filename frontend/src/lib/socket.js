@@ -117,7 +117,7 @@ export const joinChatRoom = (channelId) => {
 		return
 	}
 
-	socket.emit("chat:join", { channelId })
+socket.emit("chat:join", { channelId })
 	console.log(`[Socket] Joining room: ${channelId}`)
 }
 
@@ -178,12 +178,33 @@ export const onMessageDeleted = (callback) => {
 		callback(data)
 	}
 
+	socket.on("chat:message:deleted", handler)
+
+	return () => {
+		socket.off("chat:message:deleted", handler)
+	}
+
+}
+
+// Back-compat alias (some backends may emit the older event name)
+export const onMessageDeletedLegacy = (callback) => {
+	if (!socket) {
+		console.warn("[Socket] Socket not initialized")
+		return () => {}
+	}
+
+	const handler = (data) => {
+		console.log("[Socket] Message deleted (legacy):", data)
+		callback(data)
+	}
+
 	socket.on("chat:message:delete", handler)
 
 	return () => {
 		socket.off("chat:message:delete", handler)
 	}
 }
+
 
 // ============================================================================
 // TYPING INDICATORS
