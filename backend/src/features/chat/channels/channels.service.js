@@ -181,7 +181,9 @@ async function getChannelById(channelId, user) {
       ...CHANNEL_BASE_INCLUDE,
       members: {
         include: {
-          user: { select: { id: true, email: true, role: true } },
+          user: { select: { id: true, email: true, role: true, employee:{
+            select:{firstName:true,lastName:true}
+          } } },
         },
       },
     },

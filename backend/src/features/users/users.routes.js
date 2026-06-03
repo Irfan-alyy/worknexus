@@ -12,8 +12,8 @@ const { createUserSchema, updateUserSchema } = require("./users.schema")
 
 const router = Router()
 
-// GET /api/v1/users - list users (admin only)
-router.get("/", auth, requireRole(["admin"]), listUsersController)
+// GET /api/v1/users - list users (admin and hr only)
+router.get("/", auth, requireRole(["admin", "hr"]), listUsersController)
 
 // GET /api/v1/users/:id - get user by id (admin or owner)
 router.get("/:id", auth, getUserController)

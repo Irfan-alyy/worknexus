@@ -5,10 +5,19 @@ const { getBcryptConfig } = require("../../config/auth.config")
 
 const { saltRounds } = getBcryptConfig()
 
-async function listUsers() {
+async function listUsers(roles = null) {
   try {
-    return await prisma.user.findMany({ select: { id: true, email: true, role: true } })
+    const where = roles && Array.isArray(roles) && roles.length > 0 
+      ? { role: { in: roles } }
+      : {}
+
+    console.log("listUsers with roles filter:", where)
+    return await prisma.user.findMany({ 
+      where,
+      select: { id: true, email: true, role: true, employee: { select: { id: true, firstName: true, lastName: true } } },
+    })
   } catch (err) {
+    console.error("listUsers error:", err)
     throw new AppError("Failed to list users", 500, false)
   }
 }

@@ -15,6 +15,19 @@ const createMessageSchema = z.preprocess(
   })
 )
 
+const normalizeUpdateMessagePayload = (payload = {}) => ({
+  content: payload.content,
+})
+
+const updateMessageSchema = z.preprocess(
+  normalizeUpdateMessagePayload,
+  z.object({
+    content: z.string().min(1),
+  }),
+)
+
 module.exports = {
   createMessageSchema,
+  updateMessageSchema,
 }
+
