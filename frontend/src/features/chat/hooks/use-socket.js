@@ -7,7 +7,9 @@ import {
 	leaveChatRoom,
 	onMessageReceived,
 	onMessageDeleted,
+	onMessageDeletedLegacy,
 	onReactionAdded,
+
 	onReactionRemoved,
 	onTypingIndicator,
 	setTypingIndicator,

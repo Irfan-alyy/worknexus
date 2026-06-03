@@ -22,7 +22,7 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
     })
 
     const employees = employeesResp?.data || []
-    console.log("employees for role", role, employees)
+    // console.log("employees for role", role, employees)
     // Fetch users with specific roles for HR/Admin to see each other
     const { data: usersResp } = useQuery({
         queryKey: ["users", "by-role", role],
@@ -43,7 +43,7 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
     })
 
     const users = usersResp || []
-    console.log("Users for role", role, users)
+    // console.log("Users for role", role, users)
     const { data: projectsResp } = useQuery({
         queryKey: queryKeys.projects.list(),
         queryFn: () => projectService.getProjects(),
@@ -56,10 +56,10 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
     const { data: pmTeamsResp } = useQuery({
         queryKey: ["pm", "managedTeams", user.id],
         queryFn: async () => {
-            console.log("Fetching PM teams for user:", projects)
+            // console.log("Fetching PM teams for user:", projects)
             const teams = await Promise.all(projects.map((p) => projectService.getProjectTeam(p.id)))
             const teamsArray = teams.map(team => team.data || team) // Handle both { data: [...] } and [...] formats
-            console.log("PM teams for projects:", teamsArray.flat())
+            // console.log("PM teams for projects:", teamsArray.flat())
             return teamsArray.flat()
         },
         enabled: role === "pm" && !!user.id && projects.length > 0,
@@ -78,9 +78,9 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
             if (!projectIds.length) return []
 
             const teams = await Promise.all(projectIds.map((projectId) => projectService.getProjectTeam(projectId)))
-            console.log("teams for employee:", teams)
+            // console.log("teams for employee:", teams)
             const teamsArray = teams.map(team => team.data || team) // Handle both { data: [...] } and [...] formats
-            console.log("teamsArray for employee:", teamsArray.flat())
+            // console.log("teamsArray for employee:", teamsArray.flat())
             return teamsArray.flat()
         },
         enabled: role === "employee" && projects.length > 0,
@@ -143,7 +143,7 @@ export default function DirectMessagesDropdown({ isOpen, activeDmId, onNavigate 
                 const userObj = dm.user || dm
                 const displayName = `${dm.firstName || dm.employee?.firstName || userObj.firstName || ""} ${dm.lastName || dm.employee?.lastName || userObj.lastName || ""}`.trim() || userObj.email || `User ${userObj.id}`
                 const isActive = activeDmId === String(userObj.id)
-                console.log("DM candidate:", userObj, "isActive:", isActive)
+                // console.log("DM candidate:", userObj, "isActive:", isActive)
                 return (
                     <button
                         key={userObj.id}
