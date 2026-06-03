@@ -5,14 +5,19 @@ function registerChatSocketHandlers(socket, io) {
   socket.on(socketEvents.chatJoin, ({ channelId }) => {
     // Optionally: could verify channel membership here, but for now we join the room.
     // The strict authorization occurs during REST calls.
-    log("info", `[SOCKET] User ${socket.user.id} joining channel room: ${channelId}`)
-    socket.join(channelId)
+    log(
+      "info",
+      `[SOCKET] User ${socket.user.id} joining channel room: ${channelId} (type: ${typeof channelId})`,
+    )
+    socket.join(String(channelId))
   })
 
+
   socket.on(socketEvents.chatLeave, ({ channelId }) => {
-    log("info", `[SOCKET] User ${socket.user.id} leaving channel room: ${channelId}`)
-    socket.leave(channelId)
+    log("info", `[SOCKET] User ${socket.user.id} leaving channel room: ${channelId} (type: ${typeof channelId})`)
+    socket.leave(String(channelId))
   })
+
 
   socket.on(socketEvents.chatMessage, (payload) => {
     // Deprecated for creating. Used if clients want to push messages directly 

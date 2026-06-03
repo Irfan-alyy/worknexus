@@ -148,8 +148,75 @@ async function toggleReaction(messageId, emoji, user, action) {
   }
 }
 
+async function updateMessage(messageId, payload, user) {
+  const id = messageId
+
+  const existing = await prisma.message.findUnique({
+    where: { id },
+    select: { id: true, channelId: true },
+  })
+
+  if (!existing) throw AppError.notFound("Message not found")
+
+  // Authorize
+  await getChannelById(existing.channelId, user)
+
+  const updated = await prisma.message.update({
+    where: { id },
+    data: {
+      content: payload.content,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          employee: {
+            select: { firstName: true, lastName: true },
+          },
+        },
+      },
+      reactions: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  return updated
+}
+
+async function deleteMessage(messageId, user) {
+  const id = messageId
+
+  const existing = await prisma.message.findUnique({
+    where: { id },
+    select: { id: true, channelId: true },
+  })
+
+  if (!existing) throw AppError.notFound("Message not found")
+
+  // Authorize
+  await getChannelById(existing.channelId, user)
+
+  // Delete
+  await prisma.message.delete({ where: { id } })
+
+  return { messageId: id, channelId: existing.channelId }
+}
+
 module.exports = {
   listChannelMessages,
   createMessage,
   toggleReaction,
+  updateMessage,
+  deleteMessage,
 }
