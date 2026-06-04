@@ -67,15 +67,8 @@ export function ChatInput({
 			/>
 			<div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
 				<div className="flex items-center gap-2">
-					<input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleFileChange} />
-					<button
-						type="button"
-						onClick={openFilePicker}
-						className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
-					>
-						<Paperclip className="h-4 w-4" />
-						{attachLabel}
-					</button>
+					{/* <input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleFileChange} /> */}
+					
 					{helperText ? <p className="text-xs text-muted-foreground">{helperText}</p> : null}
 				</div>
 				<button
