@@ -11,6 +11,7 @@ import * as projectService from "@/features/projects/projects-service"
 import { useChatChannelsQuery } from "@/features/chat/hooks/use-chat-query"
 import { useGlobalStore } from "@/stores/use-global-store"
 import ProjectTasksPanel from "@/features/projects/ProjectTasksPanel"
+import logo from "@/assets/logo.png"
 
 export function Sidebar({ onNavigate }) {
 	const location = useLocation()
@@ -103,7 +104,7 @@ export function Sidebar({ onNavigate }) {
 			<div className="border-b border-border/60 p-5">
 				<div className="flex items-center gap-3">
 					<div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
-						WN
+						<img src={logo} alt="logo image" />
 					</div>
 					<div>
 						<p className="text-sm font-semibold">Workspace Hub</p>
