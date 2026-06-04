@@ -121,7 +121,7 @@ function ThreadPanel({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Thread</p>
-            <p className="mt-1 text-sm text-muted-foreground">Reply with the shared composer below.</p>
+            {/* <p className="mt-1 text-sm text-muted-foreground">Reply with the shared composer below.</p> */}
           </div>
           <button
             type="button"
@@ -131,7 +131,7 @@ function ThreadPanel({
             Close
           </button>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 m-full">
           <MessageBubble
             author={message.author}
             time={message.time}
@@ -194,7 +194,7 @@ function ThreadPanel({
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Reply in thread</p>
-              <p className="mt-1 text-sm text-muted-foreground">Uses the same composer pattern, just scoped to this thread.</p>
+              {/* <p className="mt-1 text-sm text-muted-foreground">Uses the same composer pattern, just scoped to this thread.</p> */}
             </div>
           </div>
           <ChatInput
@@ -956,10 +956,13 @@ export function ChatPage() {
     }
     return <div className="p-6">Channel not found or you don't have access to it</div>
   }
+  const receiverName = (isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.employee?.firstName) || null; ;
+  const lastName = isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.employee?.lastName ;;
 
-  const receiverName = isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.name
-  const conversationLabel = isChannel ? `#${selectedChat.name}` : receiverName || selectedChat.name
-  const conversationHint = isChannel ? selectedChat.description || "Channel" : `Direct message with ${receiverName || selectedChat.name}`
+  const email=  isDm && selectedChat?.members?.find((m) => m.userId !== user?.id)?.user?.email || null  
+  // console.log(email)
+  const conversationLabel = isChannel ? `#${selectedChat.name}` : (receiverName && lastName )? receiverName + " " + lastName :email  || selectedChat.name
+  const conversationHint = isChannel ? selectedChat.description || "Channel" : `Direct message with ${receiverName +" "+ lastName  || selectedChat.name}`
 
   // ========================================================================
   // RENDER
@@ -976,13 +979,13 @@ export function ChatPage() {
               {isConnected ? "Connected" : "Connecting..."} • {conversationHint}
             </p>
           </div>
-          <button
+          {/* <button
             type="button"
             className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground"
           >
             <Search className="h-4 w-4" />
             Search
-          </button>
+          </button> */}
         </div>
 
         {/* Messages Container */}
