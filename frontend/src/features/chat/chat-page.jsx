@@ -328,6 +328,8 @@ export function ChatPage() {
   const [forwardMessage, setForwardMessage] = useState(null)
   const [typingUsers, setTypingUsers] = useState({})
   const messagesEndRef = useRef(null)
+  const lastMessageIdRef = useRef(null)
+  const messagesContainerRef = useRef(null)
   const closeAsideRef = useRef(closeAside)
   const wasThreadAsideOpenRef = useRef(false)
 
@@ -537,8 +539,20 @@ export function ChatPage() {
   })
 
   // Auto-scroll to bottom when messages update
+  // Only scroll if the last message in the array is new (not prepending old history)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messages.length === 0) {
+      lastMessageIdRef.current = null
+      return
+    }
+
+    const lastMsg = messages[messages.length - 1]
+
+    // If the last message is different from what we saw last, it's a new message at the bottom
+    if (lastMsg.id !== lastMessageIdRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      lastMessageIdRef.current = lastMsg.id
+    }
   }, [messages])
 
   useEffect(() => {
@@ -625,6 +639,14 @@ export function ChatPage() {
     if (messages.length === 0 || isLoadingMore || !chatId) return
     setIsLoadingMore(true)
     try {
+      const scrollElement = messagesContainerRef.current
+      let prevScrollHeight = 0
+      let prevScrollTop = 0
+      if (scrollElement) {
+        prevScrollHeight = scrollElement.scrollHeight
+        prevScrollTop = scrollElement.scrollTop
+      }
+
       const oldestMessage = messages[0]
       const response = await chatApi.listMessages(chatId, {
         before: oldestMessage.createdAt,
@@ -640,6 +662,14 @@ export function ChatPage() {
       }
 
       setMessages((prev) => [...olderMessages, ...prev])
+
+      // Adjust scroll position to prevent jumping (must wait for DOM update)
+      if (scrollElement) {
+        setTimeout(() => {
+          const newScrollHeight = scrollElement.scrollHeight
+          scrollElement.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop
+        }, 0)
+      }
     } catch (error) {
       console.error("Failed to load older messages:", error)
     } finally {
@@ -1021,7 +1051,7 @@ export function ChatPage() {
         </div>
 
         {/* Messages Container */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+        <div ref={messagesContainerRef} className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
           {isMessagesLoading ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-muted-foreground">Loading messages...</p>
