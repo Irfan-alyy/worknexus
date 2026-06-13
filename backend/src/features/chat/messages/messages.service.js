@@ -2,7 +2,7 @@ const prisma = require("../../../config/db.config")
 const AppError = require("../../../utils/app-error")
 const { getChannelById } = require("../channels/channels.service")
 
-const normalizeListLimit = (value, fallback = 50) => {
+const normalizeListLimit = (value, fallback = 10) => {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed <= 0) return fallback
   return Math.min(parsed, 100)

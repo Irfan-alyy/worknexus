@@ -323,6 +323,8 @@ export function ChatPage() {
   const [activeThreadMessageId, setActiveThreadMessageId] = useState(null)
   const [editingMessageId, setEditingMessageId] = useState(null)
   const [editingDraft, setEditingDraft] = useState("")
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [forwardMessage, setForwardMessage] = useState(null)
   const [typingUsers, setTypingUsers] = useState({})
   const messagesEndRef = useRef(null)
@@ -373,7 +375,7 @@ export function ChatPage() {
   const firstChannelId = channels.length > 0 ? channels[0].id : null
 
   // Load messages from API
-  const { data: messagesResp, isLoading: isMessagesLoading } = useMessagesQuery(chatId, {}, { enabled: !!chatId })
+  const { data: messagesResp, isLoading: isMessagesLoading } = useMessagesQuery(chatId, { limit: 10 }, { enabled: !!chatId })
 
   // Load channel/dm details from API
   const { data: channelResp, isLoading: isChannelLoading, isError: isChannelError } = useQuery({
@@ -418,7 +420,9 @@ export function ChatPage() {
   useEffect(() => {
     if (messagesResp?.data?.messages) {
       const timer = window.setTimeout(() => {
-        setMessages(messagesResp.data.messages.map((msg) => transformMessage(msg, currentUserId)))
+        const msgs = messagesResp.data.messages.map((msg) => transformMessage(msg, currentUserId))
+        setMessages(msgs)
+        setHasMore(msgs.length >= 10)
       }, 0)
       return () => window.clearTimeout(timer)
     }
@@ -549,6 +553,8 @@ export function ChatPage() {
       setComposerText("")
       setTypingUsers({})
       wasThreadAsideOpenRef.current = false
+      setHasMore(true)
+      setIsLoadingMore(false)
       closeAsideRef.current()
     }, 0)
 
@@ -614,6 +620,32 @@ export function ChatPage() {
   // ========================================================================
   // EVENT HANDLERS
   // ========================================================================
+
+  const handleLoadOlder = useCallback(async () => {
+    if (messages.length === 0 || isLoadingMore || !chatId) return
+    setIsLoadingMore(true)
+    try {
+      const oldestMessage = messages[0]
+      const response = await chatApi.listMessages(chatId, {
+        before: oldestMessage.createdAt,
+        limit: 10,
+      })
+
+      const olderMessages = (response.data?.messages || []).map((msg) =>
+        transformMessage(msg, currentUserId)
+      )
+
+      if (olderMessages.length < 10) {
+        setHasMore(false)
+      }
+
+      setMessages((prev) => [...olderMessages, ...prev])
+    } catch (error) {
+      console.error("Failed to load older messages:", error)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [messages, isLoadingMore, chatId, currentUserId])
 
   const handleSendMessage = useCallback(
     async (text) => {
@@ -1003,6 +1035,18 @@ export function ChatPage() {
             </div>
           ) : (
             <div className="space-y-4">
+              {hasMore && (
+                <div className="flex justify-center pb-2">
+                  <button
+                    type="button"
+                    onClick={handleLoadOlder}
+                    disabled={isLoadingMore}
+                    className="rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+                  >
+                    {isLoadingMore ? "Loading older messages..." : "Load older messages"}
+                  </button>
+                </div>
+              )}
               {rootMessages.map((message) => (
                 <MessageBubble
                   key={message.id}
