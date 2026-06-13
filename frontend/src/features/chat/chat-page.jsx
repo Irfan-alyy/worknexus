@@ -580,6 +580,9 @@ export function ChatPage() {
 
   useEffect(() => {
     if (!activeThreadMessageId) {
+      if (wasThreadAsideOpenRef.current && asideOpen) {
+        closeAside()
+      }
       wasThreadAsideOpenRef.current = false
       return
     }
@@ -597,7 +600,7 @@ export function ChatPage() {
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [activeThreadMessageId, asideOpen])
+  }, [activeThreadMessageId, asideOpen, closeAside])
 
   // ========================================================================
   // COMPUTED VALUES & MEMOS
@@ -931,10 +934,8 @@ export function ChatPage() {
   }, [])
 
   const handleCloseThread = useCallback(() => {
-    wasThreadAsideOpenRef.current = false
     setActiveThreadMessageId(null)
-    closeAside()
-  }, [closeAside])
+  }, [])
 
   const handleComposerChange = useCallback(
     (text) => {
