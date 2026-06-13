@@ -119,7 +119,7 @@ function ThreadPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+      <section className="rounded-3xl border border-border bg-card p-3 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Thread</p>
@@ -592,14 +592,12 @@ export function ChatPage() {
       return
     }
 
+    // If ID is set but aside is closed, it means it was closed globally (Global 'X').
+    // Clear the state immediately to prevent the opener effect from re-triggering.
     if (!wasThreadAsideOpenRef.current) return
 
-    const timer = window.setTimeout(() => {
-      wasThreadAsideOpenRef.current = false
-      setActiveThreadMessageId(null)
-    }, 0)
-
-    return () => window.clearTimeout(timer)
+    wasThreadAsideOpenRef.current = false
+    setActiveThreadMessageId(null)
   }, [activeThreadMessageId, asideOpen, closeAside])
 
   // ========================================================================
@@ -934,8 +932,11 @@ export function ChatPage() {
   }, [])
 
   const handleCloseThread = useCallback(() => {
+    // Explicitly clear both states and reset the tracking ref to avoid ambiguity
+    wasThreadAsideOpenRef.current = false
     setActiveThreadMessageId(null)
-  }, [])
+    closeAside()
+  }, [closeAside])
 
   const handleComposerChange = useCallback(
     (text) => {
@@ -949,7 +950,11 @@ export function ChatPage() {
   )
 
   useEffect(() => {
-    if (!activeThreadMessage) return
+    if (!activeThreadMessage || !activeThreadMessageId) return
+
+    // If the aside was closed globally, don't force it back open.
+    // The synchronization effect above handles clearing the message ID.
+    if (!asideOpen && wasThreadAsideOpenRef.current) return
 
     openAside(
       "Thread",
@@ -974,6 +979,8 @@ export function ChatPage() {
     )
   }, [
     activeThreadMessage,
+    activeThreadMessageId,
+    asideOpen,
     activeThreadReplies,
     currentUserId,
     editingDraft,
