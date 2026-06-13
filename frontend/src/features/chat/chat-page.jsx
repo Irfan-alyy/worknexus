@@ -67,6 +67,8 @@ function formatTime(date) {
 	return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })
 }
 
+const EMPTY_ARRAY = []
+
 /**
  * Transform API message to component format
  */
@@ -377,7 +379,8 @@ export function ChatPage() {
   const firstChannelId = channels.length > 0 ? channels[0].id : null
 
   // Load messages from API
-  const { data: messagesResp, isLoading: isMessagesLoading } = useMessagesQuery(chatId, { limit: 10 }, { enabled: !!chatId })
+  const messageQueryParams = useMemo(() => ({ limit: 10 }), [])
+  const { data: messagesResp, isLoading: isMessagesLoading } = useMessagesQuery(chatId, messageQueryParams, { enabled: !!chatId })
 
   // Load channel/dm details from API
   const { data: channelResp, isLoading: isChannelLoading, isError: isChannelError } = useQuery({
@@ -622,7 +625,7 @@ export function ChatPage() {
   }, [messages])
 
   const activeThreadReplies = useMemo(
-    () => repliesByParentId.get(activeThreadMessageId) ?? [],
+    () => repliesByParentId.get(activeThreadMessageId) ?? EMPTY_ARRAY,
     [activeThreadMessageId, repliesByParentId],
   )
 
